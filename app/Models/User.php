@@ -45,4 +45,11 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Relationship: User (parent) has many kids
+    public function kids()
+    {
+        return $this->hasMany(Kid::class);
+    }
+
 }
