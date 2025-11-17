@@ -14,9 +14,14 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
-        $kids = $user->kids; // Get all kids for this parent
+        $kids = $user->kids;
         return view('parent.dashboard', compact('user', 'kids'));
     })->name('dashboard');
+
+    // Kid management
+    Route::post('/kids', [App\Http\Controllers\KidController::class, 'store'])->name('kids.store');
+    Route::patch('/kids/{kid}/balance', [App\Http\Controllers\KidController::class, 'updateBalance'])->name('kids.updateBalance');
+    Route::patch('/kids/{kid}/points', [App\Http\Controllers\KidController::class, 'updatePoints'])->name('kids.updatePoints');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
