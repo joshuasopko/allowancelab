@@ -82,7 +82,7 @@
                                 </div>
                                 @if($kid->points_enabled)
                                     @php
-                                        $pointsClass = $kid->points >= 8 ? 'points-high' : ($kid->points >= 5 ? 'points-medium' : 'points-low');
+            $pointsClass = $kid->points >= 8 ? 'points-high' : ($kid->points >= 5 ? 'points-medium' : 'points-low');
                                     @endphp
                                     <div class="points-badge {{ $pointsClass }}">{{ $kid->points }} / 10</div>
                                 @endif
@@ -170,6 +170,56 @@
                                         </div>
                                     </div>
                                 @endif
+
+                                <button class="action-btn btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}')">View
+                                    Ledger</button>
+
+                                <!-- Ledger -->
+                                <div class="dropdown-form" id="ledger-{{ $kid->id }}Form">
+                                    <div class="form-content">
+                                        <div class="ledger-filters">
+                                            <button class="filter-btn active" data-kid="{{ $kid->id }}"
+                                                onclick="filterLedger({{ $kid->id }}, 'all')">All</button>
+                                            <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                                onclick="filterLedger({{ $kid->id }}, 'deposit')">Deposits</button>
+                                            <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                                onclick="filterLedger({{ $kid->id }}, 'spend')">Spends</button>
+                                            <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                                onclick="filterLedger({{ $kid->id }}, 'points')">Point
+                                                Adjustments</button>
+                                        </div>
+                                        <div class="ledger-table" id="ledger-{{ $kid->id }}-table">
+                                            @php
+        $transactions = $kid->transactions()->latest()->take(8)->get();
+        $pointAdjustments = $kid->pointAdjustments()->latest()->take(8)->get();
+        $allEntries = $transactions->concat($pointAdjustments)->sortByDesc('created_at')->take(8);
+                                            @endphp
+
+                                            @forelse($allEntries as $entry)
+                                                <div class="ledger-row"
+                                                    data-type="{{ $entry instanceof \App\Models\Transaction ? $entry->type : 'points' }}">
+                                                    <div class="ledger-date">{{ $entry->created_at->format('M d, Y') }}</div>
+                                                    @if($entry instanceof \App\Models\Transaction)
+                                                        <div class="ledger-type">{{ ucfirst($entry->type) }}</div>
+                                                        <div class="ledger-amount {{ $entry->type }}">
+                                                            ${{ number_format($entry->amount, 2) }}</div>
+                                                        <div class="ledger-note">{{ $entry->note ?? 'No note' }}</div>
+                                                    @else
+                                                        <div class="ledger-type">Points</div>
+                                                        <div
+                                                            class="ledger-amount {{ $entry->points_change > 0 ? 'points-add' : 'points-deduct' }}">
+                                                            {{ $entry->points_change > 0 ? '+' : '' }}{{ $entry->points_change }} pts
+                                                        </div>
+                                                        <div class="ledger-note">{{ $entry->reason ?? 'No reason' }}</div>
+                                                    @endif
+                                                </div>
+                                            @empty
+                                                <div class="ledger-empty">No transactions yet</div>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <div class="card-footer">
@@ -809,6 +859,26 @@
                 form.classList.add('active');
             }
         }
+
+    function filterLedger(kidId, type) {
+        const table = document.getElementById(`ledger-${kidId}-table`);
+        const rows = table.querySelectorAll('.ledger-row');
+        const buttons = document.querySelectorAll(`.filter-btn[data-kid="${kidId}"]`);
+
+        // Update active button
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        // Filter rows
+        rows.forEach(row => {
+            if (type === 'all' || row.dataset.type === type) {
+                row.style.display = 'grid';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
     </script>
 
 </body>

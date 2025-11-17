@@ -1321,6 +1321,89 @@ body {
     color: #2e7d32;
 }
 
+/* Ledger Styles */
+.ledger-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
+.filter-btn.active {
+    background: #2196F3;
+    color: white;
+    border-color: #2196F3;
+}
+
+.ledger-table {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ledger-row {
+    display: grid;
+    grid-template-columns: 100px 100px 100px 1fr;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.ledger-date {
+    color: #666;
+}
+
+.ledger-type {
+    font-weight: 600;
+}
+
+.ledger-amount {
+    font-weight: 600;
+}
+
+.ledger-amount.deposit {
+    color: #4CAF50;
+}
+
+.ledger-amount.spend {
+    color: #f44336;
+}
+
+.ledger-amount.points-add {
+    color: #2196F3;
+}
+
+.ledger-amount.points-deduct {
+    color: #FF9800;
+}
+
+.ledger-note {
+    color: #888;
+}
+
+.ledger-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .form-row {
