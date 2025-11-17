@@ -1070,7 +1070,7 @@
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-welcome">Welcome, Joshua!</div>
+            <div class="sidebar-welcome">Welcome, {{ $user->first_name }}!</div>
             <div class="sidebar-features">
                 <a href="#chore-list" class="menu-item">Chore List</a>
                 <a href="#goals" class="menu-item">Goals</a>
@@ -1080,7 +1080,7 @@
             <nav class="sidebar-menu">
                 <a href="#account-info" class="menu-item has-subtext">
                     Account Info
-                    <div class="menu-subtext">Sopko Family</div>
+                    <div class="menu-subtext">{{ $user->last_name }} Family</div>
                 </a>
                 <a href="#dashboard" class="menu-item active">Dashboard</a>
                 <a href="#settings" class="menu-item">Settings</a>
