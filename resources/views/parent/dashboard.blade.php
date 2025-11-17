@@ -81,12 +81,16 @@
                                     </div>
                                 </div>
                                 @if($kid->points_enabled)
-                                    <div class="points-badge points-medium">{{ $kid->points }} / 10</div>
+                                    @php
+                                        $pointsClass = $kid->points >= 8 ? 'points-high' : ($kid->points >= 5 ? 'points-medium' : 'points-low');
+                                    @endphp
+                                    <div class="points-badge {{ $pointsClass }}">{{ $kid->points }} / 10</div>
                                 @endif
                             </div>
 
                             <div class="balance-section">
-                                <div class="balance">${{ number_format($kid->balance, 2) }}</div>
+                                <div class="balance {{ $kid->balance < 0 ? 'negative' : '' }}">
+                                    ${{ number_format($kid->balance, 2) }}</div>
                                 <div class="next-allowance">Weekly allowance: ${{ number_format($kid->allowance_amount, 2) }}
                                 </div>
                             </div>
