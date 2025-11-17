@@ -85,6 +85,12 @@ class KidController extends Controller
 
     public function deposit(Request $request, Kid $kid)
     {
+        \Log::info('DEPOSIT METHOD CALLED', [
+            'amount' => $request->amount,
+            'note' => $request->note,
+            'kid_id' => $kid->id
+        ]);
+
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'note' => 'nullable|string|max:255'
@@ -93,12 +99,15 @@ class KidController extends Controller
         $kid->balance += $request->amount;
         $kid->save();
 
+        \Log::info('BALANCE UPDATED');
+
         $kid->transactions()->create([
             'type' => 'deposit',
             'amount' => $request->amount,
-            'note' => $request->note,
-            'balance_after' => $kid->balance
+            'description' => $request->note
         ]);
+
+        \Log::info('TRANSACTION CREATED');
 
         return back()->with('success', 'Deposit recorded successfully');
     }
@@ -116,8 +125,7 @@ class KidController extends Controller
         $kid->transactions()->create([
             'type' => 'spend',
             'amount' => $request->amount,
-            'note' => $request->note,
-            'balance_after' => $kid->balance
+            'description' => $request->note
         ]);
 
         return back()->with('success', 'Spending recorded successfully');
@@ -135,8 +143,7 @@ class KidController extends Controller
 
         $kid->pointAdjustments()->create([
             'points_change' => $request->points,
-            'reason' => $request->reason,
-            'points_after' => $kid->points
+            'reason' => $request->reason
         ]);
 
         return back()->with('success', 'Points adjusted successfully');
