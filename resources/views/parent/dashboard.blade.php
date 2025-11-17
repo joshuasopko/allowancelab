@@ -18,8 +18,7 @@
                 <span></span>
             </div>
             <div class="logo-section">
-                <div class="logo">💰</div>
-                <div class="brand-name">AllowanceLab</div>
+                <img src="{{ asset('images/Allowance-Lab-logo.png') }}" alt="AllowanceLab" class="logo-img">
             </div>
             <nav class="header-nav">
                 <a href="#chore-list">Chore List</a>
