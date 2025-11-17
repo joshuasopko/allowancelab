@@ -82,4 +82,63 @@ class KidController extends Controller
 
         return back()->with('success', 'Points updated!');
     }
+
+    public function deposit(Request $request, Kid $kid)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'note' => 'nullable|string|max:255'
+        ]);
+
+        $kid->balance += $request->amount;
+        $kid->save();
+
+        $kid->transactions()->create([
+            'type' => 'deposit',
+            'amount' => $request->amount,
+            'note' => $request->note,
+            'balance_after' => $kid->balance
+        ]);
+
+        return back()->with('success', 'Deposit recorded successfully');
+    }
+
+    public function spend(Request $request, Kid $kid)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'note' => 'nullable|string|max:255'
+        ]);
+
+        $kid->balance -= $request->amount;
+        $kid->save();
+
+        $kid->transactions()->create([
+            'type' => 'spend',
+            'amount' => $request->amount,
+            'note' => $request->note,
+            'balance_after' => $kid->balance
+        ]);
+
+        return back()->with('success', 'Spending recorded successfully');
+    }
+
+    public function adjustPoints(Request $request, Kid $kid)
+    {
+        $request->validate([
+            'points' => 'required|integer',
+            'reason' => 'nullable|string|max:255'
+        ]);
+
+        $kid->points += $request->points;
+        $kid->save();
+
+        $kid->pointAdjustments()->create([
+            'points_change' => $request->points,
+            'reason' => $request->reason,
+            'points_after' => $kid->points
+        ]);
+
+        return back()->with('success', 'Points adjusted successfully');
+    }
 }

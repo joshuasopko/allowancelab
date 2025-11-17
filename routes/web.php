@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\KidAuthController;
+use App\Http\Controllers\KidController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,6 +27,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('/kids/{kid}/deposit', [KidController::class, 'deposit'])->name('kids.deposit');
+    Route::post('/kids/{kid}/spend', [KidController::class, 'spend'])->name('kids.spend');
+    Route::post('/kids/{kid}/points', [KidController::class, 'adjustPoints'])->name('kids.points');
 });
 
 // Kid authentication routes

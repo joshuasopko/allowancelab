@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kid_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['allowance', 'spending', 'adjustment']);
+            $table->enum('type', ['deposit', 'spend', 'allowance', 'adjustment']);
             $table->decimal('amount', 10, 2);
             $table->text('description')->nullable();
             $table->string('category')->nullable();

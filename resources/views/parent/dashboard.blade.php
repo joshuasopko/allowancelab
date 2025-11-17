@@ -123,10 +123,8 @@
                                 <!-- Spend Form -->
                                 <div class="dropdown-form" id="spend-{{ $kid->id }}Form">
                                     <div class="form-content">
-                                        <form action="{{ route('kids.updateBalance', $kid) }}" method="POST"
-                                            class="inline-form">
+                                        <form action="{{ route('kids.spend', $kid) }}" method="POST" class="inline-form">
                                             @csrf
-                                            @method('PATCH')
                                             <div class="form-group">
                                                 <label class="form-label">Amount</label>
                                                 <input type="number" step="0.01" class="form-input" name="amount"
@@ -137,7 +135,6 @@
                                                 <input type="text" class="form-input" name="note"
                                                     placeholder="What did they buy?">
                                             </div>
-                                            <input type="hidden" name="amount" value="">
                                             <button type="submit" class="submit-btn submit-spend">Record Spend</button>
                                         </form>
                                     </div>
@@ -209,46 +206,15 @@
             overlay.classList.toggle('active');
         }
 
-        function toggleForm(formName) {
-            const forms = ['deposit', 'spend', 'points', 'ledger'];
-            const ledgerBtn = document.getElementById('ledgerBtn');
+        function toggleForm(formId) {
+            const form = document.getElementById(formId + 'Form');
 
-            // If clicking the same form that's open, close it with animation
-            if (activeForm === formName) {
-                const form = document.getElementById(formName + 'Form');
-                form.classList.add('closing');
-                setTimeout(() => {
-                    form.classList.remove('open');
-                    form.classList.remove('closing');
-                }, 400);
-                if (formName === 'ledger') {
-                    ledgerBtn.textContent = 'View Ledger';
-                    ledgerBtn.classList.remove('active');
-                }
-                activeForm = null;
-                return;
+            if (activeForm && activeForm !== form) {
+                activeForm.classList.remove('active');
             }
 
-            // Close all forms instantly (no animation when switching)
-            forms.forEach(name => {
-                const form = document.getElementById(name + 'Form');
-                form.classList.remove('open');
-                form.classList.remove('closing');
-                if (name === 'ledger') {
-                    ledgerBtn.textContent = 'View Ledger';
-                    ledgerBtn.classList.remove('active');
-                }
-            });
-
-            // Open the requested form with animation
-            const form = document.getElementById(formName + 'Form');
-            form.classList.add('open');
-            activeForm = formName;
-            if (formName === 'ledger') {
-                ledgerBtn.textContent = 'Close Ledger';
-                ledgerBtn.classList.add('active');
-                renderLedger();
-            }
+            form.classList.toggle('active');
+            activeForm = form.classList.contains('active') ? form : null;
         }
 
         function formatCurrency(input) {

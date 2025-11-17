@@ -355,6 +355,11 @@ body {
     display: none;
     grid-column: 1 / -1;
     order: 5;
+    margin-top: 12px;
+}
+
+.dropdown-form.active {
+    display: block;
 }
 
 .dropdown-form.open {
