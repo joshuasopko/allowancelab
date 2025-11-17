@@ -453,10 +453,10 @@ body {
 
 .form-input {
     width: 100%;
-    padding: 12px;
+    padding: 12px 16px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 18px;
     font-family: inherit;
     transition: border-color 0.2s;
 }
@@ -1143,7 +1143,7 @@ body {
     padding: 12px 16px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 15px;
+    font-size: 18px;
     transition: border-color 0.2s;
 }
 
@@ -1482,6 +1482,7 @@ body {
 .points-reason .form-input {
     height: 48px;
 }
+
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
