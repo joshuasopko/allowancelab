@@ -68,170 +68,173 @@
             <div class="content-wrapper">
                 @if($kids->count() > 0)
                     @foreach($kids as $kid)
-                        <!-- {{ $kid->name }} Card -->
-                        <div class="kid-card">
-                            <div class="card-header">
-                                <div class="kid-info">
-                                    <div class="avatar" style="background: {{ $kid->color }};">
-                                        {{ strtoupper(substr($kid->name, 0, 1)) }}
-                                    </div>
-                                    <div class="kid-details">
-                                        <h2>{{ $kid->name }}</h2>
-                                        <div class="kid-age">Age {{ \Carbon\Carbon::parse($kid->birthday)->age }}</div>
-                                    </div>
-                                </div>
-                                @if($kid->points_enabled)
-                                    @php
-                                        $pointsClass = $kid->points >= 8 ? 'points-high' : ($kid->points >= 5 ? 'points-medium' : 'points-low');
-                                    @endphp
-                                    <div class="points-badge {{ $pointsClass }}">{{ $kid->points }} / 10</div>
-                                @endif
-                            </div>
+                                                <!-- {{ $kid->name }} Card -->
+                                                <div class="kid-card">
+                                                    <div class="card-header">
+                                                        <div class="kid-info">
+                                                            <div class="avatar" style="background: {{ $kid->color }};">
+                                                                {{ strtoupper(substr($kid->name, 0, 1)) }}
+                                                            </div>
+                                                            <div class="kid-details">
+                                                                <h2>{{ $kid->name }}</h2>
+                                                                <div class="kid-age">Age {{ \Carbon\Carbon::parse($kid->birthday)->age }}</div>
+                                                            </div>
+                                                        </div>
+                                                        @if($kid->points_enabled)
+                                                            @php
+            $pointsClass = $kid->points >= 8 ? 'points-high' : ($kid->points >= 5 ? 'points-medium' : 'points-low');
+                                                            @endphp
+                                                            <div class="points-badge {{ $pointsClass }}">{{ $kid->points }} / 10</div>
+                                                        @endif
+                                                    </div>
 
-                            <div class="balance-section">
-                                <div class="balance {{ $kid->balance < 0 ? 'negative' : '' }}">
-                                    ${{ number_format($kid->balance, 2) }}</div>
-                                <div class="next-allowance">Weekly allowance: ${{ number_format($kid->allowance_amount, 2) }}
-                                </div>
-                            </div>
-
-                            <div class="action-buttons">
-                                <button class="action-btn btn-deposit" onclick="toggleForm('deposit-{{ $kid->id }}')">Deposit
-                                    Money</button>
-
-                                <!-- Deposit Form -->
-                                <div class="dropdown-form" id="deposit-{{ $kid->id }}Form">
-                                    <div class="form-content">
-                                        <form action="{{ route('kids.deposit', $kid) }}" method="POST" class="inline-form">
-                                            @csrf
-                                            <div class="form-group">
-                                                <label class="form-label">Amount</label>
-                                                <input type="text" inputmode="decimal" class="form-input currency-input"
-                                                    name="amount" placeholder="0.00" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Note:</label>
-                                                <input type="text" class="form-input" name="note"
-                                                    placeholder="What was this for?">
-                                            </div>
-                                            <button type="submit" class="submit-btn submit-deposit">Record Deposit</button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                <button class="action-btn btn-spend" onclick="toggleForm('spend-{{ $kid->id }}')">Record
-                                    Spend</button>
-
-                                <!-- Spend Form -->
-                                <div class="dropdown-form" id="spend-{{ $kid->id }}Form">
-                                    <div class="form-content">
-                                        <form action="{{ route('kids.spend', $kid) }}" method="POST" class="inline-form">
-                                            @csrf
-                                            <div class="form-group">
-                                                <label class="form-label">Amount</label>
-                                                <input type="text" inputmode="decimal" class="form-input currency-input"
-                                                    name="amount" placeholder="0.00" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Note:</label>
-                                                <input type="text" class="form-input" name="note"
-                                                    placeholder="What did they buy?">
-                                            </div>
-                                            <button type="submit" class="submit-btn submit-spend">Record Spend</button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                @if($kid->points_enabled)
-                                    <button class="action-btn btn-points" onclick="toggleForm('points-{{ $kid->id }}')">Adjust
-                                        Points</button>
-
-                                    <!-- Points Form -->
-                                    <div class="dropdown-form" id="points-{{ $kid->id }}Form">
-                                        <div class="form-content">
-                                            <div class="current-points">Current: {{ $kid->points }} / 10 points</div>
-                                            <form action="{{ route('kids.points', $kid) }}" method="POST"
-                                                class="points-form-inline">
-                                                @csrf
-                                                <div class="points-adjustment-row">
-                                                    <div class="points-control">
-                                                        <label class="points-label">Adjust</label>
-                                                        <div class="points-adjuster">
-                                                            <button type="button" class="points-btn"
-                                                                onclick="adjustPoints({{ $kid->id }}, -1)">−</button>
-                                                            <input type="number" class="points-display" name="points"
-                                                                id="points-{{ $kid->id }}" value="0" readonly>
-                                                            <button type="button" class="points-btn"
-                                                                onclick="adjustPoints({{ $kid->id }}, 1)">+</button>
+                                                    <div class="balance-section">
+                                                        <div class="balance {{ $kid->balance < 0 ? 'negative' : '' }}">
+                                                            ${{ number_format($kid->balance, 2) }}</div>
+                                                        <div class="next-allowance">Weekly allowance: ${{ number_format($kid->allowance_amount, 2) }}
                                                         </div>
                                                     </div>
-                                                    <div class="points-reason">
-                                                        <label class="points-label">Reason:</label>
-                                                        <input type="text" class="form-input" name="reason"
-                                                            placeholder="Why are you adjusting points?" required>
+
+                                                    <div class="action-buttons">
+                                                        <button class="action-btn btn-deposit" onclick="toggleForm('deposit-{{ $kid->id }}')">Deposit
+                                                            Money</button>
+
+                                                        <!-- Deposit Form -->
+                                                        <div class="dropdown-form" id="deposit-{{ $kid->id }}Form">
+                                                            <div class="form-content">
+                                                                <form action="{{ route('kids.deposit', $kid) }}" method="POST" class="inline-form">
+                                                                    @csrf
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Amount</label>
+                                                                        <input type="text" inputmode="decimal" class="form-input currency-input"
+                                                                            name="amount" placeholder="0.00" required>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Note:</label>
+                                                                        <input type="text" class="form-input" name="note"
+                                                                            placeholder="What was this for?">
+                                                                    </div>
+                                                                    <button type="submit" class="submit-btn submit-deposit">Record Deposit</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+
+                                                        <button class="action-btn btn-spend" onclick="toggleForm('spend-{{ $kid->id }}')">Record
+                                                            Spend</button>
+
+                                                        <!-- Spend Form -->
+                                                        <div class="dropdown-form" id="spend-{{ $kid->id }}Form">
+                                                            <div class="form-content">
+                                                                <form action="{{ route('kids.spend', $kid) }}" method="POST" class="inline-form">
+                                                                    @csrf
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Amount</label>
+                                                                        <input type="text" inputmode="decimal" class="form-input currency-input"
+                                                                            name="amount" placeholder="0.00" required>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Note:</label>
+                                                                        <input type="text" class="form-input" name="note"
+                                                                            placeholder="What did they buy?">
+                                                                    </div>
+                                                                    <button type="submit" class="submit-btn submit-spend">Record Spend</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+
+                                                        @if($kid->points_enabled)
+                                                            <button class="action-btn btn-points" onclick="toggleForm('points-{{ $kid->id }}')">Adjust
+                                                                Points</button>
+
+                                                            <!-- Points Form -->
+                                                            <div class="dropdown-form" id="points-{{ $kid->id }}Form">
+                                                                <div class="form-content">
+                                                                    <div class="current-points">Current: {{ $kid->points }} / 10 points</div>
+                                                                    <form action="{{ route('kids.points', $kid) }}" method="POST"
+                                                                        class="points-form-inline">
+                                                                        @csrf
+                                                                        <div class="points-adjustment-row">
+                                                                            <div class="points-control">
+                                                                                <label class="points-label">Adjust</label>
+                                                                                <div class="points-adjuster">
+                                                                                    <button type="button" class="points-btn"
+                                                                                        onclick="adjustPoints({{ $kid->id }}, -1)">−</button>
+                                                                                    <input type="number" class="points-display" name="points"
+                                                                                        id="points-{{ $kid->id }}" value="0" readonly>
+                                                                                    <button type="button" class="points-btn"
+                                                                                        onclick="adjustPoints({{ $kid->id }}, 1)">+</button>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="points-reason">
+                                                                                <label class="points-label">Reason:</label>
+                                                                                <input type="text" class="form-input" name="reason"
+                                                                                    placeholder="Why are you adjusting points?" required>
+                                                                            </div>
+                                                                        </div>
+                                                                        <button type="submit" class="submit-btn submit-points">Adjust Points</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        <button class="action-btn btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}')">View
+                                                            Ledger</button>
+
+                                                        <!-- Ledger -->
+                                                        <div class="dropdown-form" id="ledger-{{ $kid->id }}Form">
+                                                            <div class="form-content">
+                                                                <div class="ledger-filters">
+                                                                    <button class="filter-btn active" data-kid="{{ $kid->id }}"
+                                                                        onclick="filterLedger({{ $kid->id }}, 'all')">All</button>
+                                                                    <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                                                        onclick="filterLedger({{ $kid->id }}, 'deposit')">Deposits</button>
+                                                                    <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                                                        onclick="filterLedger({{ $kid->id }}, 'spend')">Spends</button>
+                                                                    <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                                                        onclick="filterLedger({{ $kid->id }}, 'points')">Point
+                                                                        Adjustments</button>
+                                                                </div>
+                                                                <div class="ledger-table" id="ledger-{{ $kid->id }}-table">
+                                                                    @php
+        $transactions = $kid->transactions()->latest()->take(8)->get();
+        $pointAdjustments = $kid->pointAdjustments()->latest()->take(8)->get();
+        $allEntries = $transactions->concat($pointAdjustments)->sortByDesc('created_at')->take(8);
+                                                                    @endphp
+
+                                                                    @forelse($allEntries as $entry)
+                                                                        <div class="ledger-row"
+                                                                            data-type="{{ $entry instanceof \App\Models\Transaction ? $entry->type : 'points' }}">
+                                                                            <div class="ledger-date">{{ $entry->created_at->format('M d, Y') }}</div>
+                                                                            @if($entry instanceof \App\Models\Transaction)
+                                                                                <div class="ledger-type">{{ ucfirst($entry->type) }}</div>
+                                                                                <div class="ledger-amount {{ $entry->type }}">
+                                                                                    ${{ number_format($entry->amount, 2) }}</div>
+                                                                                <div class="ledger-note">{{ $entry->description ?? 'No note' }}</div>
+                                                                            @else
+                                                                                <div class="ledger-type">Points</div>
+                                                                                <div
+                                                                                    class="ledger-amount {{ $entry->points_change > 0 ? 'points-add' : 'points-deduct' }}">
+                                                                                    {{ $entry->points_change > 0 ? '+' : '' }}{{ $entry->points_change }} pts
+                                                                                </div>
+                                                                                <div class="ledger-note">{{ $entry->reason ?? 'No reason' }}</div>
+                                                                            @endif
+                                                                        </div>
+                                                                    @empty
+                                                                        <div class="ledger-empty">No transactions yet</div>
+                                                                    @endforelse
+                                                                </div>
+
+                        <button type="button" class="view-all-btn" onclick="openTransactionModal({{ $kid->id }})">View All Transactions</button>
+
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="card-footer">
+                                                        <a href="#manage-{{ $kid->id }}" class="manage-link">Manage Kid</a>
                                                     </div>
                                                 </div>
-                                                <button type="submit" class="submit-btn submit-points">Adjust Points</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <button class="action-btn btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}')">View
-                                    Ledger</button>
-
-                                <!-- Ledger -->
-                                <div class="dropdown-form" id="ledger-{{ $kid->id }}Form">
-                                    <div class="form-content">
-                                        <div class="ledger-filters">
-                                            <button class="filter-btn active" data-kid="{{ $kid->id }}"
-                                                onclick="filterLedger({{ $kid->id }}, 'all')">All</button>
-                                            <button class="filter-btn" data-kid="{{ $kid->id }}"
-                                                onclick="filterLedger({{ $kid->id }}, 'deposit')">Deposits</button>
-                                            <button class="filter-btn" data-kid="{{ $kid->id }}"
-                                                onclick="filterLedger({{ $kid->id }}, 'spend')">Spends</button>
-                                            <button class="filter-btn" data-kid="{{ $kid->id }}"
-                                                onclick="filterLedger({{ $kid->id }}, 'points')">Point
-                                                Adjustments</button>
-                                        </div>
-                                        <div class="ledger-table" id="ledger-{{ $kid->id }}-table">
-                                            @php
-                                                $transactions = $kid->transactions()->latest()->take(8)->get();
-                                                $pointAdjustments = $kid->pointAdjustments()->latest()->take(8)->get();
-                                                $allEntries = $transactions->concat($pointAdjustments)->sortByDesc('created_at')->take(8);
-                                            @endphp
-
-                                            @forelse($allEntries as $entry)
-                                                <div class="ledger-row"
-                                                    data-type="{{ $entry instanceof \App\Models\Transaction ? $entry->type : 'points' }}">
-                                                    <div class="ledger-date">{{ $entry->created_at->format('M d, Y') }}</div>
-                                                    @if($entry instanceof \App\Models\Transaction)
-                                                        <div class="ledger-type">{{ ucfirst($entry->type) }}</div>
-                                                        <div class="ledger-amount {{ $entry->type }}">
-                                                            ${{ number_format($entry->amount, 2) }}</div>
-                                                        <div class="ledger-note">{{ $entry->description ?? 'No note' }}</div>
-                                                    @else
-                                                        <div class="ledger-type">Points</div>
-                                                        <div
-                                                            class="ledger-amount {{ $entry->points_change > 0 ? 'points-add' : 'points-deduct' }}">
-                                                            {{ $entry->points_change > 0 ? '+' : '' }}{{ $entry->points_change }} pts
-                                                        </div>
-                                                        <div class="ledger-note">{{ $entry->reason ?? 'No reason' }}</div>
-                                                    @endif
-                                                </div>
-                                            @empty
-                                                <div class="ledger-empty">No transactions yet</div>
-                                            @endforelse
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <div class="card-footer">
-                                <a href="#manage-{{ $kid->id }}" class="manage-link">Manage Kid</a>
-                            </div>
-                        </div>
                     @endforeach
                 @else
                     <div class="empty-state">
@@ -244,17 +247,6 @@
     </div>
 
     <script>
-        // Sample ledger data
-        let ledgerData = [
-            { type: 'deposit', amount: 10.00, note: 'Weekly allowance', date: '2025-11-08' },
-            { type: 'spend', amount: -5.25, note: 'Ice cream at school', date: '2025-11-07' },
-            { type: 'points', amount: '+2', note: 'Extra help with dishes', date: '2025-11-06' },
-            { type: 'deposit', amount: 15.00, note: 'Birthday money from grandma', date: '2025-11-05' },
-            { type: 'spend', amount: -12.50, note: 'New book from bookstore', date: '2025-11-04' },
-            { type: 'points', amount: '-1', note: 'Forgot to feed the dog', date: '2025-11-03' },
-            { type: 'deposit', amount: 10.00, note: 'Weekly allowance', date: '2025-11-01' },
-            { type: 'spend', amount: -7.75, note: 'Movie ticket', date: '2025-10-30' }
-        ];
 
         let currentFilter = 'all';
         let activeForm = null;
@@ -584,33 +576,11 @@
         }
 
         // Modal Functions
-        function openTransactionModal() {
-            const modal = document.getElementById('transactionModal');
-            modal.classList.add('active');
-            renderModalLedger();
-        }
-
         function closeTransactionModal() {
             const modal = document.getElementById('transactionModal');
             modal.classList.remove('active');
         }
-
-        let modalTypeFilter = 'all';
         let modalTimeFilter = 'all';
-
-        function filterModalByType(type) {
-            modalTypeFilter = type;
-            const buttons = document.querySelectorAll('.modal-filter-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            renderModalLedger();
-        }
-
-        function filterModalByTime() {
-            const select = document.getElementById('modalTimeFilter');
-            modalTimeFilter = select.value;
-            renderModalLedger();
-        }
 
         function filterByTimeRange(entry) {
             if (modalTimeFilter === 'all') return true;
@@ -632,38 +602,7 @@
             return true;
         }
 
-        function renderModalLedger() {
-            const tbody = document.getElementById('modalLedgerBody');
-            let filtered = ledgerData;
-
-            // Filter by type
-            if (modalTypeFilter !== 'all') {
-                filtered = filtered.filter(entry => entry.type === modalTypeFilter);
-            }
-
-            // Filter by time
-            filtered = filtered.filter(filterByTimeRange);
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">No transactions found</div>';
-                return;
-            }
-
-            tbody.innerHTML = filtered.map(entry => `
-                <div class="modal-ledger-entry">
-                    <div class="modal-entry-details">
-                        <div class="modal-entry-type ${entry.type}">
-                            ${entry.type === 'deposit' ? 'Deposit' : entry.type === 'spend' ? 'Spend' : 'Point Adjustment'}
-                        </div>
-                        <div class="modal-entry-note">${entry.note}</div>
-                        <div class="modal-entry-date">${formatDate(entry.date)}</div>
-                    </div>
-                    <div class="modal-entry-amount ${entry.type}">
-                        ${entry.type === 'points' ? entry.amount + ' pts' : (entry.amount >= 0 ? '+$' : '-$') + Math.abs(entry.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                </div>
-            `).join('');
-        }
+        
 
         // Close modal when clicking outside
         document.addEventListener('click', function (e) {
@@ -672,34 +611,68 @@
                 closeTransactionModal();
             }
         });
-    </script>
 
-    <!-- Transaction Modal -->
-    <div id="transactionModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">All Transactions</h2>
-                <button class="modal-close" onclick="closeTransactionModal()">&times;</button>
+// transaction modal
+    let currentKidId = null;
+    let currentTypeFilter = 'all';
+    let currentDateRange = '30';
+
+    function openTransactionModal(kidId) {
+        currentKidId = kidId;
+        document.getElementById('transactionModal').classList.add('active');
+        loadTransactions();
+    }
+
+    function closeTransactionModal() {
+        document.getElementById('transactionModal').classList.remove('active');
+    }
+
+    function filterTransactionModal(type) {
+        currentTypeFilter = type;
+
+        // Update active button
+        document.querySelectorAll('.modal-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        loadTransactions();
+    }
+
+    function filterByDateRange(range) {
+        currentDateRange = range;
+        loadTransactions();
+    }
+
+    async function loadTransactions() {
+        const url = `/kids/${currentKidId}/transactions?type=${currentTypeFilter}&days=${currentDateRange}`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const body = document.getElementById('transactionModalBody');
+
+            if (data.length === 0) {
+                body.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No transactions found</div>';
+                return;
+            }
+
+            body.innerHTML = data.map(entry => `
+            <div class="ledger-row">
+                <div class="ledger-date">${entry.date}</div>
+                <div class="ledger-type">${entry.type_label}</div>
+                <div class="ledger-amount ${entry.amount_class || entry.type}">${entry.amount_display}</div>
+                <div class="ledger-note">${entry.note || 'No note'}</div>
             </div>
-            <div class="modal-filters">
-                <div class="modal-filter-tabs">
-                    <button class="modal-filter-btn active" onclick="filterModalByType('all')">All</button>
-                    <button class="modal-filter-btn" onclick="filterModalByType('deposit')">Deposits</button>
-                    <button class="modal-filter-btn" onclick="filterModalByType('spend')">Spends</button>
-                    <button class="modal-filter-btn" onclick="filterModalByType('points')">Points</button>
-                </div>
-                <select id="modalTimeFilter" class="modal-time-filter" onchange="filterModalByTime()">
-                    <option value="all">All Time</option>
-                    <option value="thisMonth">This Month</option>
-                    <option value="lastMonth">Last Month</option>
-                    <option value="last3Months">Last 3 Months</option>
-                </select>
-            </div>
-            <div class="modal-body">
-                <div id="modalLedgerBody"></div>
-            </div>
-        </div>
-    </div>
+        `).join('');
+
+        } catch (error) {
+            console.error('Error loading transactions:', error);
+        }
+    }
+
+    </script>
 
     <!-- Add Kid Modal -->
     <div id="addKidModal" class="modal-overlay" onclick="closeModalOnOverlay(event)">
@@ -802,6 +775,36 @@
                     <button type="submit" class="modal-btn modal-btn-submit">Add Kid</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="transaction-modal" id="transactionModal">
+        <div class="modal-backdrop" onclick="closeTransactionModal()"></div>
+        <div class="transaction-modal-content">
+            <div class="transaction-modal-header">
+                <h2>All Transactions</h2>
+                <button class="close-btn" onclick="closeTransactionModal()">&times;</button>
+            </div>
+    
+            <div class="transaction-filters">
+                <div class="filter-tabs">
+                    <button class="modal-filter-btn active" onclick="filterTransactionModal('all')">All</button>
+                    <button class="modal-filter-btn" onclick="filterTransactionModal('deposit')">Deposits</button>
+                    <button class="modal-filter-btn" onclick="filterTransactionModal('spend')">Spends</button>
+                    <button class="modal-filter-btn" onclick="filterTransactionModal('points')">Points</button>
+                </div>
+                <select class="date-range-select" onchange="filterByDateRange(this.value)">
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 3 Months</option>
+                    <option value="180">Last 6 Months</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
+    
+            <div class="transaction-modal-body" id="transactionModalBody">
+                <!-- Transactions will be loaded here -->
+            </div>
         </div>
     </div>
 

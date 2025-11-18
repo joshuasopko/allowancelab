@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/kids/{kid}/deposit', [KidController::class, 'deposit'])->name('kids.deposit');
     Route::post('/kids/{kid}/spend', [KidController::class, 'spend'])->name('kids.spend');
     Route::post('/kids/{kid}/points', [KidController::class, 'adjustPoints'])->name('kids.points');
+    Route::get('/kids/{kid}/transactions', [KidController::class, 'getTransactions'])->name('kids.transactions');
 });
 
 // Kid authentication routes

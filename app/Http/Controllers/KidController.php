@@ -162,4 +162,60 @@ class KidController extends Controller
 
         return back()->with('success', 'Points adjusted successfully');
     }
+
+    public function getTransactions(Request $request, Kid $kid)
+    {
+        $type = $request->get('type', 'all');
+        $days = $request->get('days', '30');
+
+        // Get transactions
+        $transactions = $kid->transactions()->latest();
+
+        // Filter by date range
+        if ($days !== 'all') {
+            $transactions->where('created_at', '>=', now()->subDays((int) $days));
+        }
+
+        // Filter by type
+        if ($type !== 'all') {
+            $transactions->where('type', $type);
+        }
+
+        $transactionsData = $transactions->get()->map(function ($t) {
+            return [
+                'date' => $t->created_at->format('M d, Y'),
+                'type' => $t->type,
+                'type_label' => ucfirst($t->type),
+                'amount_display' => '$' . number_format($t->amount, 2),
+                'note' => $t->description
+            ];
+        });
+
+        // Get point adjustments
+        $pointAdjustments = $kid->pointAdjustments()->latest();
+
+        if ($days !== 'all') {
+            $pointAdjustments->where('created_at', '>=', now()->subDays((int) $days));
+        }
+
+        if ($type === 'all' || $type === 'points') {
+            $pointsData = $pointAdjustments->get()->map(function ($p) {
+                return [
+                    'date' => $p->created_at->format('M d, Y'),
+                    'type' => 'points',
+                    'type_label' => 'Points',
+                    'amount_display' => ($p->points_change > 0 ? '+' : '') . $p->points_change . ' pts',
+                    'amount_class' => $p->points_change > 0 ? 'points-add' : 'points-deduct',
+                    'note' => $p->reason
+                ];
+            });
+
+            $transactionsData = $transactionsData->concat($pointsData);
+        }
+
+        // Sort by date
+        $transactionsData = $transactionsData->sortByDesc('date')->values();
+
+        return response()->json($transactionsData);
+    }
 }
