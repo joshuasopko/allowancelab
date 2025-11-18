@@ -225,4 +225,15 @@ class KidController extends Controller
 
         return response()->json($transactionsData);
     }
+
+    // Display the Manage Kid page
+    public function manage(Kid $kid)
+    {
+        // Make sure this kid belongs to the logged-in parent
+        if ($kid->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        return view('parent.manage-kid', compact('kid'));
+    }
 }

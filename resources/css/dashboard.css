@@ -1084,8 +1084,8 @@ body {
 .modal-container {
     background: white;
     border-radius: 16px;
-    width: 90%;
-    max-width: 600px;
+    width: 95%;
+    max-width: 760px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -1165,9 +1165,17 @@ body {
     margin-bottom: 16px;
 }
 
+/* Avatar preview container - inline layout */
+.avatar-preview-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 16px 0 28px 0;
+}
+
 .avatar-preview {
-    width: 60px;
-    height: 60px;
+    width: 88px;
+    height: 88px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1183,12 +1191,14 @@ body {
     gap: 12px;
 }
 
+/* Color options as circles */
 .color-option {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    cursor: pointer;
+    width: 80%;
+    max-width: 65px;
+    aspect-ratio: 1;
     border: 3px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
     transition: all 0.2s;
 }
 
@@ -1206,7 +1216,7 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
+    margin: 35px 0 16px 0;
 }
 
 .checkbox-input {
@@ -1647,7 +1657,8 @@ body {
     color: white;
 }
 
-.transaction-modal-header .close-btn {
+.transaction-modal-header .close-btn,
+.modal-header .close-btn {
     background: none;
     border: none;
     font-size: 32px;
