@@ -236,4 +236,55 @@ class KidController extends Controller
 
         return view('parent.manage-kid', compact('kid'));
     }
+
+    // Update kid information
+    public function update(Request $request, Kid $kid)
+    {
+        // Make sure this kid belongs to the logged-in parent
+        if ($kid->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'birthday' => 'required|date',
+            'color' => 'required|string',
+            'allowance_amount' => 'required|numeric|min:0',
+            'allowance_day' => 'required|string',
+            'points_enabled' => 'nullable',
+            'max_points' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $pointsEnabled = $request->has('points_enabled');
+
+        $kid->update([
+            'name' => $request->name,
+            'birthday' => $request->birthday,
+            'color' => $request->color,
+            'allowance_amount' => $request->allowance_amount,
+            'allowance_day' => $request->allowance_day,
+            'points_enabled' => $pointsEnabled,
+            'max_points' => $request->max_points ?? 10,
+        ]);
+
+        return redirect()->route('kids.manage', $kid)->with('success', 'Changes saved successfully!');
+    }
+
+    // Delete kid and all related data
+    public function destroy(Kid $kid)
+    {
+        // Make sure this kid belongs to the logged-in parent
+        if ($kid->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Delete related data first
+        $kid->transactions()->delete();
+        $kid->pointAdjustments()->delete();
+
+        // Delete the kid
+        $kid->delete();
+
+        return redirect()->route('dashboard')->with('success', $kid->name . ' has been removed.');
+    }
 }

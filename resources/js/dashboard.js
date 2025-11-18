@@ -366,6 +366,38 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ============================================
+// MANAGE KID PAGE FUNCTIONS
+// ============================================
+
+// Color selection for manage page
+function selectColorManage(element) {
+    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+    element.classList.add('selected');
+    document.getElementById('colorInputManage').value = element.dataset.color;
+}
+
+// Toggle max points visibility on manage page
+function toggleMaxPointsManage() {
+    const checkbox = document.getElementById('usePointsManage');
+    const maxPointsGroup = document.getElementById('maxPointsGroupManage');
+
+    if (checkbox.checked) {
+        maxPointsGroup.style.display = 'block';
+    } else {
+        maxPointsGroup.style.display = 'none';
+    }
+}
+
+// Delete confirmation modal
+function confirmDeleteKid() {
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+}
+
+// ============================================
 // MAKE FUNCTIONS GLOBALLY ACCESSIBLE
 // ============================================
 window.toggleForm = toggleForm;
@@ -381,3 +413,8 @@ window.openTransactionModal = openTransactionModal;
 window.closeTransactionModal = closeTransactionModal;
 window.filterTransactionModal = filterTransactionModal;
 window.filterByDateRange = filterByDateRange;
+
+window.selectColorManage = selectColorManage;
+window.toggleMaxPointsManage = toggleMaxPointsManage;
+window.confirmDeleteKid = confirmDeleteKid;
+window.closeDeleteModal = closeDeleteModal;

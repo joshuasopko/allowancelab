@@ -34,6 +34,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/kids/{kid}/transactions', [KidController::class, 'getTransactions'])->name('kids.transactions');
     // Manage Kid route
     Route::get('/kids/{kid}/manage', [KidController::class, 'manage'])->name('kids.manage');
+    // Update kid
+    Route::patch('/kids/{kid}', [KidController::class, 'update'])->name('kids.update');
+
+    // Delete kid
+    Route::delete('/kids/{kid}', [KidController::class, 'destroy'])->name('kids.destroy');
 });
 
 // Kid authentication routes

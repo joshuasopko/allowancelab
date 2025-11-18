@@ -17,8 +17,8 @@
                     </div>
                     @if($kid->points_enabled)
                         @php
-            $pointsPercent = $kid->max_points > 0 ? ($kid->points / $kid->max_points) * 100 : 0;
-            $pointsClass = $pointsPercent >= 80 ? 'points-high' : ($pointsPercent >= 50 ? 'points-medium' : 'points-low');
+                            $pointsPercent = $kid->max_points > 0 ? ($kid->points / $kid->max_points) * 100 : 0;
+                            $pointsClass = $pointsPercent >= 80 ? 'points-high' : ($pointsPercent >= 50 ? 'points-medium' : 'points-low');
                         @endphp
                         <div class="points-badge {{ $pointsClass }}">{{ $kid->points }} / {{ $kid->max_points }}</div>
                     @endif
@@ -27,7 +27,18 @@
                 <!-- Balance Section -->
                 <div class="balance-section">
                     <div class="balance {{ $kid->balance < 0 ? 'negative' : '' }}">${{ number_format($kid->balance, 2) }}</div>
-                    <div class="next-allowance">Weekly allowance: ${{ number_format($kid->allowance_amount, 2) }}</div>
+                    @php
+                        $daysOfWeek = ['sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6];
+                        $targetDay = $daysOfWeek[$kid->allowance_day] ?? 5;
+                        $today = now();
+                        $daysUntil = ($targetDay - $today->dayOfWeek + 7) % 7;
+                        if ($daysUntil === 0)
+                            $daysUntil = 7;
+                        $nextAllowance = $today->copy()->addDays($daysUntil);
+                    @endphp
+                    <div class="next-allowance">Next allowance: ${{ number_format($kid->allowance_amount, 2) }} on
+                        {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}
+                    </div>
                 </div>
 
                 <!-- Action Buttons -->
@@ -47,7 +58,8 @@
                             @csrf
                             <div class="form-group">
                                 <label class="form-label">Amount</label>
-                                <input type="text" inputmode="decimal" class="form-input currency-input" name="amount" placeholder="0.00" required>
+                                <input type="text" inputmode="decimal" class="form-input currency-input" name="amount"
+                                    placeholder="0.00" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Note:</label>
@@ -65,7 +77,8 @@
                             @csrf
                             <div class="form-group">
                                 <label class="form-label">Amount</label>
-                                <input type="text" inputmode="decimal" class="form-input currency-input" name="amount" placeholder="0.00" required>
+                                <input type="text" inputmode="decimal" class="form-input currency-input" name="amount"
+                                    placeholder="0.00" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Note:</label>
@@ -87,14 +100,18 @@
                                     <div class="points-control">
                                         <label class="points-label">Adjust</label>
                                         <div class="points-adjuster">
-                                            <button type="button" class="points-btn" onclick="adjustPoints({{ $kid->id }}, -1)">−</button>
-                                            <input type="number" class="points-display" name="points" id="points-{{ $kid->id }}" value="0" readonly>
-                                            <button type="button" class="points-btn" onclick="adjustPoints({{ $kid->id }}, 1)">+</button>
+                                            <button type="button" class="points-btn"
+                                                onclick="adjustPoints({{ $kid->id }}, -1)">−</button>
+                                            <input type="number" class="points-display" name="points" id="points-{{ $kid->id }}"
+                                                value="0" readonly>
+                                            <button type="button" class="points-btn"
+                                                onclick="adjustPoints({{ $kid->id }}, 1)">+</button>
                                         </div>
                                     </div>
                                     <div class="points-reason">
                                         <label class="points-label">Reason:</label>
-                                        <input type="text" class="form-input" name="reason" placeholder="Why are you adjusting points?" required>
+                                        <input type="text" class="form-input" name="reason" placeholder="Why are you adjusting points?"
+                                            required>
                                     </div>
                                 </div>
                                 <button type="submit" class="submit-btn submit-points">Adjust Points</button>
@@ -107,20 +124,25 @@
                 <div class="dropdown-form" id="ledger-{{ $kid->id }}Form">
                     <div class="form-content">
                         <div class="ledger-filters">
-                            <button class="filter-btn active" data-kid="{{ $kid->id }}" onclick="filterLedger({{ $kid->id }}, 'all')">All</button>
-                            <button class="filter-btn" data-kid="{{ $kid->id }}" onclick="filterLedger({{ $kid->id }}, 'deposit')">Deposits</button>
-                            <button class="filter-btn" data-kid="{{ $kid->id }}" onclick="filterLedger({{ $kid->id }}, 'spend')">Spends</button>
-                            <button class="filter-btn" data-kid="{{ $kid->id }}" onclick="filterLedger({{ $kid->id }}, 'points')">Point Adjustments</button>
+                            <button class="filter-btn active" data-kid="{{ $kid->id }}"
+                                onclick="filterLedger({{ $kid->id }}, 'all')">All</button>
+                            <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                onclick="filterLedger({{ $kid->id }}, 'deposit')">Deposits</button>
+                            <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                onclick="filterLedger({{ $kid->id }}, 'spend')">Spends</button>
+                            <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                onclick="filterLedger({{ $kid->id }}, 'points')">Point Adjustments</button>
                         </div>
                         <div class="ledger-table" id="ledger-{{ $kid->id }}-table">
                             @php
-        $transactions = $kid->transactions()->latest()->take(8)->get();
-        $pointAdjustments = $kid->pointAdjustments()->latest()->take(8)->get();
-        $allEntries = $transactions->concat($pointAdjustments)->sortByDesc('created_at')->take(8);
+                                $transactions = $kid->transactions()->latest()->take(8)->get();
+                                $pointAdjustments = $kid->pointAdjustments()->latest()->take(8)->get();
+                                $allEntries = $transactions->concat($pointAdjustments)->sortByDesc('created_at')->take(8);
                             @endphp
 
                             @forelse($allEntries as $entry)
-                                <div class="ledger-row" data-type="{{ $entry instanceof \App\Models\Transaction ? $entry->type : 'points' }}">
+                                <div class="ledger-row"
+                                    data-type="{{ $entry instanceof \App\Models\Transaction ? $entry->type : 'points' }}">
                                     <div class="ledger-date">{{ $entry->created_at->format('M d, Y') }}</div>
                                     @if($entry instanceof \App\Models\Transaction)
                                         <div class="ledger-type">{{ ucfirst($entry->type) }}</div>
@@ -138,7 +160,8 @@
                                 <div class="ledger-empty">No transactions yet</div>
                             @endforelse
                         </div>
-                        <button type="button" class="view-all-btn" onclick="openTransactionModal({{ $kid->id }})">View All Transactions</button>
+                        <button type="button" class="view-all-btn" onclick="openTransactionModal({{ $kid->id }})">View All
+                            Transactions</button>
                     </div>
                 </div>
 
@@ -170,18 +193,21 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Name</label>
-                            <input type="text" class="form-input" name="name" id="kidName" placeholder="First name" required>
+                            <input type="text" class="form-input" name="name" id="kidName" placeholder="First name"
+                                required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Username</label>
-                            <input type="text" class="form-input" name="username" placeholder="Choose a unique username for login" required>
+                            <input type="text" class="form-input" name="username"
+                                placeholder="Choose a unique username for login" required>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Password</label>
-                            <input type="password" class="form-input" name="password" placeholder="Simple PIN or password" required>
+                            <input type="password" class="form-input" name="password" placeholder="Simple PIN or password"
+                                required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Birthday</label>
@@ -192,7 +218,8 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Weekly Allowance</label>
-                            <input type="text" inputmode="decimal" class="form-input" name="allowance_amount" placeholder="0.00" required>
+                            <input type="text" inputmode="decimal" class="form-input" name="allowance_amount"
+                                placeholder="0.00" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">
@@ -222,8 +249,8 @@
                         <input type="hidden" name="color" id="selectedColor" value="#80d4b0">
                         <input type="hidden" name="avatar" value="avatar1">
                         <div class="color-grid">
-                            <div class="color-option selected" style="background: #80d4b0;" data-color="#80d4b0" data-name="Mint Green"
-                                onclick="selectColor(this)"></div>
+                            <div class="color-option selected" style="background: #80d4b0;" data-color="#80d4b0"
+                                data-name="Mint Green" onclick="selectColor(this)"></div>
                             <div class="color-option" style="background: #ff9999;" data-color="#ff9999" data-name="Coral"
                                 onclick="selectColor(this)"></div>
                             <div class="color-option" style="background: #b19cd9;" data-color="#b19cd9" data-name="Lavender"
@@ -234,28 +261,30 @@
                                 onclick="selectColor(this)"></div>
                             <div class="color-option" style="background: #e066a6;" data-color="#e066a6" data-name="Magenta"
                                 onclick="selectColor(this)"></div>
-                            <div class="color-option" style="background: #ffd966;" data-color="#ffd966" data-name="Butter Yellow"
-                                onclick="selectColor(this)"></div>
-                            <div class="color-option" style="background: #a8c686;" data-color="#a8c686" data-name="Sage Green"
-                                onclick="selectColor(this)"></div>
+                            <div class="color-option" style="background: #ffd966;" data-color="#ffd966"
+                                data-name="Butter Yellow" onclick="selectColor(this)"></div>
+                            <div class="color-option" style="background: #a8c686;" data-color="#a8c686"
+                                data-name="Sage Green" onclick="selectColor(this)"></div>
                             <div class="color-option" style="background: #5ab9b3;" data-color="#5ab9b3" data-name="Teal"
                                 onclick="selectColor(this)"></div>
-                            <div class="color-option" style="background: #9bb7d4;" data-color="#9bb7d4" data-name="Periwinkle"
-                                onclick="selectColor(this)"></div>
-                            <div class="color-option" style="background: #ff9966;" data-color="#ff9966" data-name="Tangerine"
-                                onclick="selectColor(this)"></div>
+                            <div class="color-option" style="background: #9bb7d4;" data-color="#9bb7d4"
+                                data-name="Periwinkle" onclick="selectColor(this)"></div>
+                            <div class="color-option" style="background: #ff9966;" data-color="#ff9966"
+                                data-name="Tangerine" onclick="selectColor(this)"></div>
                             <div class="color-option" style="background: #d4a5d4;" data-color="#d4a5d4" data-name="Lilac"
                                 onclick="selectColor(this)"></div>
                         </div>
                     </div>
 
                     <div class="checkbox-group">
-                        <input type="checkbox" name="points_enabled" id="usePoints" class="checkbox-input" value="1" checked onchange="toggleMaxPoints()">
+                        <input type="checkbox" name="points_enabled" id="usePoints" class="checkbox-input" value="1" checked
+                            onchange="toggleMaxPoints()">
                         <label class="checkbox-label" for="usePoints">
                             Use point system?
                             <span class="tooltip-icon">
                                 ?
-                                <span class="tooltip-text">Points encourage accountability. Kids start each week with full points.</span>
+                                <span class="tooltip-text">Points encourage accountability. Kids start each week with full
+                                    points.</span>
                             </span>
                         </label>
                     </div>
@@ -305,4 +334,3 @@
         </div>
     </div>
 @endsection
-
