@@ -560,7 +560,7 @@ body {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease, color 0.3s ease, transform 0.3s ease;
     color: white;
     position: relative;
 }
@@ -1481,6 +1481,43 @@ body {
 
 .points-reason .form-input {
     height: 48px;
+}
+
+/* Loading and Success Button States */
+.submit-btn {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.submit-btn.loading {
+    color: transparent;
+    pointer-events: none;
+}
+
+.submit-btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    top: 50%;
+    left: 50%;
+    margin-left: -9px;
+    margin-top: -9px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.submit-btn.success {
+    background: #4CAF50 !important;
+    transform: scale(1.05);
 }
 
 

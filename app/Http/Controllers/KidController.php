@@ -85,12 +85,6 @@ class KidController extends Controller
 
     public function deposit(Request $request, Kid $kid)
     {
-        \Log::info('DEPOSIT METHOD CALLED', [
-            'amount' => $request->amount,
-            'note' => $request->note,
-            'kid_id' => $kid->id
-        ]);
-
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'note' => 'nullable|string|max:255'
@@ -99,15 +93,19 @@ class KidController extends Controller
         $kid->balance += $request->amount;
         $kid->save();
 
-        \Log::info('BALANCE UPDATED');
-
         $kid->transactions()->create([
             'type' => 'deposit',
             'amount' => $request->amount,
             'description' => $request->note
         ]);
 
-        \Log::info('TRANSACTION CREATED');
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Deposit recorded successfully',
+                'new_balance' => $kid->balance
+            ]);
+        }
 
         return back()->with('success', 'Deposit recorded successfully');
     }
@@ -128,6 +126,14 @@ class KidController extends Controller
             'description' => $request->note
         ]);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Spending recorded successfully',
+                'new_balance' => $kid->balance
+            ]);
+        }
+
         return back()->with('success', 'Spending recorded successfully');
     }
 
@@ -145,6 +151,14 @@ class KidController extends Controller
             'points_change' => $request->points,
             'reason' => $request->reason
         ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Points adjusted successfully',
+                'new_points' => $kid->points
+            ]);
+        }
 
         return back()->with('success', 'Points adjusted successfully');
     }
