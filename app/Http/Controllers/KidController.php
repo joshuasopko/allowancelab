@@ -20,8 +20,13 @@ class KidController extends Controller
             'avatar' => 'required|string',
             'color' => 'required|string',
             'allowance_amount' => 'required|numeric|min:0',
-            'points_enabled' => 'boolean',
+            'allowance_day' => 'required|string',
+            'points_enabled' => 'nullable',
+            'max_points' => 'nullable|integer|min:1|max:100',
         ]);
+
+        $pointsEnabled = $request->has('points_enabled');
+        $maxPoints = $pointsEnabled ? ($request->max_points ?? 10) : 10;
 
         Kid::create([
             'user_id' => Auth::id(),
@@ -32,9 +37,11 @@ class KidController extends Controller
             'avatar' => $request->avatar,
             'color' => $request->color,
             'allowance_amount' => $request->allowance_amount,
-            'points_enabled' => $request->points_enabled ?? true,
+            'allowance_day' => $request->allowance_day,
+            'points_enabled' => $pointsEnabled,
+            'max_points' => $maxPoints,
             'balance' => 0,
-            'points' => 10,
+            'points' => $maxPoints,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Kid added successfully!');

@@ -22,6 +22,8 @@ class Kid extends Authenticatable
         'points',
         'points_enabled',
         'allowance_amount',
+        'allowance_day',
+        'max_points',
     ];
 
     protected $hidden = [
