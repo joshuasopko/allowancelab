@@ -374,7 +374,53 @@ function selectColorManage(element) {
     document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
     element.classList.add('selected');
     document.getElementById('colorInputManage').value = element.dataset.color;
+
+    // Update preview
+    document.getElementById('avatarPreviewManage').style.background = element.dataset.color;
+
+    // Update color name
+    const colorNames = {
+        '#80d4b0': 'Mint',
+        '#ff9999': 'Rose Pink',
+        '#b19cd9': 'Lavender',
+        '#87ceeb': 'Sky Blue',
+        '#ffb380': 'Peach',
+        '#e066a6': 'Magenta',
+        '#ffd966': 'Sunshine',
+        '#a8c686': 'Sage',
+        '#5ab9b3': 'Teal',
+        '#9bb7d4': 'Periwinkle',
+        '#ff9966': 'Coral',
+        '#d4a5d4': 'Orchid'
+    };
+    document.getElementById('colorNameManage').textContent = colorNames[element.dataset.color] || '';
 }
+
+// Set initial color name on manage page load
+document.addEventListener('DOMContentLoaded', function () {
+    const colorInputManage = document.getElementById('colorInputManage');
+    if (colorInputManage) {
+        const colorNames = {
+            '#80d4b0': 'Mint',
+            '#ff9999': 'Rose Pink',
+            '#b19cd9': 'Lavender',
+            '#87ceeb': 'Sky Blue',
+            '#ffb380': 'Peach',
+            '#e066a6': 'Magenta',
+            '#ffd966': 'Sunshine',
+            '#a8c686': 'Sage',
+            '#5ab9b3': 'Teal',
+            '#9bb7d4': 'Periwinkle',
+            '#ff9966': 'Coral',
+            '#d4a5d4': 'Orchid'
+        };
+        const currentColor = colorInputManage.value;
+        const colorNameElement = document.getElementById('colorNameManage');
+        if (colorNameElement) {
+            colorNameElement.textContent = colorNames[currentColor] || '';
+        }
+    }
+});
 
 // Toggle max points visibility on manage page
 function toggleMaxPointsManage() {

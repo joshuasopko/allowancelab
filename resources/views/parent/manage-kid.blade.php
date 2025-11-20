@@ -72,6 +72,12 @@
 
                 <div class="form-group">
                     <label class="form-label">Avatar Color</label>
+                    <div class="avatar-preview-row">
+                        <div class="avatar-preview-circle" id="avatarPreviewManage" style="background: {{ $kid->color }};">
+                            {{ strtoupper(substr($kid->name, 0, 1)) }}
+                        </div>
+                        <span class="color-name" id="colorNameManage"></span>
+                    </div>
                     <div class="color-grid">
                         <div class="color-option {{ $kid->color == '#80d4b0' ? 'selected' : '' }}"
                             style="background: #80d4b0;" data-color="#80d4b0" onclick="selectColorManage(this)"></div>
