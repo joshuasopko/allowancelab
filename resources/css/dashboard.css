@@ -411,6 +411,13 @@ body {
     order: 4;
 }
 
+.ledger-row.allowance-not-earned {
+    background-color: #ffe6e6;
+    /* Light red background */
+    color: #d32f2f;
+    /* Red text */
+}
+
 .form-content {
     background: #f8f9fa;
     border-radius: 10px;

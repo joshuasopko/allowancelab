@@ -141,15 +141,25 @@
                             @endphp
 
                             @forelse($allEntries as $entry)
-                                <div class="ledger-row"
+                                <div class="ledger-row {{ $entry instanceof \App\Models\Transaction && $entry->description === 'Allowance not earned - insufficient points' ? 'allowance-not-earned' : '' }}"
                                     data-type="{{ $entry instanceof \App\Models\Transaction ? $entry->type : 'points' }}">
                                     <div class="ledger-date">{{ $entry->created_at->format('M d, Y') }}</div>
                                     @if($entry instanceof \App\Models\Transaction)
-                                        <div class="ledger-type">{{ ucfirst($entry->type) }}</div>
+                                        <div class="ledger-type">
+                                            @if($entry->description === 'Weekly Allowance')
+                                                Allowance
+                                            @elseif($entry->description === 'Allowance not earned - insufficient points')
+                                                Allowance
+                                            @else
+                                                {{ ucfirst($entry->type) }}
+                                            @endif
+                                        </div>
                                         <div class="ledger-amount {{ $entry->type }}">${{ number_format($entry->amount, 2) }}</div>
                                         <div class="ledger-note">{{ $entry->description ?? 'No note' }}</div>
                                     @else
-                                        <div class="ledger-type">Points</div>
+                                        <div class="ledger-type">
+                                            {{ $entry->reason === 'Weekly points reset' ? 'Point Reset' : 'Points' }}
+                                        </div>
                                         <div class="ledger-amount {{ $entry->points_change > 0 ? 'points-add' : 'points-deduct' }}">
                                             {{ $entry->points_change > 0 ? '+' : '' }}{{ $entry->points_change }} pts
                                         </div>
