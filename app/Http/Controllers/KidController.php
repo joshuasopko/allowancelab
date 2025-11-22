@@ -6,16 +6,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Kid;
+use Carbon\Carbon;
 
 class KidController extends Controller
 {
     // Store a new kid
     public function store(Request $request)
     {
+        // Validate the form data
         $request->validate([
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:kids,username',
-            'password' => 'required|string|min:4',
             'birthday' => 'required|date',
             'avatar' => 'required|string',
             'color' => 'required|string',
@@ -28,21 +28,40 @@ class KidController extends Controller
         $pointsEnabled = $request->has('points_enabled');
         $maxPoints = $pointsEnabled ? ($request->max_points ?? 10) : 10;
 
-        Kid::create([
+        // Calculate next allowance date
+        $nextAllowanceDate = Carbon::parse("next {$request->allowance_day}")->setTime(0, 0, 1);
+        if ($nextAllowanceDate->isToday()) {
+            $nextAllowanceDate = Carbon::today()->setTime(0, 0, 1);
+        }
+
+        // Create the kid without username/password (they'll set it when they accept invite)
+        $kid = Kid::create([
             'user_id' => Auth::id(),
             'name' => $request->name,
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
+            'username' => null, // Kid will create this during registration
+            'password' => null, // Kid will create this during registration
             'birthday' => $request->birthday,
             'avatar' => $request->avatar,
             'color' => $request->color,
             'allowance_amount' => $request->allowance_amount,
             'allowance_day' => $request->allowance_day,
+            'next_allowance_date' => $nextAllowanceDate,
             'points_enabled' => $pointsEnabled,
             'max_points' => $maxPoints,
             'balance' => 0,
             'points' => $maxPoints,
         ]);
+
+        // Return kid data as JSON for the modal transition
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'kid' => [
+                    'id' => $kid->id,
+                    'name' => $kid->name,
+                ]
+            ]);
+        }
 
         return redirect()->route('dashboard')->with('success', 'Kid added successfully!');
     }
@@ -286,5 +305,59 @@ class KidController extends Controller
         $kid->delete();
 
         return redirect()->route('dashboard')->with('success', $kid->name . ' has been removed.');
+    }
+
+    // Create an invite for a kid
+    public function createInvite(Kid $kid)
+    {
+        // Make sure this kid belongs to the logged-in parent
+        if ($kid->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Check if invite already exists
+        $invite = $kid->invite;
+
+        if (!$invite || $invite->isExpired() || $invite->status === 'accepted') {
+            // Create new invite
+            $invite = \App\Models\Invite::createForKid($kid->id);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $invite->token,
+            'expires_at' => $invite->expires_at->format('M d, Y'),
+        ]);
+    }
+
+    // Send email invite
+    public function sendEmailInvite(Request $request, Kid $kid)
+    {
+        // Make sure this kid belongs to the logged-in parent
+        if ($kid->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        // Create or get existing invite
+        $invite = $kid->invite;
+
+        if (!$invite || $invite->isExpired() || $invite->status === 'accepted') {
+            $invite = \App\Models\Invite::createForKid($kid->id, $request->email);
+        } else {
+            // Update email on existing invite
+            $invite->update(['email' => $request->email]);
+        }
+
+        // TODO: Send actual email (we'll set this up later)
+        // For now, just return success
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email invite sent successfully',
+        ]);
     }
 }

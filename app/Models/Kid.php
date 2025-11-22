@@ -13,6 +13,7 @@ class Kid extends Authenticatable
     protected $fillable = [
         'user_id',
         'name',
+        'email',  // Add this line
         'username',
         'password',
         'birthday',
@@ -53,5 +54,17 @@ class Kid extends Authenticatable
     public function pointAdjustments()
     {
         return $this->hasMany(PointAdjustment::class);
+    }
+
+    // Relationship: Kid has one invite
+    public function invite()
+    {
+        return $this->hasOne(Invite::class);
+    }
+
+    // Helper: Check if kid has a pending invite
+    public function hasPendingInvite()
+    {
+        return $this->invite && $this->invite->isPending();
     }
 }

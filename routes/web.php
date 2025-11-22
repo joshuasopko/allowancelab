@@ -39,6 +39,10 @@ Route::middleware('auth')->group(function () {
 
     // Delete kid
     Route::delete('/kids/{kid}', [KidController::class, 'destroy'])->name('kids.destroy');
+
+    // Invite routes
+    Route::post('/kids/{kid}/create-invite', [KidController::class, 'createInvite'])->name('kids.create-invite');
+    Route::post('/kids/{kid}/send-email-invite', [KidController::class, 'sendEmailInvite'])->name('kids.send-email-invite');
 });
 
 // Kid authentication routes

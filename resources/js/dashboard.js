@@ -443,6 +443,231 @@ function closeDeleteModal() {
     document.getElementById('deleteModal').classList.remove('active');
 }
 
+// Toggle invite options based on "Create account" checkbox
+function toggleInviteOptions() {
+    const createAccountCheckbox = document.getElementById('createAccount');
+    const emailGroup = document.getElementById('emailGroup');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (createAccountCheckbox.checked) {
+        // Show email field and change button text
+        emailGroup.style.display = 'block';
+        submitBtn.textContent = 'Add Kid & Send Invite';
+    } else {
+        // Hide email field and change button text
+        emailGroup.style.display = 'none';
+        submitBtn.textContent = 'Add Kid';
+    }
+}
+
+// Variables to store the newly created kid info
+let newKidId = null;
+let newKidName = null;
+let inviteToken = null;
+
+// Intercept Add Kid form submission
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOMContentLoaded fired'); // ADD THIS LINE
+
+    const addKidForm = document.getElementById('addKidForm');
+    console.log('Add Kid Form:', addKidForm); // ADD THIS LINE TOO
+
+    if (addKidForm) {
+        console.log('Attaching submit event listener'); // ADD THIS
+
+        addKidForm.addEventListener('submit', function (e) {
+            console.log('Form submitted! Preventing default...'); // ADD THIS
+            e.preventDefault(); // Prevent normal form submission
+
+            // ... rest of the code
+
+            // Submit via AJAX
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    console.log('Response received:', response); // ADD THIS
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data received:', data);
+                    if (data.success) {
+                        // Store kid info
+                        newKidId = data.kid.id;
+                        newKidName = data.kid.name;
+
+                        // Close Add Kid modal
+                        const addKidModal = document.getElementById('addKidModal');
+                        addKidModal.classList.remove('active');
+                        addKidModal.style.display = 'none';
+
+                        // Show success message
+                        const successOverlay = document.createElement('div');
+                        successOverlay.className = 'success-overlay';
+                        successOverlay.innerHTML = `
+        <div class="success-message">
+            <div class="success-icon">✓</div>
+            <h2>Success! Kid Added</h2>
+            <p>Preparing invite options...</p>
+        </div>
+    `;
+                        document.body.appendChild(successOverlay);
+
+                        // Wait 2.5 seconds, then show invite modal
+                        setTimeout(() => {
+                            successOverlay.remove();
+
+                            const sendInviteModal = document.getElementById('sendInviteModal');
+                            document.getElementById('inviteKidName').textContent = newKidName;
+                            sendInviteModal.classList.add('active');
+                            sendInviteModal.style.display = 'flex';
+                        }, 2500);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error creating kid. Please try again.');
+                });
+        });
+    }
+});
+
+// Close Send Invite Modal
+function closeSendInviteModal() {
+    const sendInviteModal = document.getElementById('sendInviteModal');
+    sendInviteModal.classList.remove('active'); // Remove active class
+    sendInviteModal.style.display = 'none';
+    location.reload(); // Reload to show the new kid on dashboard
+}
+
+// Skip invite and close modal
+function skipInvite() {
+    closeSendInviteModal();
+}
+
+// Toggle invite method sections
+let currentOpenMethod = null;
+function toggleInviteMethod(method) {
+    const methods = ['copyLink', 'email', 'qr'];
+
+    // Close currently open method if clicking the same button
+    if (currentOpenMethod === method) {
+        document.getElementById(method + 'Content').style.display = 'none';
+        currentOpenMethod = null;
+        return;
+    }
+
+    // Close all methods
+    methods.forEach(m => {
+        document.getElementById(m + 'Content').style.display = 'none';
+    });
+
+    // Open selected method
+    document.getElementById(method + 'Content').style.display = 'block';
+    currentOpenMethod = method;
+
+    // Generate content for the method
+    if (method === 'copyLink') {
+        generateInviteLink();
+    } else if (method === 'qr') {
+        generateQRCode();
+    }
+}
+
+// Generate and display invite link
+function generateInviteLink() {
+    // Call backend to create invite and get token
+    fetch(`/kids/${newKidId}/create-invite`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                inviteToken = data.token;
+                const inviteUrl = `${window.location.origin}/invite/${inviteToken}`;
+                document.getElementById('inviteLinkInput').value = inviteUrl;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating invite link.');
+        });
+}
+
+// Copy invite link to clipboard
+function copyInviteLink() {
+    const input = document.getElementById('inviteLinkInput');
+    input.select();
+    document.execCommand('copy');
+    alert('Invite link copied to clipboard!');
+}
+
+// Send email invite
+function sendEmailInvite() {
+    const email = document.getElementById('kidEmailInput').value;
+
+    if (!email) {
+        alert('Please enter an email address');
+        return;
+    }
+
+    fetch(`/kids/${newKidId}/send-email-invite`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email: email })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Invite email sent successfully!');
+                closeSendInviteModal();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error sending email invite.');
+        });
+}
+
+// Generate QR Code (placeholder - we'll implement this next)
+function generateQRCode() {
+    fetch(`/kids/${newKidId}/create-invite`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                inviteToken = data.token;
+                const inviteUrl = `${window.location.origin}/invite/${inviteToken}`;
+                document.getElementById('qrCodeDisplay').innerHTML = `
+                <p>QR Code generation coming soon!</p>
+                <p style="font-size: 12px; color: #666;">For now, use Copy Link instead</p>
+            `;
+            }
+        });
+}
+
 // ============================================
 // MAKE FUNCTIONS GLOBALLY ACCESSIBLE
 // ============================================
@@ -464,3 +689,11 @@ window.selectColorManage = selectColorManage;
 window.toggleMaxPointsManage = toggleMaxPointsManage;
 window.confirmDeleteKid = confirmDeleteKid;
 window.closeDeleteModal = closeDeleteModal;
+
+// Invite modal functions
+window.closeSendInviteModal = closeSendInviteModal;
+window.skipInvite = skipInvite;
+window.toggleInviteMethod = toggleInviteMethod;
+window.copyInviteLink = copyInviteLink;
+window.sendEmailInvite = sendEmailInvite;
+window.generateQRCode = generateQRCode;
