@@ -5,7 +5,7 @@
             <h2 class="modal-title">Add a New Kid</h2>
             <button class="close-btn" onclick="closeAddKidModal()">&times;</button>
         </div>
-        <form action="{{ route('kids.store') }}" method="POST" id="addKidForm">
+        <form action="{{ route('kids.store') }}" method="POST" id="addKidForm" novalidate>
             @csrf
             <div class="modal-body">
                 <div class="form-row">

@@ -16,7 +16,7 @@ let currentDateRange = '30';
 // ============================================
 
 // Toggle form dropdowns
-function toggleForm(formId) {
+function toggleForm(formId, buttonElement = null) {
     const form = document.getElementById(formId + 'Form');
 
     if (activeForm && activeForm !== form) {
@@ -25,6 +25,15 @@ function toggleForm(formId) {
 
     form.classList.toggle('active');
     activeForm = form.classList.contains('active') ? form : null;
+
+    // Toggle button text if button element is provided
+    if (buttonElement) {
+        if (form.classList.contains('active')) {
+            buttonElement.textContent = 'Close Ledger';
+        } else {
+            buttonElement.textContent = 'View Ledger';
+        }
+    }
 }
 
 // ============================================
@@ -467,19 +476,48 @@ let inviteToken = null;
 
 // Intercept Add Kid form submission
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOMContentLoaded fired'); // ADD THIS LINE
-
     const addKidForm = document.getElementById('addKidForm');
-    console.log('Add Kid Form:', addKidForm); // ADD THIS LINE TOO
 
     if (addKidForm) {
-        console.log('Attaching submit event listener'); // ADD THIS
-
         addKidForm.addEventListener('submit', function (e) {
-            console.log('Form submitted! Preventing default...'); // ADD THIS
             e.preventDefault(); // Prevent normal form submission
 
-            // ... rest of the code
+            // Clear any existing error message
+            const existingError = document.getElementById('formError');
+            if (existingError) existingError.remove();
+
+            // Validate required fields
+            const name = document.querySelector('input[name="name"]').value.trim();
+            const birthday = document.querySelector('input[name="birthday"]').value;
+            const allowanceAmount = document.querySelector('input[name="allowance_amount"]').value.trim();
+            const allowanceDay = document.querySelector('select[name="allowance_day"]').value;
+            const color = document.querySelector('input[name="color"]').value;
+
+            let errorMessage = '';
+
+            if (!name) errorMessage = 'Please fill out Name';
+            else if (!birthday) errorMessage = 'Please fill out Birthday';
+            else if (birthday) {
+                // Check if birthday is in the future
+                const selectedDate = new Date(birthday);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (selectedDate >= today) {
+                    errorMessage = 'Birthday cannot be today or in the future';
+                }
+            }
+
+            if (!errorMessage && !allowanceAmount) errorMessage = 'Please fill out Weekly Allowance';
+            else if (!errorMessage && !allowanceDay) errorMessage = 'Please select Allowance Day';
+            else if (!errorMessage && !color) errorMessage = 'Please select Avatar Color';
+
+            // If there's an error, show toast and stop
+            if (errorMessage) {
+                const submitButton = document.querySelector('#addKidModal .modal-btn-submit');
+                showToast(errorMessage, 'error', submitButton);
+                return;
+            }
 
             // Submit via AJAX
             const formData = new FormData(this);
@@ -493,11 +531,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
                 .then(response => {
-                    console.log('Response received:', response); // ADD THIS
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Data received:', data);
                     if (data.success) {
                         // Store kid info
                         newKidId = data.kid.id;
@@ -512,12 +548,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         const successOverlay = document.createElement('div');
                         successOverlay.className = 'success-overlay';
                         successOverlay.innerHTML = `
-        <div class="success-message">
-            <div class="success-icon">✓</div>
-            <h2>Success! Kid Added</h2>
-            <p>Preparing invite options...</p>
-        </div>
-    `;
+    <div class="success-message">
+        <div class="success-icon">✓</div>
+        <h2>Success! Kid Added</h2>
+        <p>Preparing invite options...</p>
+    </div>
+`;
                         document.body.appendChild(successOverlay);
 
                         // Wait 2.5 seconds, then show invite modal
@@ -618,13 +654,14 @@ function copyInviteLink() {
 }
 
 // Toast notification helper
+let activeErrorToast = null;
+
 function showToast(message, type = 'success', nearElement = null) {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
 
     if (nearElement) {
-        // Position near the element
         const rect = nearElement.getBoundingClientRect();
         toast.style.position = 'fixed';
         toast.style.top = (rect.top - 50) + 'px';
@@ -636,12 +673,35 @@ function showToast(message, type = 'success', nearElement = null) {
     // Trigger animation
     setTimeout(() => toast.classList.add('show'), 10);
 
-    // Remove after 2 seconds
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 2000);
+    // Only auto-remove success toasts, keep error toasts until user fixes issue
+    if (type === 'success') {
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    } else if (type === 'error') {
+        // Store reference to error toast so we can remove it later
+        activeErrorToast = toast;
+    }
 }
+
+// Remove error toast when user starts typing in any form field
+document.addEventListener('DOMContentLoaded', function () {
+    const addKidModal = document.getElementById('addKidModal');
+    if (addKidModal) {
+        addKidModal.addEventListener('input', function () {
+            if (activeErrorToast) {
+                activeErrorToast.classList.remove('show');
+                setTimeout(() => {
+                    if (activeErrorToast) {
+                        activeErrorToast.remove();
+                        activeErrorToast = null;
+                    }
+                }, 300);
+            }
+        });
+    }
+});
 
 // Send email invite
 function sendEmailInvite() {

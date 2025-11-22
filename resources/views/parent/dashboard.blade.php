@@ -17,8 +17,8 @@
                     </div>
                     @if($kid->points_enabled)
                         @php
-            $pointsPercent = $kid->max_points > 0 ? ($kid->points / $kid->max_points) * 100 : 0;
-            $pointsClass = $pointsPercent >= 80 ? 'points-high' : ($pointsPercent >= 50 ? 'points-medium' : 'points-low');
+                            $pointsPercent = $kid->max_points > 0 ? ($kid->points / $kid->max_points) * 100 : 0;
+                            $pointsClass = $pointsPercent >= 80 ? 'points-high' : ($pointsPercent >= 50 ? 'points-medium' : 'points-low');
                         @endphp
                         <div class="points-badge {{ $pointsClass }}">{{ $kid->points }} / {{ $kid->max_points }}</div>
                     @endif
@@ -28,13 +28,13 @@
                 <div class="balance-section">
                     <div class="balance {{ $kid->balance < 0 ? 'negative' : '' }}">${{ number_format($kid->balance, 2) }}</div>
                     @php
-        $daysOfWeek = ['sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6];
-        $targetDay = $daysOfWeek[$kid->allowance_day] ?? 5;
-        $today = now();
-        $daysUntil = ($targetDay - $today->dayOfWeek + 7) % 7;
-        if ($daysUntil === 0)
-            $daysUntil = 7;
-        $nextAllowance = $today->copy()->addDays($daysUntil);
+                        $daysOfWeek = ['sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6];
+                        $targetDay = $daysOfWeek[$kid->allowance_day] ?? 5;
+                        $today = now();
+                        $daysUntil = ($targetDay - $today->dayOfWeek + 7) % 7;
+                        if ($daysUntil === 0)
+                            $daysUntil = 7;
+                        $nextAllowance = $today->copy()->addDays($daysUntil);
                     @endphp
                     <div class="next-allowance">Next allowance: ${{ number_format($kid->allowance_amount, 2) }} on
                         {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}
@@ -48,7 +48,7 @@
                     @if($kid->points_enabled)
                         <button class="action-btn btn-points" onclick="toggleForm('points-{{ $kid->id }}')">Adjust Points</button>
                     @endif
-                    <button class="action-btn btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}')">View Ledger</button>
+                    <button class="action-btn btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}', this)">View Ledger</button>
                 </div>
 
                 <!-- Deposit Form -->
@@ -135,9 +135,9 @@
                         </div>
                         <div class="ledger-table" id="ledger-{{ $kid->id }}-table">
                             @php
-        $transactions = $kid->transactions()->latest()->take(8)->get();
-        $pointAdjustments = $kid->pointAdjustments()->latest()->take(8)->get();
-        $allEntries = $transactions->concat($pointAdjustments)->sortByDesc('created_at')->take(8);
+                                $transactions = $kid->transactions()->latest()->take(8)->get();
+                                $pointAdjustments = $kid->pointAdjustments()->latest()->take(8)->get();
+                                $allEntries = $transactions->concat($pointAdjustments)->sortByDesc('created_at')->take(8);
                             @endphp
 
                             @forelse($allEntries as $entry)

@@ -19,7 +19,7 @@ class KidController extends Controller
         // Validate the form data
         $request->validate([
             'name' => 'required|string|max:255',
-            'birthday' => 'required|date',
+            'birthday' => 'required|date|before:today',
             'avatar' => 'required|string',
             'color' => 'required|string',
             'allowance_amount' => 'required|numeric|min:0',
@@ -40,7 +40,7 @@ class KidController extends Controller
         // Create the kid without username/password (they'll set it when they accept invite)
         $kid = Kid::create([
             'user_id' => Auth::id(),
-            'name' => $request->name,
+            'name' => ucwords(strtolower($request->name)),
             'username' => null, // Kid will create this during registration
             'password' => null, // Kid will create this during registration
             'birthday' => $request->birthday,
@@ -269,7 +269,7 @@ class KidController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'birthday' => 'required|date',
+            'birthday' => 'required|date|before:today',
             'color' => 'required|string',
             'allowance_amount' => 'required|numeric|min:0',
             'allowance_day' => 'required|string',
@@ -280,7 +280,7 @@ class KidController extends Controller
         $pointsEnabled = $request->has('points_enabled');
 
         $kid->update([
-            'name' => $request->name,
+            'name' => ucwords(strtolower($request->name)),
             'birthday' => $request->birthday,
             'color' => $request->color,
             'allowance_amount' => $request->allowance_amount,
