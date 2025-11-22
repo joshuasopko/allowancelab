@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Kid;
 use Carbon\Carbon;
 
+use Illuminate\Support\Facades\Mail;
+use App\Mail\KidInviteMail;
+
 class KidController extends Controller
 {
     // Store a new kid
@@ -352,12 +355,50 @@ class KidController extends Controller
             $invite->update(['email' => $request->email]);
         }
 
-        // TODO: Send actual email (we'll set this up later)
-        // For now, just return success
+        // Send the email
+        try {
+            Mail::to($request->email)->send(new KidInviteMail($kid, $invite));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email invite sent successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // Generate QR code for invite
+    public function generateQRCode(Kid $kid)
+    {
+        // Make sure this kid belongs to the logged-in parent
+        if ($kid->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Get or create invite
+        $invite = $kid->invite;
+
+        if (!$invite || $invite->isExpired() || $invite->status === 'accepted') {
+            $invite = \App\Models\Invite::createForKid($kid->id);
+        }
+
+        // Generate invite URL
+        $inviteUrl = url('/invite/' . $invite->token);
+
+        // Generate QR code as SVG (convert to string)
+        $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)
+            ->margin(2)
+            ->generate($inviteUrl);
 
         return response()->json([
             'success' => true,
-            'message' => 'Email invite sent successfully',
+            'qrCode' => (string) $qrCode,  // Cast to string
+            'inviteUrl' => $inviteUrl,
+            'expiresAt' => $invite->expires_at->format('F j, Y')
         ]);
     }
 }

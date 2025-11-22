@@ -611,7 +611,36 @@ function copyInviteLink() {
     const input = document.getElementById('inviteLinkInput');
     input.select();
     document.execCommand('copy');
-    alert('Invite link copied to clipboard!');
+
+    // Get the copy button's position
+    const copyButton = event.target;
+    showToast('Copied!', 'success', copyButton);
+}
+
+// Toast notification helper
+function showToast(message, type = 'success', nearElement = null) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+
+    if (nearElement) {
+        // Position near the element
+        const rect = nearElement.getBoundingClientRect();
+        toast.style.position = 'fixed';
+        toast.style.top = (rect.top - 50) + 'px';
+        toast.style.left = rect.left + 'px';
+    }
+
+    document.body.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Remove after 2 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
 
 // Send email invite
@@ -619,9 +648,15 @@ function sendEmailInvite() {
     const email = document.getElementById('kidEmailInput').value;
 
     if (!email) {
-        alert('Please enter an email address');
+        showToast('Please enter an email address', 'error');
         return;
     }
+
+    // Disable button and show loading state
+    const sendButton = event.target;
+    const originalText = sendButton.innerHTML;
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
     fetch(`/kids/${newKidId}/send-email-invite`, {
         method: 'POST',
@@ -635,36 +670,52 @@ function sendEmailInvite() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Invite email sent successfully!');
-                closeSendInviteModal();
+                showToast('Email sent successfully!', 'success', sendButton);
+                setTimeout(() => {
+                    closeSendInviteModal();
+                }, 1500);
+            } else {
+                showToast('Failed to send email', 'error');
+                sendButton.disabled = false;
+                sendButton.innerHTML = originalText;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error sending email invite.');
+            showToast('Error sending email', 'error');
+            sendButton.disabled = false;
+            sendButton.innerHTML = originalText;
         });
 }
 
-// Generate QR Code (placeholder - we'll implement this next)
+// Generate QR Code
 function generateQRCode() {
-    fetch(`/kids/${newKidId}/create-invite`, {
-        method: 'POST',
+    fetch(`/kids/${newKidId}/qr-code`, {
+        method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             'Accept': 'application/json'
         }
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                inviteToken = data.token;
-                const inviteUrl = `${window.location.origin}/invite/${inviteToken}`;
+                inviteToken = data.inviteUrl.split('/').pop();
                 document.getElementById('qrCodeDisplay').innerHTML = `
-                <p>QR Code generation coming soon!</p>
-                <p style="font-size: 12px; color: #666;">For now, use Copy Link instead</p>
+                <div style="padding: 20px;">
+                    <div style="display: inline-block; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        ${data.qrCode}
+                    </div>
+                    <p style="margin-top: 20px; color: #666; font-size: 14px;">Scan this code with your phone to create your account</p>
+                    <p style="margin-top: 10px; color: #9ca3af; font-size: 12px;">QR code expires on ${data.expiresAt}</p>
+                </div>
             `;
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('qrCodeDisplay').innerHTML = `
+            <p style="color: #ef4444;">Error generating QR code. Please try Copy Link instead.</p>
+        `;
         });
 }
 
@@ -697,3 +748,4 @@ window.toggleInviteMethod = toggleInviteMethod;
 window.copyInviteLink = copyInviteLink;
 window.sendEmailInvite = sendEmailInvite;
 window.generateQRCode = generateQRCode;
+window.showToast = showToast;

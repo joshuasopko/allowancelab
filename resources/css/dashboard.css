@@ -975,6 +975,133 @@ body {
     margin-top: 10px;
 }
 
+/* Invite Buttons Row (Horizontal Layout) */
+.invite-buttons-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.invite-btn {
+    flex: 1;
+    padding: 15px 20px;
+    background: white;
+    border: 2px solid;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.invite-btn i {
+    font-size: 24px;
+}
+
+.invite-btn-blue {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.invite-btn-blue:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.invite-btn-green {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.invite-btn-green:hover {
+    background: #10b981;
+    color: white;
+}
+
+.invite-btn-purple {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+}
+
+.invite-btn-purple:hover {
+    background: #8b5cf6;
+    color: white;
+}
+
+/* Invite Method Content */
+.invite-method-content {
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+/* Modal Footer for Invite */
+.modal-footer-invite {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 20px;
+}
+
+.skip-section {
+    text-align: right;
+    padding: 0 40px 30px 0px;
+}
+
+.skip-link {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.skip-link:hover {
+    color: #2563eb;
+}
+
+.skip-notice {
+    margin: 5px 0 0 0;
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    padding: 12px 24px;
+    background: #10b981;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 10001;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-success {
+    background: #10b981;
+}
+
+.toast-error {
+    background: #ef4444;
+}
+
 /* Success Overlay */
 .success-overlay {
     position: fixed;

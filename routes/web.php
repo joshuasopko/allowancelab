@@ -23,11 +23,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/kids', [App\Http\Controllers\KidController::class, 'store'])->name('kids.store');
     Route::patch('/kids/{kid}/balance', [App\Http\Controllers\KidController::class, 'updateBalance'])->name('kids.updateBalance');
     Route::patch('/kids/{kid}/points', [App\Http\Controllers\KidController::class, 'updatePoints'])->name('kids.updatePoints');
-
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     Route::post('/kids/{kid}/deposit', [KidController::class, 'deposit'])->name('kids.deposit');
     Route::post('/kids/{kid}/spend', [KidController::class, 'spend'])->name('kids.spend');
     Route::post('/kids/{kid}/points', [KidController::class, 'adjustPoints'])->name('kids.points');
@@ -36,13 +34,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/kids/{kid}/manage', [KidController::class, 'manage'])->name('kids.manage');
     // Update kid
     Route::patch('/kids/{kid}', [KidController::class, 'update'])->name('kids.update');
-
     // Delete kid
     Route::delete('/kids/{kid}', [KidController::class, 'destroy'])->name('kids.destroy');
-
     // Invite routes
     Route::post('/kids/{kid}/create-invite', [KidController::class, 'createInvite'])->name('kids.create-invite');
     Route::post('/kids/{kid}/send-email-invite', [KidController::class, 'sendEmailInvite'])->name('kids.send-email-invite');
+    // Generate QR Code
+    Route::get('/kids/{kid}/qr-code', [KidController::class, 'generateQRCode'])->name('kids.qr-code');
 });
 
 // Kid authentication routes
