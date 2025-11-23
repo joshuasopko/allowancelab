@@ -779,6 +779,55 @@ function generateQRCode() {
         });
 }
 
+// Real-time username validation
+function validateUsername(input) {
+    const username = input.value.trim();
+    const feedbackIcon = document.getElementById('usernameValidation');
+    const errorMessage = document.getElementById('usernameError');
+
+    // Clear previous state
+    feedbackIcon.className = 'validation-icon';
+    errorMessage.textContent = '';
+
+    // Must have at least 3 characters to check
+    if (username.length < 3) {
+        feedbackIcon.className = 'validation-icon';
+        return;
+    }
+
+    // Show loading state
+    feedbackIcon.className = 'validation-icon loading';
+    feedbackIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    // Check username via AJAX
+    fetch('/check-username', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username: username })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.available) {
+                feedbackIcon.className = 'validation-icon valid';
+                feedbackIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                errorMessage.textContent = '';
+            } else {
+                feedbackIcon.className = 'validation-icon invalid';
+                feedbackIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                errorMessage.textContent = data.message;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            feedbackIcon.className = 'validation-icon';
+            feedbackIcon.innerHTML = '';
+        });
+}
+
 // ============================================
 // MAKE FUNCTIONS GLOBALLY ACCESSIBLE
 // ============================================
@@ -809,3 +858,4 @@ window.copyInviteLink = copyInviteLink;
 window.sendEmailInvite = sendEmailInvite;
 window.generateQRCode = generateQRCode;
 window.showToast = showToast;
+window.validateUsername = validateUsername;

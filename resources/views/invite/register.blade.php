@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Create Your Account - AllowanceLab</title>
-    @vite(['resources/css/dashboard.css'])
+    <!--@vite(['resources/css/dashboard.css'])-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body {
@@ -153,9 +153,91 @@
         }
 
         .error-message {
+            display: block;
             color: #ef4444;
-            font-size: 14px;
+            font-size: 13px;
             margin-top: 5px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            max-width: 100%;
+            line-height: 1.4;
+        }
+
+        .input-with-validation {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-validation input {
+            flex: 1;
+            padding-right: 45px;
+            /* Make room for icon */
+        }
+
+        .validation-icon {
+            position: absolute;
+            right: 12px;
+            font-size: 20px;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .validation-icon.valid {
+            color: #10b981;
+            animation: scaleIn 0.3s ease;
+        }
+
+        .validation-icon.invalid {
+            color: #ef4444;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .validation-icon.loading {
+            color: #10b981;
+            /* Green instead of gray */
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
     </style>
 </head>
@@ -173,8 +255,13 @@
 
             <div class="form-group">
                 <label for="username">Choose a Username</label>
-                <input type="text" id="username" name="username" placeholder="Enter a unique username"
-                    value="{{ old('username') }}" required minlength="3" maxlength="20">
+                <div class="input-with-validation">
+                    <input type="text" id="username" name="username" placeholder="Enter a unique username"
+                        value="{{ old('username') }}" onblur="validateUsername(this)" required minlength="3"
+                        maxlength="20">
+                    <span class="validation-icon" id="usernameValidation"></span>
+                </div>
+                <small class="error-message" id="usernameError"></small>
                 @error('username')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
@@ -267,16 +354,94 @@
             const password = document.getElementById('password');
             const passwordConfirm = document.getElementById('password_confirmation');
 
+            // Add error message element for password mismatch
+            const passwordError = document.createElement('small');
+            passwordError.id = 'passwordMatchError';
+            passwordError.className = 'error-message';
+            passwordError.style.display = 'none';
+            passwordConfirm.parentElement.appendChild(passwordError);
+
+            // Clear error when typing in password fields
+            password.addEventListener('input', function () {
+                passwordError.style.display = 'none';
+                passwordConfirm.style.borderColor = '#e5e7eb';
+            });
+
+            passwordConfirm.addEventListener('input', function () {
+                passwordError.style.display = 'none';
+                passwordConfirm.style.borderColor = '#e5e7eb';
+            });
+
             form.addEventListener('submit', function (e) {
                 // Check if passwords match
                 if (password.value !== passwordConfirm.value) {
                     e.preventDefault();
-                    alert('Passwords do not match! Please make sure both passwords are the same.');
+                    passwordError.textContent = 'Passwords do not match. Please make sure both passwords are the same.';
+                    passwordError.style.display = 'block';
+                    passwordConfirm.style.borderColor = '#ef4444';
                     passwordConfirm.focus();
                     return false;
                 }
             });
         });
+
+        // Real-time username validation
+        function validateUsername(input) {
+            const username = input.value.trim();
+            const feedbackIcon = document.getElementById('usernameValidation');
+            const errorMessage = document.getElementById('usernameError');
+
+            // Clear previous state
+            feedbackIcon.className = 'validation-icon';
+            errorMessage.textContent = '';
+
+            // Must have at least 3 characters to check
+            if (username.length < 3) {
+                feedbackIcon.className = 'validation-icon';
+                return;
+            }
+
+            // Show loading state
+            feedbackIcon.className = 'validation-icon loading';
+            feedbackIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            // Check username via AJAX (with minimum 2 second loading state)
+            const startTime = Date.now();
+
+            fetch('/check-username', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ username: username })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Calculate how long the request took
+                    const elapsed = Date.now() - startTime;
+                    const remainingTime = Math.max(0, 1200 - elapsed); // Ensure at least 1.2 seconds total
+
+                    // Delay showing result to ensure visible loading state
+                    setTimeout(() => {
+                        if (data.available) {
+                            feedbackIcon.className = 'validation-icon valid';
+                            feedbackIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                            errorMessage.textContent = '';
+                        } else {
+                            feedbackIcon.className = 'validation-icon invalid';
+                            feedbackIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                            errorMessage.textContent = data.message;
+                        }
+                    }, remainingTime);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    feedbackIcon.className = 'validation-icon';
+                    feedbackIcon.innerHTML = '';
+                });
+        }
     </script>
 </body>
 

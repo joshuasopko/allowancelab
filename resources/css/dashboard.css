@@ -1931,6 +1931,28 @@ body {
     color: #333;
 }
 
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
 /* ============================================
    MANAGE KID PAGE STYLES
    ============================================ */
@@ -2087,6 +2109,7 @@ body {
     border-color: #ffcdd2;
     background: #fff5f5;
     margin-top: 70px;
+    max-width: 800px;
 }
 
 .delete-btn {
@@ -2141,6 +2164,47 @@ body {
 .remove-confirm-btn:hover {
     background: #f44336 !important;
     color: white !important;
+}
+
+/* Account Status Section */
+.account-status-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    max-width: 800px;
+}
+
+.status-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-display i {
+    font-size: 32px;
+}
+
+.status-display.active i {
+    color: #10b981;
+}
+
+.status-display.inactive i {
+    color: #f59e0b;
+}
+
+.status-display strong {
+    display: block;
+    font-size: 18px;
+    color: #1f2937;
+    margin-bottom: 5px;
+}
+
+.last-used {
+    display: block;
+    font-size: 14px;
+    color: #6b7280;
 }
 
 /* Mobile Responsive */

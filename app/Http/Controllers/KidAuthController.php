@@ -26,6 +26,9 @@ class KidAuthController extends Controller
         $kid = Kid::where('username', $request->username)->first();
 
         if ($kid && Hash::check($request->password, $kid->password)) {
+            // Update last login timestamp
+            $kid->update(['last_login_at' => now()]);
+
             Auth::guard('kid')->login($kid);
             return redirect()->route('kid.dashboard');
         }

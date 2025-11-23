@@ -13,6 +13,8 @@ Route::get('/', function () {
 // Kid invite acceptance
 Route::get('/invite/{token}', [KidController::class, 'showInvite'])->name('invite.show');
 Route::post('/invite/{token}', [KidController::class, 'acceptInvite'])->name('invite.accept');
+// Check username availability
+Route::post('/check-username', [KidController::class, 'checkUsername'])->name('check.username');
 
 
 // Parent routes (protected by 'auth' middleware)

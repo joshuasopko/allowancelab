@@ -476,4 +476,33 @@ class KidController extends Controller
         // Redirect to kid dashboard (placeholder for now)
         return redirect('/kid/dashboard')->with('success', 'Welcome to AllowanceLab, ' . $kid->name . '!');
     }
+
+    // Check if username is available
+    public function checkUsername(Request $request)
+    {
+        $username = $request->input('username');
+
+        // Check format
+        if (!preg_match('/^[a-zA-Z0-9._-]+$/', $username)) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Username can only contain letters, numbers, periods, dashes, and underscores.'
+            ]);
+        }
+
+        // Check if taken
+        $exists = Kid::where('username', $username)->exists();
+
+        if ($exists) {
+            return response()->json([
+                'available' => false,
+                'message' => 'This username is already taken.'
+            ]);
+        }
+
+        return response()->json([
+            'available' => true,
+            'message' => 'Username is available!'
+        ]);
+    }
 }

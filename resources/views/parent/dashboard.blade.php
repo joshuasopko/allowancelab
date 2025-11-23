@@ -13,6 +13,17 @@
                         <div>
                             <h2 class="kid-name">{{ $kid->name }}</h2>
                             <div class="kid-age">Age {{ \Carbon\Carbon::parse($kid->birthday)->age }}</div>
+
+                            @php
+                                $invite = $kid->invite;
+                                $showPendingBadge = $invite && $invite->status === 'pending' && !$invite->isExpired();
+                            @endphp
+
+                            @if($showPendingBadge)
+                                <div class="status-badge status-pending">
+                                    <i class="fas fa-clock"></i> Invite Pending
+                                </div>
+                            @endif
                         </div>
                     </div>
                     @if($kid->points_enabled)
@@ -130,8 +141,11 @@
                                 onclick="filterLedger({{ $kid->id }}, 'deposit')">Deposits</button>
                             <button class="filter-btn" data-kid="{{ $kid->id }}"
                                 onclick="filterLedger({{ $kid->id }}, 'spend')">Spends</button>
-                            <button class="filter-btn" data-kid="{{ $kid->id }}"
-                                onclick="filterLedger({{ $kid->id }}, 'points')">Point Adjustments</button>
+                            @if($kid->points_enabled)
+                                <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                    onclick="filterLedger({{ $kid->id }}, 'points')">Point
+                                    Adjustments</button>
+                            @endif
                         </div>
                         <div class="ledger-table" id="ledger-{{ $kid->id }}-table">
                             @php
