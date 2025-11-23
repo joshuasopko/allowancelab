@@ -39,6 +39,7 @@
             <!-- Account Status Section -->
             <div class="account-status-section">
                 @if($kid->username)
+                    <!-- Account Active -->
                     <div class="status-display active">
                         <i class="fas fa-check-circle"></i>
                         <div>
@@ -50,16 +51,127 @@
                             @endif
                         </div>
                     </div>
-                @else
-                    <div class="status-display inactive">
+                @elseif($kid->invite && $kid->invite->status === 'pending' && !$kid->invite->isExpired())
+                    <!-- Invite Pending -->
+                    <div class="status-display pending">
                         <i class="fas fa-clock"></i>
                         <div>
+                            <strong>Invite Pending</strong>
+                            <span class="last-used">Expires: {{ $kid->invite->expires_at->format('F j, Y') }}</span>
+                        </div>
+                    </div>
+
+                    <button type="button" class="resend-invite-btn" onclick="toggleResendInvite()">
+                        <i class="fas fa-paper-plane"></i> Resend Invite
+                    </button>
+
+                    <!-- Invite Options (Hidden by default) -->
+                    <div class="invite-options" id="resendInviteOptions" style="display: none;">
+                        <div class="invite-buttons-row-manage">
+                            <button type="button" class="invite-btn-manage invite-btn-blue"
+                                onclick="showInviteMethod('copyLink')">
+                                <i class="fas fa-link"></i>
+                                <span>Copy Link</span>
+                            </button>
+                            <button type="button" class="invite-btn-manage invite-btn-green"
+                                onclick="showInviteMethod('email')">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email Invite</span>
+                            </button>
+                            <button type="button" class="invite-btn-manage invite-btn-purple" onclick="showInviteMethod('qr')">
+                                <i class="fas fa-qrcode"></i>
+                                <span>QR Code</span>
+                            </button>
+                        </div>
+
+                        <!-- Copy Link Content -->
+                        <div class="invite-method-content-manage" id="copyLinkContentManage" style="display: none;">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" class="form-input" id="inviteLinkInputManage"
+                                    value="{{ url('/invite/' . $kid->invite->token) }}" readonly style="flex: 1;">
+                                <button type="button" class="modal-btn modal-btn-submit" onclick="copyInviteLinkManage()">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Email Content -->
+                        <div class="invite-method-content-manage" id="emailContentManage" style="display: none;">
+                            <label class="form-label">Kid's Email</label>
+                            <input type="email" class="form-input" id="kidEmailInputManage" value="{{ $kid->email }}"
+                                placeholder="kid@example.com">
+                            <button type="button" class="modal-btn modal-btn-submit" style="margin-top: 10px;"
+                                onclick="sendEmailInviteManage()">
+                                <i class="fas fa-paper-plane"></i> Send Email
+                            </button>
+                        </div>
+
+                        <!-- QR Code Content -->
+                        <div class="invite-method-content-manage" id="qrContentManage" style="display: none;">
+                            <div id="qrCodeDisplayManage" style="text-align: center;">
+                                <button type="button" class="modal-btn modal-btn-submit" onclick="generateQRCodeManage()">
+                                    Generate QR Code
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <!-- No Account Created -->
+                    <div class="status-display no-account">
+                        <i class="fas fa-user-plus"></i>
+                        <div>
                             <strong>No Account Created</strong>
-                            <span class="last-used">
-                                <a href="#invite-section" style="color: #3b82f6; text-decoration: underline;">Want to invite
-                                    them
-                                    now?</a>
-                            </span>
+                            <span class="last-used">Want to invite them now?</span>
+                        </div>
+                    </div>
+
+                    <!-- Invite Options -->
+                    <div class="invite-options">
+                        <div class="invite-buttons-row-manage">
+                            <button type="button" class="invite-btn-manage invite-btn-blue"
+                                onclick="showInviteMethod('copyLink')">
+                                <i class="fas fa-link"></i>
+                                <span>Copy Link</span>
+                            </button>
+                            <button type="button" class="invite-btn-manage invite-btn-green"
+                                onclick="showInviteMethod('email')">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email Invite</span>
+                            </button>
+                            <button type="button" class="invite-btn-manage invite-btn-purple" onclick="showInviteMethod('qr')">
+                                <i class="fas fa-qrcode"></i>
+                                <span>QR Code</span>
+                            </button>
+                        </div>
+
+                        <!-- Copy Link Content -->
+                        <div class="invite-method-content-manage" id="copyLinkContentManage" style="display: none;">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" class="form-input" id="inviteLinkInputManage" readonly style="flex: 1;">
+                                <button type="button" class="modal-btn modal-btn-submit" onclick="copyInviteLinkManage()">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Email Content -->
+                        <div class="invite-method-content-manage" id="emailContentManage" style="display: none;">
+                            <label class="form-label">Kid's Email</label>
+                            <input type="email" class="form-input" id="kidEmailInputManage" value="{{ $kid->email }}"
+                                placeholder="kid@example.com">
+                            <button type="button" class="modal-btn modal-btn-submit" style="margin-top: 10px;"
+                                onclick="sendEmailInviteManage()">
+                                <i class="fas fa-paper-plane"></i> Send Email
+                            </button>
+                        </div>
+
+                        <!-- QR Code Content -->
+                        <div class="invite-method-content-manage" id="qrContentManage" style="display: none;">
+                            <div id="qrCodeDisplayManage" style="text-align: center;">
+                                <button type="button" class="modal-btn modal-btn-submit" onclick="generateQRCodeManage()">
+                                    Generate QR Code
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @endif

@@ -2207,6 +2207,120 @@ body {
     color: #6b7280;
 }
 
+/* Account Status States */
+.status-display.pending {
+    background: #dbeafe;
+    border: 2px solid #3b82f6;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.status-display.pending i {
+    color: #3b82f6;
+}
+
+.status-display.no-account {
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.status-display.no-account i {
+    color: #f59e0b;
+}
+
+/* Resend Invite Button */
+.resend-invite-btn {
+    width: 100%;
+    padding: 12px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background 0.2s;
+}
+
+.resend-invite-btn:hover {
+    background: #2563eb;
+}
+
+/* Invite Options Section */
+.invite-options {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Invite Buttons Row (Manage Page) */
+.invite-buttons-row-manage {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.invite-btn-manage {
+    flex: 1;
+    padding: 15px;
+    background: white;
+    border: 2px solid;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.invite-btn-manage i {
+    font-size: 20px;
+}
+
+.invite-btn-manage.invite-btn-blue {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.invite-btn-manage.invite-btn-blue:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.invite-btn-manage.invite-btn-green {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.invite-btn-manage.invite-btn-green:hover {
+    background: #10b981;
+    color: white;
+}
+
+.invite-btn-manage.invite-btn-purple {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+}
+
+.invite-btn-manage.invite-btn-purple:hover {
+    background: #8b5cf6;
+    color: white;
+}
+
+/* Invite Method Content */
+.invite-method-content-manage {
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .form-row {

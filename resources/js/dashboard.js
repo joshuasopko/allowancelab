@@ -828,6 +828,162 @@ function validateUsername(input) {
         });
 }
 
+// Toggle resend invite options
+function toggleResendInvite() {
+    const options = document.getElementById('resendInviteOptions');
+    if (options.style.display === 'none') {
+        options.style.display = 'block';
+    } else {
+        options.style.display = 'none';
+    }
+}
+
+// Show specific invite method on manage page
+let currentManageMethod = null;
+function showInviteMethod(method) {
+    const methods = ['copyLink', 'email', 'qr'];
+
+    // Close currently open method if clicking the same button
+    if (currentManageMethod === method) {
+        document.getElementById(method + 'ContentManage').style.display = 'none';
+        currentManageMethod = null;
+        return;
+    }
+
+    // Close all methods
+    methods.forEach(m => {
+        const content = document.getElementById(m + 'ContentManage');
+        if (content) content.style.display = 'none';
+    });
+
+    // Open selected method
+    document.getElementById(method + 'ContentManage').style.display = 'block';
+    currentManageMethod = method;
+
+    // Generate content for the method
+    if (method === 'copyLink') {
+        const linkInput = document.getElementById('inviteLinkInputManage');
+        if (!linkInput.value) {
+            createInviteForManage();
+        }
+    } else if (method === 'qr') {
+        // QR code will be generated when button is clicked
+    }
+}
+
+// Create invite if none exists (for "skip for now" case)
+function createInviteForManage() {
+    const kidId = window.location.pathname.split('/').pop().split('/')[0];
+
+    fetch(`/kids/${kidId}/create-invite`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const inviteUrl = `${window.location.origin}/invite/${data.token}`;
+                const linkInput = document.getElementById('inviteLinkInputManage');
+                if (linkInput) {
+                    linkInput.value = inviteUrl;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error generating invite link', 'error');
+        });
+}
+
+// Copy invite link from manage page
+function copyInviteLinkManage() {
+    const input = document.getElementById('inviteLinkInputManage');
+    input.select();
+    document.execCommand('copy');
+    const copyButton = event.target.closest('button');
+    showToast('Copied!', 'success', copyButton);
+}
+
+// Send email invite from manage page
+function sendEmailInviteManage() {
+    const email = document.getElementById('kidEmailInputManage').value;
+    const kidId = window.location.pathname.split('/').pop().split('/')[0];
+
+    if (!email) {
+        showToast('Please enter an email address', 'error');
+        return;
+    }
+
+    const sendButton = event.target;
+    const originalText = sendButton.innerHTML;
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+    fetch(`/kids/${kidId}/send-email-invite`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email: email })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Email sent successfully!', 'success', sendButton);
+                sendButton.disabled = false;
+                sendButton.innerHTML = originalText;
+            } else {
+                showToast('Failed to send email', 'error');
+                sendButton.disabled = false;
+                sendButton.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error sending email', 'error');
+            sendButton.disabled = false;
+            sendButton.innerHTML = originalText;
+        });
+}
+
+// Generate QR code from manage page
+function generateQRCodeManage() {
+    const kidId = window.location.pathname.split('/').pop().split('/')[0];
+
+    fetch(`/kids/${kidId}/qr-code`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('qrCodeDisplayManage').innerHTML = `
+                <div style="padding: 20px;">
+                    <div style="display: inline-block; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        ${data.qrCode}
+                    </div>
+                    <p style="margin-top: 20px; color: #666; font-size: 14px;">Scan this code with your phone to create your account</p>
+                    <p style="margin-top: 10px; color: #9ca3af; font-size: 12px;">QR code expires on ${data.expiresAt}</p>
+                </div>
+            `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('qrCodeDisplayManage').innerHTML = `
+            <p style="color: #ef4444;">Error generating QR code. Please try Copy Link instead.</p>
+        `;
+        });
+}
+
 // ============================================
 // MAKE FUNCTIONS GLOBALLY ACCESSIBLE
 // ============================================
@@ -859,3 +1015,10 @@ window.sendEmailInvite = sendEmailInvite;
 window.generateQRCode = generateQRCode;
 window.showToast = showToast;
 window.validateUsername = validateUsername;
+
+// Manage kid page invite send / resend functions
+window.toggleResendInvite = toggleResendInvite;
+window.showInviteMethod = showInviteMethod;
+window.copyInviteLinkManage = copyInviteLinkManage;
+window.sendEmailInviteManage = sendEmailInviteManage;
+window.generateQRCodeManage = generateQRCodeManage;
