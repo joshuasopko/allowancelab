@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Auth;
 Route::get('/', function () {
     return view('welcome');
 });
+// Kid invite acceptance
+Route::get('/invite/{token}', [KidController::class, 'showInvite'])->name('invite.show');
+Route::post('/invite/{token}', [KidController::class, 'acceptInvite'])->name('invite.accept');
+
 
 // Parent routes (protected by 'auth' middleware)
 Route::middleware('auth')->group(function () {

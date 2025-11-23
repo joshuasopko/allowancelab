@@ -401,4 +401,79 @@ class KidController extends Controller
             'expiresAt' => $invite->expires_at->format('F j, Y')
         ]);
     }
+
+    // Show invite registration page
+    public function showInvite($token)
+    {
+        // Find the invite by token
+        $invite = \App\Models\Invite::where('token', $token)->first();
+
+        // Check if invite exists
+        if (!$invite) {
+            return view('invite.invalid', ['message' => 'This invite link is invalid.']);
+        }
+
+        // Check if invite is expired
+        if ($invite->isExpired()) {
+            return view('invite.invalid', ['message' => 'This invite has expired.']);
+        }
+
+        // Check if invite is already accepted
+        if ($invite->status === 'accepted') {
+            return view('invite.invalid', ['message' => 'This invite has already been used.']);
+        }
+
+        // Get the kid
+        $kid = $invite->kid;
+
+        return view('invite.register', compact('kid', 'invite'));
+    }
+
+    // Accept invite and create kid account
+    public function acceptInvite(Request $request, $token)
+    {
+        // Find and validate invite
+        $invite = \App\Models\Invite::where('token', $token)->first();
+
+        if (!$invite || $invite->isExpired() || $invite->status === 'accepted') {
+            return back()->with('error', 'Invalid or expired invite.');
+        }
+
+        // Validate form
+        $request->validate([
+            'username' => [
+                'required',
+                'string',
+                'min:3',
+                'max:20',
+                'unique:kids,username',
+                'regex:/^[a-zA-Z0-9._-]+$/'
+            ],
+            'password' => 'required|string|min:4|confirmed',
+            'color' => 'required|string',
+        ], [
+            'username.regex' => 'Username can only contain letters, numbers, periods, dashes, and underscores.',
+            'username.unique' => 'This username is already taken. Please choose another one.',
+            'username.min' => 'Username must be at least 3 characters.',
+            'password.min' => 'Password must be at least 4 characters.',
+            'password.confirmed' => 'Passwords do not match.',
+        ]);
+
+        // Update kid with username and password
+        $kid = $invite->kid;
+        $kid->update([
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+            'color' => $request->color,
+        ]);
+
+        // Mark invite as accepted
+        $invite->markAsAccepted();
+
+        // Log the kid in using kid guard
+        Auth::guard('kid')->login($kid);
+
+        // Redirect to kid dashboard (placeholder for now)
+        return redirect('/kid/dashboard')->with('success', 'Welcome to AllowanceLab, ' . $kid->name . '!');
+    }
 }
