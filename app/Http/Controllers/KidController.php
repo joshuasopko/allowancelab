@@ -505,4 +505,76 @@ class KidController extends Controller
             'message' => 'Username is available!'
         ]);
     }
+
+    // Change kid's username
+    public function changeUsername(Request $request, Kid $kid)
+    {
+        // Make sure this kid belongs to the logged-in parent
+        if ($kid->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'username' => [
+                'required',
+                'string',
+                'min:3',
+                'max:20',
+                'unique:kids,username,' . $kid->id,
+                'regex:/^[a-zA-Z0-9._-]+$/'
+            ],
+        ], [
+            'username.regex' => 'Username can only contain letters, numbers, periods, dashes, and underscores.',
+            'username.unique' => 'This username is already taken.',
+        ]);
+
+        $oldUsername = $kid->username;
+        $kid->update(['username' => $request->username]);
+
+        // Send email notification if kid has email
+        if ($kid->email) {
+            try {
+                Mail::to($kid->email)->send(new \App\Mail\UsernameChangedMail($kid, Auth::user(), $oldUsername, $request->username));
+            } catch (\Exception $e) {
+                // Log error but don't fail the request
+                \Log::error('Failed to send username change email: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Username changed successfully',
+        ]);
+    }
+
+    // Reset kid's password
+    public function resetPassword(Request $request, Kid $kid)
+    {
+        // Make sure this kid belongs to the logged-in parent
+        if ($kid->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'password' => 'required|string|min:4',
+        ]);
+
+        $kid->update(['password' => Hash::make($request->password)]);
+
+        // Send email notification if kid has email
+        if ($kid->email) {
+            try {
+                Mail::to($kid->email)->send(new \App\Mail\PasswordResetMail($kid, Auth::user()));
+            } catch (\Exception $e) {
+                // Log error but don't fail the request
+                \Log::error('Failed to send password reset email: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset successfully',
+        ]);
+    }
+
 }

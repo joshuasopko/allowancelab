@@ -199,18 +199,29 @@
                             </div>
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Username</label>
-                                <input type="text" class="form-input" value="{{ $kid->username }}" readonly disabled>
-                                <small style="color: #666; margin-left: 5px;">Username cannot be changed</small>
+                        @if($kid->username)
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Username</label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="text" class="form-input" value="{{ $kid->username }}" readonly
+                                            style="flex: 1;">
+                                        <button type="button" class="btn-change-credential" onclick="openChangeUsernameModal()">
+                                            <i class="fas fa-edit"></i> Change
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Password</label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="password" class="form-input" value="********" readonly style="flex: 1;">
+                                        <button type="button" class="btn-change-credential" onclick="openResetPasswordModal()">
+                                            <i class="fas fa-key"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Password</label>
-                                <input type="password" class="form-input" value="********" readonly disabled>
-                                <small style="color: #666; margin-left: 5px;">Password hidden for security</small>
-                            </div>
-                        </div>
+                        @endif
                     </div>
 
                     <!-- Appearance Section -->
@@ -365,4 +376,69 @@
                 </div>
             </div>
         </div>
+
+        <!-- Change Username Modal -->
+        <div class="credential-modal" id="changeUsernameModal" style="display: none;">
+            <div class="credential-modal-content">
+                <div class="credential-modal-header">
+                    <h3>Change Username</h3>
+                    <button class="close-btn" onclick="closeChangeUsernameModal()">&times;</button>
+                </div>
+                <div class="credential-modal-body">
+                    <p style="color: #6b7280; margin-bottom: 20px;">Enter a new username for {{ $kid->name }}</p>
+                    <label class="form-label">New Username</label>
+                    <input type="text" class="form-input" id="newUsername" placeholder="Enter new username">
+                    <div id="usernameValidationChange"
+                        style="margin-top: 8px; font-size: 14px; display: none; align-items: center; gap: 8px;"></div>
+                    <small class="error-message" id="usernameChangeError" style="display: none;"></small>
+                </div>
+                <div class="credential-modal-footer">
+                    <button type="button" class="modal-btn modal-btn-cancel"
+                        onclick="closeChangeUsernameModal()">Cancel</button>
+                    <button type="button" class="modal-btn modal-btn-submit" onclick="changeUsername()">Change
+                        Username</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Password Modal -->
+        <div class="credential-modal" id="resetPasswordModal" style="display: none;">
+            <div class="credential-modal-content">
+                <div class="credential-modal-header">
+                    <h3>Reset Password</h3>
+                    <button class="close-btn" onclick="closeResetPasswordModal()">&times;</button>
+                </div>
+                <div class="credential-modal-body">
+                    <p style="color: #6b7280; margin-bottom: 20px;">Enter a new password for {{ $kid->name }}</p>
+                    <label class="form-label">New Password</label>
+                    <div style="position: relative;">
+                        <input type="password" class="form-input" id="newPassword" placeholder="Enter new password"
+                            minlength="4" style="padding-right: 45px;">
+                        <button type="button" onclick="togglePasswordVisibility('newPassword', 'eyeIcon1')"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280;">
+                            <i class="fas fa-eye" id="eyeIcon1"></i>
+                        </button>
+                    </div>
+                    <label class="form-label" style="margin-top: 15px;">Confirm Password</label>
+                    <div style="position: relative;">
+                        <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm new password"
+                            minlength="4" style="padding-right: 45px;">
+                        <button type="button" onclick="togglePasswordVisibility('confirmPassword', 'eyeIcon2')"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280;">
+                            <i class="fas fa-eye" id="eyeIcon2"></i>
+                        </button>
+                    </div>
+                    <div id="passwordResetFeedback"
+                        style="margin-top: 12px; font-size: 14px; display: none; align-items: center; gap: 8px;"></div>
+                    <small class="error-message" id="passwordChangeError" style="display: none;"></small>
+                </div>
+                <div class="credential-modal-footer">
+                    <button type="button" class="modal-btn modal-btn-cancel"
+                        onclick="closeResetPasswordModal()">Cancel</button>
+                    <button type="button" class="modal-btn modal-btn-submit" onclick="resetPassword()">Reset
+                        Password</button>
+                </div>
+            </div>
+        </div>
+
     @endsection

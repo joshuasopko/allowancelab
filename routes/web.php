@@ -47,6 +47,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/kids/{kid}/send-email-invite', [KidController::class, 'sendEmailInvite'])->name('kids.send-email-invite');
     // Generate QR Code
     Route::get('/kids/{kid}/qr-code', [KidController::class, 'generateQRCode'])->name('kids.qr-code');
+    // Username and password management
+    Route::post('/kids/{kid}/change-username', [KidController::class, 'changeUsername'])->name('kids.change-username');
+    Route::post('/kids/{kid}/reset-password', [KidController::class, 'resetPassword'])->name('kids.reset-password');
 });
 
 // Kid authentication routes

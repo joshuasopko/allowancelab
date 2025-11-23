@@ -984,6 +984,219 @@ function generateQRCodeManage() {
         });
 }
 
+// Change Username Modal
+function openChangeUsernameModal() {
+    const modal = document.getElementById('changeUsernameModal');
+    const feedbackDiv = document.getElementById('usernameValidationChange');
+    const errorDiv = document.getElementById('usernameChangeError');
+
+    modal.style.display = 'flex';
+    document.getElementById('newUsername').value = '';
+    feedbackDiv.style.display = 'none';
+    feedbackDiv.innerHTML = '';
+    errorDiv.style.display = 'none';
+}
+
+function closeChangeUsernameModal() {
+    document.getElementById('changeUsernameModal').style.display = 'none';
+}
+
+function changeUsername() {
+    const newUsername = document.getElementById('newUsername').value.trim();
+    const feedbackDiv = document.getElementById('usernameValidationChange');
+    const errorDiv = document.getElementById('usernameChangeError');
+    const kidId = window.location.pathname.split('/')[2];
+    const submitBtn = event.target;
+
+    // Clear previous errors
+    feedbackDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+
+    if (!newUsername || newUsername.length < 3) {
+        errorDiv.textContent = 'Username must be at least 3 characters';
+        errorDiv.style.cssText = 'display: block !important; color: #ef4444 !important; font-size: 13px !important; margin-top: 8px !important; line-height: 1.4 !important; position: static !important; word-wrap: break-word !important; overflow-wrap: break-word !important; white-space: normal !important; max-width: 100% !important;';
+        return;
+    }
+
+    // Disable button and show checking state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing...';
+
+    // Show checking availability feedback
+    feedbackDiv.style.display = 'flex';
+    feedbackDiv.style.color = '#6b7280';
+    feedbackDiv.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size: 16px;"></i> <span>Checking availability...</span>';
+
+    const startTime = Date.now();
+
+    fetch(`/kids/${kidId}/change-username`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username: newUsername })
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const elapsed = Date.now() - startTime;
+                const remainingTime = Math.max(0, 500 - elapsed);
+
+                setTimeout(() => {
+                    feedbackDiv.style.color = '#10b981';
+                    feedbackDiv.innerHTML = '<i class="fas fa-check-circle" style="font-size: 18px;"></i> <span style="font-weight: 600;">Success! Username updated</span>';
+                    feedbackDiv.classList.add('feedback-animate');
+
+                    setTimeout(() => {
+                        closeChangeUsernameModal();
+                        location.reload();
+                    }, 2000); // Changed from 1300 to 2000
+                }, remainingTime);
+            }
+        })
+        .catch(error => {
+            const elapsed = Date.now() - startTime;
+            const remainingTime = Math.max(0, 500 - elapsed);
+
+            setTimeout(() => {
+                let errorMessage = 'Error changing username. Please try again.';
+
+                if (error.errors && error.errors.username) {
+                    errorMessage = error.errors.username[0];
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                feedbackDiv.style.display = 'flex';
+                feedbackDiv.style.color = '#ef4444';
+                feedbackDiv.innerHTML = '<i class="fas fa-times-circle" style="font-size: 18px;"></i> <span style="font-weight: 600;">' + errorMessage + '</span>';
+                feedbackDiv.classList.add('feedback-animate');
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Change Username';
+            }, remainingTime);
+        });
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Reset Password Modal
+function openResetPasswordModal() {
+    document.getElementById('resetPasswordModal').style.display = 'flex';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    document.getElementById('passwordChangeError').style.display = 'none';
+
+    // Reset password fields to hidden
+    document.getElementById('newPassword').type = 'password';
+    document.getElementById('confirmPassword').type = 'password';
+    document.getElementById('eyeIcon1').classList.remove('fa-eye-slash');
+    document.getElementById('eyeIcon1').classList.add('fa-eye');
+    document.getElementById('eyeIcon2').classList.remove('fa-eye-slash');
+    document.getElementById('eyeIcon2').classList.add('fa-eye');
+}
+
+function closeResetPasswordModal() {
+    document.getElementById('resetPasswordModal').style.display = 'none';
+}
+
+function resetPassword() {
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const feedbackDiv = document.getElementById('passwordResetFeedback');
+    const errorDiv = document.getElementById('passwordChangeError');
+    const kidId = window.location.pathname.split('/')[2];
+    const submitBtn = event.target;
+
+    // Clear previous messages
+    feedbackDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+
+    if (!newPassword || newPassword.length < 4) {
+        errorDiv.textContent = 'Password must be at least 4 characters';
+        errorDiv.style.cssText = 'display: block !important; color: #ef4444 !important; font-size: 13px !important; margin-top: 8px !important; line-height: 1.4 !important; position: static !important; word-wrap: break-word !important; overflow-wrap: break-word !important; white-space: normal !important; max-width: 100% !important;';
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.style.cssText = 'display: block !important; color: #ef4444 !important; font-size: 13px !important; margin-top: 8px !important; line-height: 1.4 !important; position: static !important; word-wrap: break-word !important; overflow-wrap: break-word !important; white-space: normal !important; max-width: 100% !important;';
+        return;
+    }
+
+    // Disable button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resetting...';
+
+    fetch(`/kids/${kidId}/reset-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ password: newPassword })
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                feedbackDiv.style.display = 'flex';
+                feedbackDiv.style.color = '#10b981';
+                feedbackDiv.innerHTML = '<i class="fas fa-check-circle" style="font-size: 18px;"></i> <span style="font-weight: 600;">Success! Password has been reset</span>';
+                feedbackDiv.classList.add('feedback-animate');
+
+                // Wait 2 seconds then close
+                setTimeout(() => {
+                    closeResetPasswordModal();
+                }, 2000); // Changed from 1300 to 2000
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+            let errorMessage = 'Error resetting password. Please try again.';
+
+            if (error.errors && error.errors.password) {
+                errorMessage = error.errors.password[0];
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.cssText = 'display: block !important; color: #ef4444 !important; font-size: 13px !important; margin-top: 8px !important; line-height: 1.4 !important; position: static !important; word-wrap: break-word !important; overflow-wrap: break-word !important; white-space: normal !important; max-width: 100% !important;';
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Reset Password';
+        });
+}
+
 // ============================================
 // MAKE FUNCTIONS GLOBALLY ACCESSIBLE
 // ============================================
@@ -1022,3 +1235,12 @@ window.showInviteMethod = showInviteMethod;
 window.copyInviteLinkManage = copyInviteLinkManage;
 window.sendEmailInviteManage = sendEmailInviteManage;
 window.generateQRCodeManage = generateQRCodeManage;
+
+// Manage kid username / password change functions
+window.openChangeUsernameModal = openChangeUsernameModal;
+window.closeChangeUsernameModal = closeChangeUsernameModal;
+window.changeUsername = changeUsername;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.openResetPasswordModal = openResetPasswordModal;
+window.closeResetPasswordModal = closeResetPasswordModal;
+window.resetPassword = resetPassword;
