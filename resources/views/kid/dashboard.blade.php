@@ -88,6 +88,28 @@
                 {{ $kid->color }}
                 !important;
         }
+
+        /* Dynamic theme color based on kid's selection */
+        .kid-header::after {
+            background-color:
+                {{ $kid->color }}
+                !important;
+        }
+
+        .kid-modal-ledger-entry {
+            border-left-color:
+                {{ $kid->color }}
+                !important;
+            background:
+                {{ $lightShade }}
+                !important;
+        }
+
+        .kid-modal-ledger-entry:hover {
+            background: color-mix(in srgb,
+                    {{ $kid->color }}
+                    20%, white) !important;
+        }
     </style>
 
     <!-- Mobile Welcome Message -->
@@ -201,15 +223,32 @@
         </div>
     </div>
 
+
+
     <script>
-        // Initialize kid data from Laravel
+        // Initialize kid data from Laravel - SET BEFORE JS MODULE LOADS
         window.kidBalance = {{ $kid->balance }};
         @if($kid->points_enabled)
             window.kidPoints = {{ $kid->points }};
         @endif
+        window.kidLedgerData = @json($transactions);
 
         // Wait for DOMContentLoaded to ensure functions are loaded
         document.addEventListener('DOMContentLoaded', function () {
+            // Force update balance display on load
+            if (window.kidBalance !== undefined) {
+                kidBalance = window.kidBalance;
+                const balanceEl = document.getElementById('kidBalance');
+                if (balanceEl && kidBalance !== 0) {
+                    balanceEl.textContent = '$' + kidBalance.toFixed(2);
+                }
+            }
+
+            // Load ledger data
+            if (window.kidLedgerData !== undefined) {
+                kidLedgerData = window.kidLedgerData;
+            }
+
             if (typeof window.kidUpdatePointsDisplay === 'function') {
                 window.kidUpdatePointsDisplay();
             }
@@ -218,4 +257,35 @@
             }
         });
     </script>
+
+    <!-- Transaction Modal -->
+    <div class="kid-transaction-modal" id="kidTransactionModal">
+        <div class="kid-modal-backdrop" onclick="kidCloseTransactionModal()"></div>
+        <div class="kid-modal-content">
+            <div class="kid-modal-header">
+                <h2>All Transactions</h2>
+                <button class="kid-modal-close" onclick="kidCloseTransactionModal()">×</button>
+            </div>
+
+            <div class="kid-modal-filters">
+                <div class="kid-modal-filter-tabs">
+                    <button class="kid-modal-filter-btn active" onclick="kidModalFilter('all')">All</button>
+                    <button class="kid-modal-filter-btn" onclick="kidModalFilter('deposit')">Deposits</button>
+                    <button class="kid-modal-filter-btn" onclick="kidModalFilter('spend')">Spends</button>
+                    <button class="kid-modal-filter-btn" onclick="kidModalFilter('points')">Points</button>
+                </div>
+                <select class="kid-modal-time-filter" id="kidModalTimeFilter" onchange="kidModalTimeFilter()">
+                    <option value="all">All Time</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                </select>
+            </div>
+
+            <div class="kid-modal-body" id="kidModalBody">
+                <!-- Transactions will be rendered here -->
+            </div>
+        </div>
+    </div>
+
 @endsection

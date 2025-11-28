@@ -6,12 +6,12 @@
 // ============================================
 // GLOBAL VARIABLES
 // ============================================
-let kidBalance = 0;
+let kidBalance = window.kidBalance || 0;
 let kidPoints = window.kidPoints || 0;
 let kidActiveForm = null;
 let kidCurrentFilter = 'all';
 let kidLedgerOpen = false;
-let kidLedgerData = [];
+let kidLedgerData = window.kidLedgerData || [];
 
 // Points messages by zone
 const kidPointsMessages = {
@@ -110,17 +110,20 @@ function kidUpdatePointsDisplay() {
     if (kidPoints === 0) {
         pointsPill.className = 'kid-points-pill danger';
         pointsMessage.textContent = kidPointsMessages.zero;
-    } else if (kidPoints >= 8) {
-        pointsPill.className = 'kid-points-pill';
-        const messages = kidPointsMessages.high;
+    } else if (kidPoints <= 4) {
+        // 1-4 points: Red/Danger
+        pointsPill.className = 'kid-points-pill danger';
+        const messages = kidPointsMessages.low;
         pointsMessage.textContent = messages[Math.floor(Math.random() * messages.length)];
-    } else if (kidPoints >= 5) {
-        pointsPill.className = 'kid-points-pill';
+    } else if (kidPoints <= 7) {
+        // 5-7 points: Yellow/Warning
+        pointsPill.className = 'kid-points-pill warning';
         const messages = kidPointsMessages.medium;
         pointsMessage.textContent = messages[Math.floor(Math.random() * messages.length)];
     } else {
-        pointsPill.className = 'kid-points-pill warning';
-        const messages = kidPointsMessages.low;
+        // 8-10 points: Green
+        pointsPill.className = 'kid-points-pill';
+        const messages = kidPointsMessages.high;
         pointsMessage.textContent = messages[Math.floor(Math.random() * messages.length)];
     }
 }
@@ -200,26 +203,27 @@ function kidToggleLedger() {
     }
 }
 
-function kidFilterLedger(filter) {
-    kidCurrentFilter = filter;
-    const buttons = document.querySelectorAll('.kid-filter-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    kidRenderLedger();
-}
-
 function kidRenderLedger() {
     const table = document.getElementById('kidLedgerTable');
     if (!table) return;
 
-    let filtered = kidCurrentFilter === 'all' ? kidLedgerData : kidLedgerData.filter(entry => entry.type === kidCurrentFilter);
+    let filtered;
+    if (kidCurrentFilter === 'all') {
+        filtered = kidLedgerData;
+    } else {
+        filtered = kidLedgerData.filter(entry => entry.type === kidCurrentFilter);
+    }
 
     if (filtered.length === 0) {
         table.innerHTML = '<div style="text-align: center; padding: 40px; color: #888; line-height: 1.6;">Ready to start tracking your money?<br>Record your first transaction above! 💰</div>';
         return;
     }
 
-    table.innerHTML = filtered.map(entry => {
+    // Show only first 8 entries (already sorted newest first from backend)
+    const displayedEntries = filtered.slice(0, 8);
+    const hasMore = filtered.length > 8;
+
+    table.innerHTML = displayedEntries.map(entry => {
         let amountClass = entry.type;
         if (entry.type === 'points') {
             amountClass += entry.amount >= 0 ? ' positive' : ' negative';
@@ -227,11 +231,18 @@ function kidRenderLedger() {
 
         const isParentInitiated = entry.parentInitiated || entry.initiated_by === 'parent';
 
+        // Format date/time
+        const dateObj = new Date(entry.timestamp * 1000);
+        const dateTime = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
+            ' | ' +
+            dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
         return `
         <div class="kid-ledger-entry">
             <div class="kid-parent-icon-cell">
                 ${isParentInitiated ? '<span class="kid-parent-icon">👤</span>' : ''}
             </div>
+            <div class="kid-entry-date">${dateTime}</div>
             <div class="kid-entry-type ${entry.type}">
                 ${entry.type === 'deposit' ? 'Deposit' : entry.type === 'spend' ? 'Spend' : 'Points'}
             </div>
@@ -241,8 +252,33 @@ function kidRenderLedger() {
             </div>
         </div>
         `;
-    }).join('');
+    }).join('') + (hasMore ? `
+        <button class="kid-view-all-btn" onclick="kidOpenTransactionModal()">
+            View All ${filtered.length} Transactions →
+        </button>
+    ` : '');
 }
+
+// ... end of kidRenderLedger function
+
+function kidFilterLedger(filter) {
+    kidCurrentFilter = filter;
+    const buttons = document.querySelectorAll('.kid-filter-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    // Find and activate the correct button
+    buttons.forEach(btn => {
+        if (btn.textContent.toLowerCase().includes(filter) || (filter === 'all' && btn.textContent === 'All')) {
+            btn.classList.add('active');
+        }
+    });
+
+    kidRenderLedger();
+}
+
+// ============================================
+// FORM TOGGLE FUNCTIONS
+// ============================================
 
 // ============================================
 // FORM TOGGLE FUNCTIONS
@@ -532,7 +568,112 @@ function kidFormatDate(dateString) {
     return date.toLocaleDateString('en-US', options);
 }
 
+// ============================================
+// TRANSACTION MODAL
+// ============================================
 
+let kidModalCurrentFilter = 'all';  // CHANGED from kidModalFilter
+let kidModalTimeRange = 'all';
+
+function kidOpenTransactionModal() {
+    const modal = document.getElementById('kidTransactionModal');
+    if (!modal) return;
+
+    modal.classList.add('active');
+    kidModalCurrentFilter = 'all';  // CHANGED
+    kidModalTimeRange = 'all';
+    kidRenderModalLedger();
+}
+
+function kidCloseTransactionModal() {
+    const modal = document.getElementById('kidTransactionModal');
+    if (!modal) return;
+
+    modal.classList.remove('active');
+}
+
+function kidModalFilter(filter) {
+    kidModalCurrentFilter = filter;  // CHANGED
+
+    const buttons = document.querySelectorAll('.kid-modal-filter-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    kidRenderModalLedger();
+}
+
+function kidModalTimeFilter() {
+    const select = document.getElementById('kidModalTimeFilter');
+    kidModalTimeRange = select.value;
+    kidRenderModalLedger();
+}
+
+function kidRenderModalLedger() {
+    const body = document.getElementById('kidModalBody');
+    if (!body) return;
+
+    let filtered = kidLedgerData;
+
+    // Filter by type
+    if (kidModalCurrentFilter !== 'all') {  // CHANGED
+        filtered = filtered.filter(entry => entry.type === kidModalCurrentFilter);  // CHANGED
+    }
+
+    // Filter by time range
+    const now = new Date();
+    if (kidModalTimeRange !== 'all') {
+        filtered = filtered.filter(entry => {
+            const entryDate = new Date(entry.timestamp * 1000);
+
+            if (kidModalTimeRange === 'week') {
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                return entryDate >= weekAgo;
+            } else if (kidModalTimeRange === 'month') {
+                const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
+                return entryDate >= monthAgo;
+            } else if (kidModalTimeRange === 'year') {
+                const yearAgo = new Date(now.getFullYear(), 0, 1);
+                return entryDate >= yearAgo;
+            }
+            return true;
+        });
+    }
+
+    if (filtered.length === 0) {
+        body.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: #888;">No transactions found for this filter.</div>';
+        return;
+    }
+
+    body.innerHTML = filtered.map(entry => {
+        let amountClass = entry.type;
+        if (entry.type === 'points') {
+            amountClass += entry.amount >= 0 ? ' positive' : ' negative';
+        }
+
+        const isParentInitiated = entry.parentInitiated || entry.initiated_by === 'parent';
+
+        const dateObj = new Date(entry.timestamp * 1000);
+        const dateTime = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
+            ' | ' +
+            dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+        return `
+        <div class="kid-modal-ledger-entry">
+            <div class="kid-parent-icon-cell">
+                ${isParentInitiated ? '<span class="kid-parent-icon">👤</span>' : ''}
+            </div>
+            <div class="kid-entry-date">${dateTime}</div>
+            <div class="kid-entry-type ${entry.type}">
+                ${entry.type === 'deposit' ? 'Deposit' : entry.type === 'spend' ? 'Spend' : 'Points'}
+            </div>
+            <div class="kid-entry-note">${entry.note}</div>
+            <div class="kid-entry-amount ${amountClass}">
+                ${entry.type === 'points' ? (entry.amount >= 0 ? '+' : '') + entry.amount + ' pts' : (entry.amount >= 0 ? '+$' : '-$') + Math.abs(entry.amount).toFixed(2)}
+            </div>
+        </div>
+        `;
+    }).join('');
+}
 
 // Expose functions to window for inline onclick handlers
 window.kidToggleSidebar = kidToggleSidebar;
@@ -545,3 +686,9 @@ window.kidOpenSpendForm = kidOpenSpendForm;
 window.kidSubmitDeposit = kidSubmitDeposit;
 window.kidSubmitSpend = kidSubmitSpend;
 window.kidFormatCurrency = kidFormatCurrency;
+window.kidRenderLedger = kidRenderLedger;
+
+window.kidOpenTransactionModal = kidOpenTransactionModal;
+window.kidCloseTransactionModal = kidCloseTransactionModal;
+window.kidModalFilter = kidModalFilter;
+window.kidModalTimeFilter = kidModalTimeFilter;

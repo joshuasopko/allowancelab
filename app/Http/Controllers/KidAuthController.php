@@ -57,6 +57,7 @@ class KidAuthController extends Controller
                 'amount' => (float) $t->amount,
                 'note' => $t->description ?? '',
                 'date' => $t->created_at->format('Y-m-d'),
+                'timestamp' => $t->created_at->timestamp, // ADD THIS
                 'initiated_by' => $t->initiated_by ?? 'parent',
                 'parentInitiated' => ($t->initiated_by ?? 'parent') === 'parent'
             ];
@@ -71,15 +72,16 @@ class KidAuthController extends Controller
                     'amount' => $p->points_change,
                     'note' => $p->reason ?? '',
                     'date' => $p->created_at->format('Y-m-d'),
+                    'timestamp' => $p->created_at->timestamp, // ADD THIS
                     'initiated_by' => 'parent',
                     'parentInitiated' => true
                 ];
             });
         }
 
-        // Combine and sort by date
+        // Combine and sort by timestamp (newest first)
         $allTransactions = $transactions->concat($pointAdjustments)
-            ->sortByDesc('date')
+            ->sortByDesc('timestamp') // CHANGE THIS
             ->values();
 
         return view('kid.dashboard', [
