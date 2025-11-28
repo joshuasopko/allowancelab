@@ -125,7 +125,8 @@ class KidController extends Controller
         $kid->transactions()->create([
             'type' => 'deposit',
             'amount' => $request->amount,
-            'description' => $request->note
+            'description' => $request->note,
+            'initiated_by' => 'parent'
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -152,7 +153,8 @@ class KidController extends Controller
         $kid->transactions()->create([
             'type' => 'spend',
             'amount' => $request->amount,
-            'description' => $request->note
+            'description' => $request->note,
+            'initiated_by' => 'parent'
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -216,7 +218,8 @@ class KidController extends Controller
                 'type' => $t->type,
                 'type_label' => ucfirst($t->type),
                 'amount_display' => '$' . number_format($t->amount, 2),
-                'note' => $t->description
+                'note' => $t->description,
+                'initiated_by' => $t->initiated_by ?? 'parent'
             ];
         });
 
@@ -235,7 +238,8 @@ class KidController extends Controller
                     'type_label' => 'Points',
                     'amount_display' => ($p->points_change > 0 ? '+' : '') . $p->points_change . ' pts',
                     'amount_class' => $p->points_change > 0 ? 'points-add' : 'points-deduct',
-                    'note' => $p->reason
+                    'note' => $p->reason,
+                    'initiated_by' => 'parent'
                 ];
             });
 

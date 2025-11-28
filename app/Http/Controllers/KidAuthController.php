@@ -26,9 +26,7 @@ class KidAuthController extends Controller
         $kid = Kid::where('username', $request->username)->first();
 
         if ($kid && Hash::check($request->password, $kid->password)) {
-            // Update last login timestamp
             $kid->update(['last_login_at' => now()]);
-
             Auth::guard('kid')->login($kid);
             return redirect()->route('kid.dashboard');
         }
@@ -45,5 +43,48 @@ class KidAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('kid.login');
+    }
+
+    // Show kid dashboard
+    public function dashboard()
+    {
+        $kid = Auth::guard('kid')->user();
+
+        // Get transactions (deposits and spends)
+        $transactions = $kid->transactions()->latest()->get()->map(function ($t) {
+            return [
+                'type' => $t->type,
+                'amount' => (float) $t->amount,
+                'note' => $t->description ?? '',
+                'date' => $t->created_at->format('Y-m-d'),
+                'initiated_by' => $t->initiated_by ?? 'parent',
+                'parentInitiated' => ($t->initiated_by ?? 'parent') === 'parent'
+            ];
+        });
+
+        // Get point adjustments if points are enabled
+        $pointAdjustments = collect([]);
+        if ($kid->points_enabled) {
+            $pointAdjustments = $kid->pointAdjustments()->latest()->get()->map(function ($p) {
+                return [
+                    'type' => 'points',
+                    'amount' => $p->points_change,
+                    'note' => $p->reason ?? '',
+                    'date' => $p->created_at->format('Y-m-d'),
+                    'initiated_by' => 'parent',
+                    'parentInitiated' => true
+                ];
+            });
+        }
+
+        // Combine and sort by date
+        $allTransactions = $transactions->concat($pointAdjustments)
+            ->sortByDesc('date')
+            ->values();
+
+        return view('kid.dashboard', [
+            'kid' => $kid,
+            'transactions' => $allTransactions
+        ]);
     }
 }

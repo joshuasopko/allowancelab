@@ -1,92 +1,221 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.kid')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Dashboard - AllowanceLab</title>
-    @vite(['resources/css/dashboard.css'])
+@section('title', 'My Dashboard - AllowanceLab')
+
+@section('content')
+    @php
+        // Convert hex to RGB and create lighter shade
+        $hex = ltrim($kid->color, '#');
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+        // Mix with white (85% white + 15% color for light background)
+        $lightR = round($r * 0.15 + 255 * 0.85);
+        $lightG = round($g * 0.15 + 255 * 0.85);
+        $lightB = round($b * 0.15 + 255 * 0.85);
+        $lightShade = "rgb($lightR, $lightG, $lightB)";
+    @endphp
+
     <style>
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        /* Dynamic theme color based on kid's selection */
+        .kid-header::after {
+            background-color:
+                {{ $kid->color }}
+                !important;
         }
 
-        .placeholder {
-            background: white;
-            padding: 60px;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 600px;
+        .kid-birthday-countdown {
+            color:
+                {{ $kid->color }}
+                !important;
+            border-bottom-color:
+                {{ $kid->color }}
+                !important;
         }
 
-        .success-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
+        .kid-birthday-icon {
+            background-color:
+                {{ $kid->color }}
+                !important;
         }
 
-        h1 {
-            color: #1f2937;
-            margin: 0 0 15px 0;
-            font-size: 32px;
+        .kid-menu-divider {
+            background-color:
+                {{ $kid->color }}
+                !important;
         }
 
-        p {
-            color: #6b7280;
-            font-size: 18px;
-            line-height: 1.6;
-            margin: 0 0 30px 0;
+        .kid-next-allowance .days-away {
+            color:
+                {{ $kid->color }}
+                !important;
         }
 
-        .info-box {
-            background: #f0f9ff;
-            border-left: 4px solid #3b82f6;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: left;
+        .kid-ledger-entry {
+            border-left-color:
+                {{ $kid->color }}
+                !important;
+            background:
+                {{ $lightShade }}
+                !important;
         }
 
-        .info-box strong {
-            color: #1e40af;
+        .kid-parent-icon {
+            color:
+                {{ $kid->color }}
+                !important;
         }
 
-        .logout-btn {
-            display: inline-block;
-            padding: 12px 30px;
-            background: #ef4444;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
+        /* Menu active state with theme color */
+        .kid-sidebar .kid-menu-item.active {
+            background:
+                {{ $lightShade }}
+                !important;
+            color:
+                {{ $kid->color }}
+                !important;
+            border-left-color:
+                {{ $kid->color }}
+                !important;
+        }
+
+        /* Coming soon badge with theme color */
+        .kid-sidebar .kid-coming-soon-badge {
+            background:
+                {{ $lightShade }}
+                !important;
+            color:
+                {{ $kid->color }}
+                !important;
         }
     </style>
-</head>
 
-<body>
-    <div class="placeholder">
-        <div class="success-icon">🎉</div>
-        <h1>Welcome to AllowanceLab!</h1>
-        <p>Your account has been created successfully!</p>
+    <!-- Mobile Welcome Message -->
+    <div class="kid-mobile-welcome">Welcome back, {{ $kid->name }}!</div>
 
-        <div class="info-box">
-            <strong>What's Next?</strong><br>
-            We're still building your awesome kid dashboard. For now, you're all set up and ready to go!
+    <!-- Kid Card -->
+    <div class="kid-card">
+        <!-- Card Header -->
+        <div class="kid-card-header">
+            <div class="kid-avatar" style="background: {{ $kid->color }};">{{ strtoupper(substr($kid->name, 0, 1)) }}</div>
+            <div class="kid-info">
+                <h2 class="kid-name">{{ $kid->name }}</h2>
+                <div class="kid-age">Age {{ \Carbon\Carbon::parse($kid->birthday)->age }}</div>
+            </div>
         </div>
 
-        <form action="{{ route('kid.logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
-    </div>
-</body>
+        @if($kid->points_enabled)
+            <!-- Points Pill (upper right) -->
+            <div class="kid-points-pill" id="kidPointsPill">
+                <div class="kid-points-pill-label">Points</div>
+                <div class="kid-points-pill-value" id="kidPointsValue">{{ $kid->points }} / {{ $kid->max_points }}</div>
+                <div class="kid-points-pill-message" id="kidPointsMessage"></div>
+            </div>
+        @endif
 
-</html>
+        <!-- Balance Section -->
+        <div class="kid-balance-section">
+            <div class="kid-balance-amount {{ $kid->balance < 0 ? 'negative' : '' }}" id="kidBalance">
+                ${{ number_format($kid->balance, 2) }}</div>
+            @php
+                $daysOfWeek = ['sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6];
+                $targetDay = $daysOfWeek[$kid->allowance_day] ?? 5;
+                $today = now();
+                $daysUntil = ($targetDay - $today->dayOfWeek + 7) % 7;
+                if ($daysUntil === 0)
+                    $daysUntil = 7;
+                $nextAllowance = $today->copy()->addDays($daysUntil);
+            @endphp
+            <div class="kid-next-allowance">
+                Next allowance: ${{ number_format($kid->allowance_amount, 2) }} on {{ ucfirst($kid->allowance_day) }},
+                {{ $nextAllowance->format('M j') }}<br>
+                Only <span class="days-away">{{ $daysUntil }}</span> more days away!
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="kid-action-buttons">
+            <button class="kid-action-btn kid-deposit-btn" onclick="kidOpenDepositForm()">Record Deposit</button>
+            <button class="kid-action-btn kid-spend-btn" onclick="kidOpenSpendForm()">Record Spend</button>
+            <button class="kid-action-btn kid-ledger-btn" id="kidLedgerBtn" onclick="kidToggleLedger()">View Ledger</button>
+        </div>
+
+        <!-- Deposit Form -->
+        <div class="kid-form-container" id="kidDepositForm">
+            <form onsubmit="kidSubmitDeposit(event)" class="kid-form-row">
+                <div class="kid-form-group">
+                    <label class="kid-form-label">Amount</label>
+                    <input type="text" id="kidDepositAmount" class="kid-form-input" placeholder="$0.00"
+                        oninput="kidFormatCurrency(this)">
+                    <div id="kidDepositAmountError" class="kid-error-message">Please enter an amount</div>
+                </div>
+                <div class="kid-form-group">
+                    <label class="kid-form-label">Note</label>
+                    <input type="text" id="kidDepositNote" class="kid-form-input" placeholder="What's this for?">
+                    <div id="kidDepositNoteError" class="kid-error-message">Please add a note</div>
+                </div>
+                <div class="kid-submit-btn-wrapper">
+                    <button type="submit" class="kid-submit-btn kid-submit-deposit">Record Deposit</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Spend Form -->
+        <div class="kid-form-container" id="kidSpendForm">
+            <form onsubmit="kidSubmitSpend(event)" class="kid-form-row">
+                <div class="kid-form-group">
+                    <label class="kid-form-label">Amount</label>
+                    <input type="text" id="kidSpendAmount" class="kid-form-input" placeholder="$0.00"
+                        oninput="kidFormatCurrency(this)">
+                    <div id="kidSpendAmountError" class="kid-error-message">Please enter an amount</div>
+                </div>
+                <div class="kid-form-group">
+                    <label class="kid-form-label">Note</label>
+                    <input type="text" id="kidSpendNote" class="kid-form-input" placeholder="What did you buy?">
+                    <div id="kidSpendNoteError" class="kid-error-message">Please add a note</div>
+                </div>
+                <div class="kid-submit-btn-wrapper">
+                    <button type="submit" class="kid-submit-btn kid-submit-spend">Record Spend</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Ledger Section -->
+        <div class="kid-ledger-section" id="kidLedgerSection">
+            <div class="kid-ledger-header">
+                <h2 class="kid-ledger-title">All Transactions</h2>
+            </div>
+
+            <div class="kid-ledger-filters">
+                <button class="kid-filter-btn active" onclick="kidFilterLedger('all')">All</button>
+                <button class="kid-filter-btn" onclick="kidFilterLedger('deposit')">Deposits</button>
+                <button class="kid-filter-btn" onclick="kidFilterLedger('spend')">Spends</button>
+                @if($kid->points_enabled)
+                    <button class="kid-filter-btn" onclick="kidFilterLedger('points')">Points</button>
+                @endif
+            </div>
+
+            <div class="kid-ledger-table" id="kidLedgerTable">
+                <!-- Transactions will be rendered here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize kid data from Laravel
+        window.kidBalance = {{ $kid->balance }};
+        @if($kid->points_enabled)
+            window.kidPoints = {{ $kid->points }};
+        @endif
+
+        // Wait for DOMContentLoaded to ensure functions are loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof window.kidUpdatePointsDisplay === 'function') {
+                window.kidUpdatePointsDisplay();
+            }
+            if (typeof window.kidRenderLedger === 'function') {
+                window.kidRenderLedger();
+            }
+        });
+    </script>
+@endsection

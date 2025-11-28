@@ -5,6 +5,7 @@ use App\Http\Controllers\KidAuthController;
 use App\Http\Controllers\KidController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\KidDashboardController;
 
 // Landing page
 Route::get('/', function () {
@@ -60,9 +61,11 @@ Route::prefix('kid')->name('kid.')->group(function () {
 
     // Kid dashboard (protected)
     Route::middleware('auth:kid')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('kid.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [KidAuthController::class, 'dashboard'])->name('dashboard');
+
+        // Kid-initiated transactions
+        Route::post('/deposit', [KidDashboardController::class, 'recordDeposit'])->name('deposit');
+        Route::post('/spend', [KidDashboardController::class, 'recordSpend'])->name('spend');
     });
 });
 

@@ -7,8 +7,11 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/dashboard.css',
+                'resources/css/kid-dashboard.css',
                 'resources/js/app.js',
+                'resources/js/bootstrap.js',
                 'resources/js/dashboard.js',
+                'resources/js/kid-dashboard.js',
             ],
             refresh: true,
         }),

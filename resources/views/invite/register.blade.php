@@ -38,6 +38,12 @@
             margin-bottom: 15px;
         }
 
+        .logo-img {
+            height: 120px;
+            width: auto;
+            margin-bottom: 15px;
+        }
+
         h1 {
             color: #1f2937;
             margin: 0 0 10px 0;
@@ -239,13 +245,119 @@
                 opacity: 0.5;
             }
         }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .register-container {
+                padding: 30px 20px;
+                max-width: 100%;
+            }
+
+            .welcome-icon {
+                font-size: 40px;
+                margin-bottom: 12px;
+            }
+
+            .logo-img {
+                height: 90px;
+                margin-bottom: 12px;
+            }
+
+            h1 {
+                font-size: 22px;
+                margin-bottom: 8px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            .header {
+                margin-bottom: 30px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            label {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+
+            input {
+                padding: 10px;
+                font-size: 16px;
+            }
+
+            .avatar-section {
+                margin: 24px 0;
+            }
+
+            .avatar-preview-row {
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+
+            .avatar-preview-circle {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+
+            .color-name {
+                font-size: 14px;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+
+            .color-option {
+                width: 55px;
+                height: 55px;
+            }
+
+            .submit-btn {
+                padding: 13px;
+                font-size: 16px;
+            }
+
+            .error-message {
+                font-size: 12px;
+            }
+
+            .validation-icon {
+                font-size: 18px;
+                right: 10px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .register-container {
+                padding: 25px 16px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="register-container">
         <div class="header">
-            <div class="welcome-icon">👋</div>
+            <img src="{{ asset('/images/Allowance-Lab-logo.png') }}" alt="AllowanceLab" class="logo-img">
             <h1>Welcome, <span class="kid-name">{{ $kid->name }}</span>!</h1>
             <p class="subtitle">Create your username and password to get started</p>
         </div>
