@@ -6,168 +6,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Create Your Account - AllowanceLab</title>
-    <!--@vite(['resources/css/dashboard.css'])-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 60px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-container a {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo-container img {
+            height: 70px;
+            width: auto;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px 20px;
         }
 
         .register-container {
             background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
             padding: 50px;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
             width: 100%;
+            max-width: 500px;
         }
 
-        .header {
+        .register-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 32px;
         }
 
         .welcome-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+            font-size: 56px;
+            margin-bottom: 12px;
         }
 
-        .logo-img {
-            height: 120px;
-            width: auto;
-            margin-bottom: 15px;
-        }
-
-        h1 {
-            color: #1f2937;
-            margin: 0 0 10px 0;
-            font-size: 28px;
+        .register-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
         }
 
         .kid-name {
-            color: #667eea;
-            font-weight: 700;
+            color: #42a5f5;
         }
 
-        .subtitle {
-            color: #6b7280;
+        .register-subtitle {
             font-size: 16px;
+            color: #666;
+            line-height: 1.5;
         }
 
+        /* Form Styles */
         .form-group {
             margin-bottom: 20px;
         }
 
-        label {
+        .form-label {
             display: block;
-            color: #374151;
+            font-size: 16px;
             font-weight: 600;
+            color: #444;
             margin-bottom: 8px;
-            font-size: 14px;
         }
 
-        input {
+        .form-input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .avatar-section {
-            margin: 30px 0;
-        }
-
-        .avatar-preview-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .avatar-preview-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: 700;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .color-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
-        }
-
-        .color-option {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .color-option:hover {
-            transform: scale(1.1);
-        }
-
-        .color-option.selected {
-            border-color: #1f2937;
-            box-shadow: 0 0 0 2px white, 0 0 0 4px #1f2937;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
+            padding: 16px 18px;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
             font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s;
+            font-family: inherit;
         }
 
-        .submit-btn:hover {
-            transform: translateY(-2px);
+        .form-input:focus {
+            outline: none;
+            border-color: #42a5f5;
+            box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.1);
+        }
+
+        .form-input.error {
+            border-color: #ef5350;
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-8px);
+            }
+
+            75% {
+                transform: translateX(8px);
+            }
         }
 
         .error-message {
+            color: #ef5350;
+            font-size: 14px;
+            margin-top: 6px;
             display: block;
-            color: #ef4444;
-            font-size: 13px;
-            margin-top: 5px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
-            max-width: 100%;
-            line-height: 1.4;
+            font-weight: 500;
         }
 
         .input-with-validation {
@@ -178,13 +156,12 @@
 
         .input-with-validation input {
             flex: 1;
-            padding-right: 45px;
-            /* Make room for icon */
+            padding-right: 50px;
         }
 
         .validation-icon {
             position: absolute;
-            right: 12px;
+            right: 16px;
             font-size: 20px;
             pointer-events: none;
             transition: all 0.3s ease;
@@ -197,7 +174,7 @@
 
         .validation-icon.invalid {
             color: #ef4444;
-            animation: shake 0.3s ease;
+            animation: shakeIcon 0.3s ease;
         }
 
         @keyframes scaleIn {
@@ -212,7 +189,7 @@
             }
         }
 
-        @keyframes shake {
+        @keyframes shakeIcon {
 
             0%,
             100% {
@@ -230,7 +207,6 @@
 
         .validation-icon.loading {
             color: #10b981;
-            /* Green instead of gray */
             animation: pulse 1s ease-in-out infinite;
         }
 
@@ -246,198 +222,242 @@
             }
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
+        /* Avatar Color Picker */
+        .avatar-section {
+            margin-bottom: 28px;
+        }
+
+        .avatar-preview-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .color-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+
+        .color-option {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #1a1a1a;
+            transform: scale(1.15);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #42a5f5 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(66, 165, 245, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 16px 20px;
+            }
+
+            .logo-container img {
+                height: 80px;
+            }
+
+            main {
+                padding: 30px 16px;
             }
 
             .register-container {
-                padding: 30px 20px;
-                max-width: 100%;
+                padding: 40px 30px;
+                border-radius: 16px;
             }
 
             .welcome-icon {
-                font-size: 40px;
-                margin-bottom: 12px;
+                font-size: 48px;
             }
 
-            .logo-img {
-                height: 90px;
-                margin-bottom: 12px;
+            .register-title {
+                font-size: 28px;
             }
 
-            h1 {
-                font-size: 22px;
-                margin-bottom: 8px;
+            .register-subtitle {
+                font-size: 15px;
             }
 
-            .subtitle {
-                font-size: 14px;
-            }
-
-            .header {
-                margin-bottom: 30px;
-            }
-
-            .form-group {
-                margin-bottom: 16px;
-            }
-
-            label {
-                font-size: 13px;
-                margin-bottom: 6px;
-            }
-
-            input {
-                padding: 10px;
-                font-size: 16px;
-            }
-
-            .avatar-section {
-                margin: 24px 0;
-            }
-
-            .avatar-preview-row {
-                gap: 12px;
-                margin-bottom: 12px;
-            }
-
-            .avatar-preview-circle {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
-            }
-
-            .color-name {
-                font-size: 14px;
+            .avatar-preview {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
             }
 
             .color-grid {
                 grid-template-columns: repeat(4, 1fr);
                 gap: 10px;
             }
-
-            .color-option {
-                width: 55px;
-                height: 55px;
-            }
-
-            .submit-btn {
-                padding: 13px;
-                font-size: 16px;
-            }
-
-            .error-message {
-                font-size: 12px;
-            }
-
-            .validation-icon {
-                font-size: 18px;
-                right: 10px;
-            }
         }
 
         @media (max-width: 400px) {
             .register-container {
-                padding: 25px 16px;
-            }
-
-            h1 {
-                font-size: 20px;
+                padding: 30px 20px;
             }
 
             .color-grid {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="register-container">
-        <div class="header">
-            <img src="{{ asset('/images/Allowance-Lab-logo.png') }}" alt="AllowanceLab" class="logo-img">
-            <h1>Welcome, <span class="kid-name">{{ $kid->name }}</span>!</h1>
-            <p class="subtitle">Create your username and password to get started</p>
+    <!-- Header -->
+    <header>
+        <div class="logo-container">
+            <a href="{{ url('/') }}">
+                <img src="{{ asset('/images/Allowance-Lab-logo.png') }}" alt="AllowanceLab">
+            </a>
         </div>
+    </header>
 
-        <form action="{{ route('invite.accept', $invite->token) }}" method="POST" id="registerForm">
-            @csrf
-
-            <div class="form-group">
-                <label for="username">Choose a Username</label>
-                <div class="input-with-validation">
-                    <input type="text" id="username" name="username" placeholder="Enter a unique username"
-                        value="{{ old('username') }}" onblur="validateUsername(this)" required minlength="3"
-                        maxlength="20">
-                    <span class="validation-icon" id="usernameValidation"></span>
-                </div>
-                <small class="error-message" id="usernameError"></small>
-                @error('username')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
+    <!-- Main Content -->
+    <main>
+        <div class="register-container">
+            <div class="register-header">
+                <div class="welcome-icon">👋</div>
+                <h1 class="register-title">Welcome, <span class="kid-name">{{ $kid->name }}</span>!</h1>
+                <p class="register-subtitle">Create your username and password to get started</p>
             </div>
 
-            <div class="form-group">
-                <label for="password">Create a Password</label>
-                <input type="password" id="password" name="password" placeholder="At least 4 characters" required
-                    minlength="4">
-                @error('password')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+            <form action="{{ route('invite.accept', $invite->token) }}" method="POST" id="registerForm">
+                @csrf
 
-            <div class="form-group">
-                <label for="password_confirmation">Confirm Password</label>
-                <input type="password" id="password_confirmation" name="password_confirmation"
-                    placeholder="Re-enter your password" required minlength="4">
-            </div>
-
-            <div class="avatar-section">
-                <label>Choose Your Avatar Color</label>
-                <div class="avatar-preview-row">
-                    <div class="avatar-preview-circle" id="avatarPreview" style="background: {{ $kid->color }};">
-                        {{ strtoupper(substr($kid->name, 0, 1)) }}
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="username" class="form-label">Choose a Username</label>
+                    <div class="input-with-validation">
+                        <input type="text" id="username" name="username"
+                            class="form-input @error('username') error @enderror" placeholder="Enter a unique username"
+                            value="{{ old('username') }}" onblur="validateUsername(this)" required minlength="3"
+                            maxlength="20">
+                        <span class="validation-icon" id="usernameValidation"></span>
                     </div>
-                    <span class="color-name" id="colorName"></span>
+                    <small class="error-message" id="usernameError"></small>
+                    @error('username')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
                 </div>
 
-                <input type="hidden" name="color" id="selectedColor" value="{{ $kid->color }}">
-
-                <div class="color-grid">
-                    <div class="color-option" style="background: #80d4b0;" data-color="#80d4b0" data-name="Mint"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #ff9999;" data-color="#ff9999" data-name="Coral"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #b19cd9;" data-color="#b19cd9" data-name="Lavender"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #87ceeb;" data-color="#87ceeb" data-name="Sky Blue"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #ffb380;" data-color="#ffb380" data-name="Peach"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #e066a6;" data-color="#e066a6" data-name="Magenta"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #ffd966;" data-color="#ffd966" data-name="Sunshine"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #a8c686;" data-color="#a8c686" data-name="Sage"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #5ab9b3;" data-color="#5ab9b3" data-name="Teal"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #9bb7d4;" data-color="#9bb7d4" data-name="Periwinkle"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #ff9966;" data-color="#ff9966" data-name="Tangerine"
-                        onclick="selectColorRegister(this)"></div>
-                    <div class="color-option" style="background: #d4a5d4;" data-color="#d4a5d4" data-name="Lilac"
-                        onclick="selectColorRegister(this)"></div>
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label">Create a Password</label>
+                    <input type="password" id="password" name="password"
+                        class="form-input @error('password') error @enderror" placeholder="At least 4 characters"
+                        required minlength="4">
+                    @error('password')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
                 </div>
-            </div>
 
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-rocket"></i> Create My Account
-            </button>
-        </form>
-    </div>
+                <!-- Confirm Password -->
+                <div class="form-group">
+                    <label for="password_confirmation" class="form-label">Confirm Password</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation"
+                        class="form-input @error('password_confirmation') error @enderror"
+                        placeholder="Re-enter your password" required minlength="4">
+                </div>
+
+                <!-- Avatar Color Picker -->
+                <div class="avatar-section">
+                    <label class="form-label">Choose Your Avatar Color</label>
+                    <div class="avatar-preview-row">
+                        <div class="avatar-preview" id="avatarPreview" style="background: {{ $kid->color }};">
+                            {{ strtoupper(substr($kid->name, 0, 1)) }}
+                        </div>
+                        <span class="color-name" id="colorName"></span>
+                    </div>
+                    <input type="hidden" name="color" id="selectedColor" value="{{ $kid->color }}">
+                    <div class="color-grid">
+                        <div class="color-option" style="background: #80d4b0;" data-color="#80d4b0" data-name="Mint"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #ff9999;" data-color="#ff9999" data-name="Coral"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #b19cd9;" data-color="#b19cd9" data-name="Lavender"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #87ceeb;" data-color="#87ceeb" data-name="Sky Blue"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #ffb380;" data-color="#ffb380" data-name="Peach"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #e066a6;" data-color="#e066a6" data-name="Magenta"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #ffd966;" data-color="#ffd966" data-name="Sunshine"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #a8c686;" data-color="#a8c686" data-name="Sage"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #5ab9b3;" data-color="#5ab9b3" data-name="Teal"
+                            onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #9bb7d4;" data-color="#9bb7d4"
+                            data-name="Periwinkle" onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #ff9966;" data-color="#ff9966"
+                            data-name="Tangerine" onclick="selectColorRegister(this)"></div>
+                        <div class="color-option" style="background: #d4a5d4;" data-color="#d4a5d4" data-name="Lilac"
+                            onclick="selectColorRegister(this)"></div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-rocket"></i> Create My Account
+                </button>
+            </form>
+        </div>
+    </main>
 
     <script>
         // Color selection
@@ -476,12 +496,12 @@
             // Clear error when typing in password fields
             password.addEventListener('input', function () {
                 passwordError.style.display = 'none';
-                passwordConfirm.style.borderColor = '#e5e7eb';
+                passwordConfirm.style.borderColor = '#e0e0e0';
             });
 
             passwordConfirm.addEventListener('input', function () {
                 passwordError.style.display = 'none';
-                passwordConfirm.style.borderColor = '#e5e7eb';
+                passwordConfirm.style.borderColor = '#e0e0e0';
             });
 
             form.addEventListener('submit', function (e) {
@@ -490,7 +510,7 @@
                     e.preventDefault();
                     passwordError.textContent = 'Passwords do not match. Please make sure both passwords are the same.';
                     passwordError.style.display = 'block';
-                    passwordConfirm.style.borderColor = '#ef4444';
+                    passwordConfirm.style.borderColor = '#ef5350';
                     passwordConfirm.focus();
                     return false;
                 }
@@ -517,7 +537,7 @@
             feedbackIcon.className = 'validation-icon loading';
             feedbackIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-            // Check username via AJAX (with minimum 2 second loading state)
+            // Check username via AJAX (with minimum 1.2 second loading state)
             const startTime = Date.now();
 
             fetch('/check-username', {
@@ -533,7 +553,7 @@
                 .then(data => {
                     // Calculate how long the request took
                     const elapsed = Date.now() - startTime;
-                    const remainingTime = Math.max(0, 1200 - elapsed); // Ensure at least 1.2 seconds total
+                    const remainingTime = Math.max(0, 1200 - elapsed);
 
                     // Delay showing result to ensure visible loading state
                     setTimeout(() => {
