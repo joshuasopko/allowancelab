@@ -66,6 +66,10 @@ Route::prefix('kid')->name('kid.')->group(function () {
         // Kid-initiated transactions
         Route::post('/deposit', [KidDashboardController::class, 'recordDeposit'])->name('deposit');
         Route::post('/spend', [KidDashboardController::class, 'recordSpend'])->name('spend');
+
+        // Add this new route:
+        Route::get('/profile', [KidAuthController::class, 'profile'])->name('profile');
+        Route::patch('/update-color', [KidAuthController::class, 'updateColor'])->name('update-color');
     });
 });
 

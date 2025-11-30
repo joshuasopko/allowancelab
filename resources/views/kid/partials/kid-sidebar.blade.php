@@ -24,7 +24,8 @@
 
     <!-- Menu -->
     <nav class="kid-sidebar-menu">
-        <a href="{{ route('kid.dashboard') }}" class="kid-menu-item active">
+        <a href="{{ route('kid.dashboard') }}"
+            class="kid-menu-item {{ request()->routeIs('kid.dashboard') ? 'active' : '' }}">
             Dashboard
         </a>
 
@@ -63,8 +64,9 @@
 
         <div class="kid-menu-divider"></div>
 
-        <a href="#" class="kid-menu-item">
-            Profile Settings
+        <a href="{{ route('kid.profile') }}"
+            class="kid-menu-item {{ request()->routeIs('kid.profile') ? 'active' : '' }}">
+            <span>Profile Settings</span>
         </a>
 
         <form action="{{ route('kid.logout') }}" method="POST" style="margin-top: auto;">

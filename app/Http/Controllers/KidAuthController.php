@@ -89,4 +89,26 @@ class KidAuthController extends Controller
             'transactions' => $allTransactions
         ]);
     }
+
+    public function profile()
+    {
+        $kid = Auth::guard('kid')->user();
+        $parent = $kid->user; // Get the parent
+
+        return view('kid.profile', compact('kid', 'parent'));
+    }
+
+    public function updateColor(Request $request)
+    {
+        $request->validate([
+            'color' => 'required|string'
+        ]);
+
+        $kid = Auth::guard('kid')->user();
+        $kid->color = $request->color;
+        $kid->save();
+
+        return redirect()->route('kid.profile')->with('success', 'Theme color updated!');
+    }
+
 }
