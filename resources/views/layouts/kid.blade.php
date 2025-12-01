@@ -38,7 +38,8 @@
         <div class="kid-toast-icon">ℹ️</div>
         <div class="kid-toast-message" id="kidToastMessage"></div>
     </div>
-
+    @include('partials.version')
+</body>
 </body>
 
 </html>

@@ -27,6 +27,10 @@
 
     @yield('modals')
 
+    @include('partials.version')
+</body>
+</body>
+
 </body>
 
 </html>

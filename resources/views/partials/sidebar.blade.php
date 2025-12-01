@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<div class="sidebar">
+<div class="sidebar" id="parentSidebar">
     @php
         $nameParts = explode(' ', Auth::user()->name);
         $firstName = ucfirst(strtolower($nameParts[0]));
@@ -9,26 +9,57 @@
     <div class="sidebar-welcome">Welcome, {{ $firstName }}!</div>
 
     <div class="sidebar-menu">
-        <div class="menu-item has-subtext">
-            Account Info
+        <a href="#" class="menu-item">
+            <div class="menu-item-main">My Account</div>
             <div class="menu-subtext">{{ $lastName }} Family</div>
-        </div>
+        </a>
+
         <a href="{{ route('dashboard') }}"
             class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
+
         @hasSection('sidebar-active')
             @yield('sidebar-active')
         @endif
-        <div class="menu-item">Settings</div>
-        <div class="menu-item">Billing</div>
-        <div class="menu-item">Help</div>
+
+        <div class="menu-item menu-dropdown" onclick="toggleLabTools(event)">
+            <span>Lab Tools</span>
+            <i class="fas fa-chevron-down dropdown-icon"></i>
+        </div>
+        <div class="dropdown-content" id="labToolsDropdown">
+            <a href="#" class="dropdown-item">
+                Chore List
+                <span class="coming-soon-badge">Coming Soon</span>
+            </a>
+            <a href="#" class="dropdown-item">
+                Goals
+                <span class="coming-soon-badge">Coming Soon</span>
+            </a>
+            <a href="#" class="dropdown-item">
+                Loans
+                <span class="coming-soon-badge">Coming Soon</span>
+            </a>
+            <a href="#" class="dropdown-item">
+                Jobs
+                <span class="coming-soon-badge">Coming Soon</span>
+            </a>
+        </div>
+
         <div class="menu-divider"></div>
-        <div class="menu-item">Family Settings</div>
-        <div class="menu-item">Preferences</div>
+
+        <a href="#" class="menu-item">Manage Family</a>
+        <a href="#" class="menu-item">Help</a>
+
+        <div class="menu-divider mobile-only"></div>
+
+        <!-- Mobile Add Kid Button -->
+        <div class="mobile-add-kid-wrapper">
+            <button class="mobile-add-kid-btn" onclick="openAddKidModal(); toggleMobileMenu();">+ Add Kid</button>
+        </div>
+
+
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="menu-item sign-out"
-                style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; font-size: 15px; font-weight: 500;">Sign
-                Out</button>
+            <button type="submit" class="menu-item sign-out">Sign Out</button>
         </form>
     </div>
 </div>

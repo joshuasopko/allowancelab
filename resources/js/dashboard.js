@@ -116,8 +116,24 @@ function selectColor(element) {
 // ============================================
 
 function toggleMobileMenu() {
-    document.querySelector('.header-nav').classList.toggle('mobile-open');
+    const sidebar = document.getElementById('parentSidebar');
+    const hamburger = document.querySelector('.hamburger');
+
+    sidebar.classList.toggle('mobile-open');
+    hamburger.classList.toggle('active');
 }
+
+// Toggle Lab Tools dropdown
+function toggleLabTools(event) {
+    event.preventDefault();
+    const dropdown = document.getElementById('labToolsDropdown');
+    const icon = event.currentTarget.querySelector('.dropdown-icon');
+
+    dropdown.classList.toggle('open');
+    icon.classList.toggle('rotated');
+}
+
+
 
 // ============================================
 // TRANSACTION MODAL FUNCTIONS
@@ -163,14 +179,35 @@ async function loadTransactions() {
             return;
         }
 
-        body.innerHTML = data.map(entry => `
-            <div class="ledger-row">
-                <div class="ledger-date">${entry.date}</div>
-                <div class="ledger-type">${entry.type_label}</div>
-                <div class="ledger-amount ${entry.amount_class || entry.type}">${entry.amount_display}</div>
-                <div class="ledger-note">${entry.note || 'No note'}</div>
+        body.innerHTML = data.map(entry => {
+            const isKidInitiated = entry.initiated_by === 'kid';
+            const kidColor = entry.kid_color || '#87ceeb';
+
+            // Convert hex to RGB for background
+            const hex = kidColor.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const lightBg = `rgba(${r}, ${g}, ${b}, 0.08)`;
+
+            // Determine type class for coloring
+            let typeClass = entry.type;
+            if (entry.type === 'points') {
+                typeClass = 'points';
+            }
+
+            return `
+        <div class="ledger-row" style="${isKidInitiated ? `background: ${lightBg};` : ''}">
+            <div class="ledger-kid-icon-cell">
+                ${isKidInitiated ? `<span class="ledger-kid-icon" style="color: ${kidColor};">K</span>` : ''}
             </div>
-        `).join('');
+            <div class="ledger-date">${entry.date} | ${entry.time}</div>
+            <div class="ledger-type ${typeClass}">${entry.type_label}</div>
+            <div class="ledger-amount ${entry.amount_class || entry.type}">${entry.amount_display}</div>
+            <div class="ledger-note">${entry.note || 'No note'}</div>
+        </div>
+    `;
+        }).join('');
 
     } catch (error) {
         console.error('Error loading transactions:', error);
@@ -1244,3 +1281,6 @@ window.togglePasswordVisibility = togglePasswordVisibility;
 window.openResetPasswordModal = openResetPasswordModal;
 window.closeResetPasswordModal = closeResetPasswordModal;
 window.resetPassword = resetPassword;
+
+// Make it globally available
+window.toggleLabTools = toggleLabTools;

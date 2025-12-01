@@ -135,17 +135,23 @@
                 <div class="dropdown-form" id="ledger-{{ $kid->id }}Form">
                     <div class="form-content">
                         <div class="ledger-filters">
-                            <button class="filter-btn active" data-kid="{{ $kid->id }}"
-                                onclick="filterLedger({{ $kid->id }}, 'all')">All</button>
-                            <button class="filter-btn" data-kid="{{ $kid->id }}"
-                                onclick="filterLedger({{ $kid->id }}, 'deposit')">Deposits</button>
-                            <button class="filter-btn" data-kid="{{ $kid->id }}"
-                                onclick="filterLedger({{ $kid->id }}, 'spend')">Spends</button>
-                            @if($kid->points_enabled)
+                            <div class="ledger-filter-buttons">
+                                <button class="filter-btn active" data-kid="{{ $kid->id }}"
+                                    onclick="filterLedger({{ $kid->id }}, 'all')">All</button>
                                 <button class="filter-btn" data-kid="{{ $kid->id }}"
-                                    onclick="filterLedger({{ $kid->id }}, 'points')">Point
-                                    Adjustments</button>
-                            @endif
+                                    onclick="filterLedger({{ $kid->id }}, 'deposit')">Deposits</button>
+                                <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                    onclick="filterLedger({{ $kid->id }}, 'spend')">Spends</button>
+                                @if($kid->points_enabled)
+                                    <button class="filter-btn" data-kid="{{ $kid->id }}"
+                                        onclick="filterLedger({{ $kid->id }}, 'points')">Point
+                                        Adjustments</button>
+                                @endif
+                            </div>
+                            <div class="ledger-kid-legend">
+                                <span class="ledger-kid-icon-sample" style="color: {{ $kid->color }};">K</span> = Kid initiated this
+                                transaction
+                            </div>
                         </div>
                         <div class="ledger-table" id="ledger-{{ $kid->id }}-table">
                             @php
@@ -155,11 +161,32 @@
                             @endphp
 
                             @forelse($allEntries as $entry)
+                                @php
+                                    $isKidInitiated = ($entry instanceof \App\Models\Transaction) && ($entry->initiated_by === 'kid');
+
+                                    // Convert hex to RGB for background
+                                    $hex = ltrim($kid->color, '#');
+                                    $r = hexdec(substr($hex, 0, 2));
+                                    $g = hexdec(substr($hex, 2, 2));
+                                    $b = hexdec(substr($hex, 4, 2));
+                                    $lightBg = "rgba($r, $g, $b, 0.08)";
+                                @endphp
+
                                 <div class="ledger-row {{ $entry instanceof \App\Models\Transaction && $entry->description === 'Allowance not earned - insufficient points' ? 'allowance-not-earned' : '' }}"
-                                    data-type="{{ $entry instanceof \App\Models\Transaction ? $entry->type : 'points' }}">
-                                    <div class="ledger-date">{{ $entry->created_at->format('M d, Y') }}</div>
+                                    data-type="{{ $entry instanceof \App\Models\Transaction ? $entry->type : 'points' }}"
+                                    style="{{ $isKidInitiated ? 'background: ' . $lightBg . ';' : '' }}">
+
+                                    <div class="ledger-kid-icon-cell">
+                                        @if($isKidInitiated)
+                                            <span class="ledger-kid-icon" style="color: {{ $kid->color }};">K</span>
+                                        @endif
+                                    </div>
+
+                                    <div class="ledger-date">{{ $entry->created_at->format('M j') }} |
+                                        {{ $entry->created_at->format('g:i A') }}</div>
+
                                     @if($entry instanceof \App\Models\Transaction)
-                                        <div class="ledger-type">
+                                        <div class="ledger-type {{ $entry->type }}">
                                             @if($entry->description === 'Weekly Allowance')
                                                 Allowance
                                             @elseif($entry->description === 'Allowance not earned - insufficient points')
@@ -171,7 +198,7 @@
                                         <div class="ledger-amount {{ $entry->type }}">${{ number_format($entry->amount, 2) }}</div>
                                         <div class="ledger-note">{{ $entry->description ?? 'No note' }}</div>
                                     @else
-                                        <div class="ledger-type">
+                                        <div class="ledger-type points">
                                             {{ $entry->reason === 'Weekly points reset' ? 'Point Reset' : 'Points' }}
                                         </div>
                                         <div class="ledger-amount {{ $entry->points_change > 0 ? 'points-add' : 'points-deduct' }}">

@@ -212,14 +212,17 @@ class KidController extends Controller
             $transactions->where('type', $type);
         }
 
-        $transactionsData = $transactions->get()->map(function ($t) {
+        $transactionsData = $transactions->get()->map(function ($t) use ($kid) {
+            $dateObj = $t->created_at;
             return [
-                'date' => $t->created_at->format('M d, Y'),
+                'date' => $dateObj->format('M d, Y'),
+                'time' => $dateObj->format('g:i A'),
                 'type' => $t->type,
                 'type_label' => ucfirst($t->type),
                 'amount_display' => '$' . number_format($t->amount, 2),
                 'note' => $t->description,
-                'initiated_by' => $t->initiated_by ?? 'parent'
+                'initiated_by' => $t->initiated_by ?? 'parent',
+                'kid_color' => $kid->color
             ];
         });
 
@@ -231,23 +234,28 @@ class KidController extends Controller
         }
 
         if ($type === 'all' || $type === 'points') {
-            $pointsData = $pointAdjustments->get()->map(function ($p) {
+            $pointsData = $pointAdjustments->get()->map(function ($p) use ($kid) {
+                $dateObj = $p->created_at;
                 return [
-                    'date' => $p->created_at->format('M d, Y'),
+                    'date' => $dateObj->format('M d, Y'),
+                    'time' => $dateObj->format('g:i A'),
                     'type' => 'points',
                     'type_label' => 'Points',
                     'amount_display' => ($p->points_change > 0 ? '+' : '') . $p->points_change . ' pts',
                     'amount_class' => $p->points_change > 0 ? 'points-add' : 'points-deduct',
                     'note' => $p->reason,
-                    'initiated_by' => 'parent'
+                    'initiated_by' => 'parent',
+                    'kid_color' => $kid->color
                 ];
             });
 
             $transactionsData = $transactionsData->concat($pointsData);
         }
 
-        // Sort by date
-        $transactionsData = $transactionsData->sortByDesc('date')->values();
+        // Sort by created_at timestamp before returning
+        $transactionsData = $transactionsData->sortByDesc(function ($item) {
+            return strtotime($item['date'] . ' ' . $item['time']);
+        })->values();
 
         return response()->json($transactionsData);
     }
