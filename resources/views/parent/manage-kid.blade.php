@@ -214,7 +214,13 @@
                                 <div class="form-group">
                                     <label class="form-label">Password</label>
                                     <div style="display: flex; gap: 10px; align-items: center;">
-                                        <input type="password" class="form-input" value="********" readonly style="flex: 1;">
+                                        <input type="password" class="form-input" id="kidPasswordField"
+                                            value="{{ $kid->password_plaintext ?? '********' }}" readonly style="flex: 1;">
+                                        <button type="button" class="btn-show-password"
+                                            onclick="togglePasswordVisibility('kidPasswordField', 'togglePasswordIcon')"
+                                            id="togglePasswordBtn">
+                                            <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                                        </button>
                                         <button type="button" class="btn-change-credential" onclick="openResetPasswordModal()">
                                             <i class="fas fa-key"></i> Reset
                                         </button>

@@ -468,6 +468,7 @@ class KidController extends Controller
         $kid->update([
             'username' => $request->username,
             'password' => Hash::make($request->password),
+            'password_plaintext' => $request->password,
             'color' => $request->color,
         ]);
 
@@ -563,7 +564,10 @@ class KidController extends Controller
             'password' => 'required|string|min:4',
         ]);
 
-        $kid->update(['password' => Hash::make($request->password)]);
+        $kid->update([
+            'password' => Hash::make($request->password),
+            'password_plaintext' => $request->password,
+        ]);
 
         // Send email notification if kid has email
         if ($kid->email) {

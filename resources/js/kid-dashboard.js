@@ -240,7 +240,7 @@ function kidRenderLedger() {
         return `
         <div class="kid-ledger-entry">
             <div class="kid-parent-icon-cell">
-                ${isParentInitiated ? '<span class="kid-parent-icon">👤</span>' : ''}
+                ${isParentInitiated ? '<span class="kid-parent-icon">P</span>' : ''}
             </div>
             <div class="kid-entry-date">${dateTime}</div>
             <div class="kid-entry-type ${entry.type}">
@@ -660,7 +660,7 @@ function kidRenderModalLedger() {
         return `
         <div class="kid-modal-ledger-entry">
             <div class="kid-parent-icon-cell">
-                ${isParentInitiated ? '<span class="kid-parent-icon">👤</span>' : ''}
+                ${isParentInitiated ? '<span class="kid-parent-icon">P</span>' : ''}
             </div>
             <div class="kid-entry-date">${dateTime}</div>
             <div class="kid-entry-type ${entry.type}">

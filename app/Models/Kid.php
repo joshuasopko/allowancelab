@@ -13,9 +13,10 @@ class Kid extends Authenticatable
     protected $fillable = [
         'user_id',
         'name',
-        'email',  // Add this line
+        'email',
         'username',
         'password',
+        'password_plaintext',
         'birthday',
         'avatar',
         'color',

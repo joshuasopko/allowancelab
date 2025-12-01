@@ -61,9 +61,13 @@
         }
 
         .kid-parent-icon {
+            font-size: 22px;
+            font-weight: 900;
             color:
                 {{ $kid->color }}
                 !important;
+            line-height: 1;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         /* Menu active state with theme color */
@@ -109,6 +113,55 @@
             background: color-mix(in srgb,
                     {{ $kid->color }}
                     20%, white) !important;
+        }
+
+        /* Theme colored border and shadow for main card */
+        .kid-card {
+            /* border: 1px solid
+                                                                        {{ $kid->color }}
+            !important;
+            */ box-shadow: 0 4px 16px rgba({{ $r }},
+                    {{ $g }}
+                    ,
+                    {{ $b }}
+                    , 0.50) !important;
+        }
+
+        /* Parent legend styling */
+        .kid-ledger-filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .kid-filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .kid-parent-legend {
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .kid-parent-icon-sample {
+            font-size: 18px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        @media (max-width: 768px) {
+            .kid-parent-legend {
+                width: 100%;
+                justify-content: center;
+                margin-top: 8px;
+            }
         }
     </style>
 
@@ -209,12 +262,18 @@
             </div>
 
             <div class="kid-ledger-filters">
-                <button class="kid-filter-btn active" onclick="kidFilterLedger('all')">All</button>
-                <button class="kid-filter-btn" onclick="kidFilterLedger('deposit')">Deposits</button>
-                <button class="kid-filter-btn" onclick="kidFilterLedger('spend')">Spends</button>
-                @if($kid->points_enabled)
-                    <button class="kid-filter-btn" onclick="kidFilterLedger('points')">Points</button>
-                @endif
+                <div class="kid-filter-buttons">
+                    <button class="kid-filter-btn active" onclick="kidFilterLedger('all')">All</button>
+                    <button class="kid-filter-btn" onclick="kidFilterLedger('deposit')">Deposits</button>
+                    <button class="kid-filter-btn" onclick="kidFilterLedger('spend')">Spends</button>
+                    @if($kid->points_enabled)
+                        <button class="kid-filter-btn" onclick="kidFilterLedger('points')">Points</button>
+                    @endif
+                </div>
+                <div class="kid-parent-legend">
+                    <span class="kid-parent-icon-sample" style="color: {{ $kid->color }};">P</span> = Parent initiated this
+                    transaction
+                </div>
             </div>
 
             <div class="kid-ledger-table" id="kidLedgerTable">
