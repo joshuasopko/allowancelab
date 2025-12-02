@@ -48,10 +48,25 @@ class User extends Authenticatable
         ];
     }
 
-    // Relationship: User (parent) has many kids
-    public function kids()
+    // Relationship: User owns families (as SuperAdmin)
+    public function ownedFamilies()
     {
-        return $this->hasMany(Kid::class);
+        return $this->hasMany(Family::class, 'owner_user_id');
+    }
+
+    // Relationship: User belongs to families (as member)
+    public function families()
+    {
+        return $this->belongsToMany(Family::class, 'family_members')
+            ->withPivot('role', 'permissions')
+            ->withTimestamps();
+    }
+
+    // Helper: Get all kids this user can access
+    public function accessibleKids()
+    {
+        $familyIds = $this->families()->pluck('families.id');
+        return Kid::whereIn('family_id', $familyIds)->get();
     }
 
 }

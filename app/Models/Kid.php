@@ -11,7 +11,7 @@ class Kid extends Authenticatable
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+        'family_id',
         'name',
         'email',
         'username',
@@ -39,10 +39,10 @@ class Kid extends Authenticatable
         'allowance_amount' => 'decimal:2',
     ];
 
-    // Relationship: Kid belongs to a Parent (User)
-    public function user()
+    // Relationship: Kid belongs to a Family
+    public function family()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Family::class);
     }
 
     // Relationship: Kid has many transactions

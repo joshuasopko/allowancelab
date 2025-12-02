@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('kids', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('family_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('username')->unique();
             $table->string('password');
