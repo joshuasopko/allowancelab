@@ -8,5 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Schedule allowance processing to run daily at 00:00:01
-Schedule::command('allowances:process')->dailyAt('00:00:01');
+// Schedule allowance processing
+Schedule::command('allowance:post')->dailyAt('02:00');
+Schedule::command('points:reset')->dailyAt('02:01');

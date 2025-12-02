@@ -2262,6 +2262,91 @@ body {
     margin-bottom: 0;
 }
 
+/* Allowance Day Change Modal */
+.allowance-confirm-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+.allowance-confirm-modal.active {
+    display: flex;
+}
+
+.modal-backdrop-allow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content-allow {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+.modal-content-allow h3 {
+    margin: 0 0 16px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.modal-content-allow p {
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #666;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-confirm {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.btn-cancel:hover {
+    background: #e0e0e0;
+}
+
+.btn-confirm {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #45a049;
+}
+
 /* Form Actions */
 .form-actions {
     margin-top: 24px;

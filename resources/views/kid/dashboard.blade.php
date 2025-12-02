@@ -14,6 +14,12 @@
         $lightG = round($g * 0.15 + 255 * 0.85);
         $lightB = round($b * 0.15 + 255 * 0.85);
         $lightShade = "rgb($lightR, $lightG, $lightB)";
+
+        // Create medium shade for parent transactions (70% white + 30% color)
+        $mediumR = round($r * 0.28 + 255 * 0.72);
+        $mediumG = round($g * 0.28 + 255 * 0.72);
+        $mediumB = round($b * 0.28 + 255 * 0.72);
+        $mediumShade = "rgb($mediumR, $mediumG, $mediumB)";
     @endphp
 
     <style>
@@ -57,6 +63,12 @@
                 !important;
             background:
                 {{ $lightShade }}
+                !important;
+        }
+
+        .kid-ledger-entry.parent-initiated {
+            background:
+                {{ $mediumShade }}
                 !important;
         }
 
@@ -118,7 +130,7 @@
         /* Theme colored border and shadow for main card */
         .kid-card {
             /* border: 1px solid
-                                                                        {{ $kid->color }}
+                                                                                                                        {{ $kid->color }}
             !important;
             */ box-shadow: 0 4px 16px rgba({{ $r }},
                     {{ $g }}
@@ -154,6 +166,11 @@
             font-size: 18px;
             font-weight: 900;
             line-height: 1;
+        }
+
+        .kid-ledger-entry.denied-allowance {
+            background: #ffebee !important;
+            border-left-color: #ef5350 !important;
         }
 
         @media (max-width: 768px) {
