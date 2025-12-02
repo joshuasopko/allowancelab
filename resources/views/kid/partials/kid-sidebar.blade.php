@@ -31,6 +31,13 @@
 
         <div class="kid-menu-divider"></div>
 
+        <!-- Lab Tools Header -->
+        <div class="kid-lab-tools-header"
+            style="color: {{ $kid->color }}; border-bottom: 1px solid {{ $kid->color }}80;">
+            <span>Lab Tools</span>
+            <i class="fas fa-flask"></i>
+        </div>
+
         <!-- Coming Soon Features -->
         <a href="#" class="kid-menu-item kid-coming-soon-item">
             My Goals

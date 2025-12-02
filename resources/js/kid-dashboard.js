@@ -659,8 +659,10 @@ function kidRenderModalLedger() {
             ' | ' +
             dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
+        const isDeniedAllowance = entry.note === 'Allowance not earned - insufficient points';
+
         return `
-        <div class="kid-modal-ledger-entry">
+<div class="kid-modal-ledger-entry ${isParentInitiated ? 'parent-initiated' : ''} ${isDeniedAllowance ? 'denied-allowance' : ''}">
             <div class="kid-parent-icon-cell">
                 ${isParentInitiated ? '<span class="kid-parent-icon">P</span>' : ''}
             </div>

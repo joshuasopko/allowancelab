@@ -72,6 +72,23 @@
                 !important;
         }
 
+        .kid-ledger-entry.parent-initiated {
+            background:
+                {{ $mediumShade }}
+                !important;
+        }
+
+        .kid-modal-ledger-entry.parent-initiated {
+            background:
+                {{ $mediumShade }}
+                !important;
+        }
+
+        .kid-modal-ledger-entry.denied-allowance {
+            background: #ffebee !important;
+            border-left-color: #ef5350 !important;
+        }
+
         .kid-parent-icon {
             font-size: 22px;
             font-weight: 900;
@@ -130,7 +147,7 @@
         /* Theme colored border and shadow for main card */
         .kid-card {
             /* border: 1px solid
-                                                                                                                                                    {{ $kid->color }}
+                                                                                                                                                                {{ $kid->color }}
             !important;
             */ box-shadow: 0 4px 16px rgba({{ $r }},
                     {{ $g }}
