@@ -47,8 +47,17 @@
                             $daysUntil = 7;
                         $nextAllowance = $today->copy()->addDays($daysUntil);
                     @endphp
-                    <div class="next-allowance">Next allowance: ${{ number_format($kid->allowance_amount, 2) }} on
-                        {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}
+                    <div class="next-allowance">
+                        @if($kid->points_enabled && $kid->points === 0)
+                            <span style="color: #ef4444; font-weight: 600;">
+                                {{ $kid->name }} is at 0 points. No allowance on {{ $nextAllowance->format('l, M j') }}.<br>Help them
+                                find ways
+                                to earn points back!
+                            </span>
+                        @else
+                            Next allowance: ${{ number_format($kid->allowance_amount, 2) }} on
+                            {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}
+                        @endif
                     </div>
                 </div>
 
@@ -183,7 +192,8 @@
                                     </div>
 
                                     <div class="ledger-date">{{ $entry->created_at->format('M j') }} |
-                                        {{ $entry->created_at->format('g:i A') }}</div>
+                                        {{ $entry->created_at->format('g:i A') }}
+                                    </div>
 
                                     @if($entry instanceof \App\Models\Transaction)
                                         <div class="ledger-type {{ $entry->type }}">

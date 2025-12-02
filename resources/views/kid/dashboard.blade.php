@@ -130,7 +130,7 @@
         /* Theme colored border and shadow for main card */
         .kid-card {
             /* border: 1px solid
-                                                                                                                        {{ $kid->color }}
+                                                                                                                                                    {{ $kid->color }}
             !important;
             */ box-shadow: 0 4px 16px rgba({{ $r }},
                     {{ $g }}
@@ -219,9 +219,16 @@
                 $nextAllowance = $today->copy()->addDays($daysUntil);
             @endphp
             <div class="kid-next-allowance">
-                Next allowance: ${{ number_format($kid->allowance_amount, 2) }} on {{ ucfirst($kid->allowance_day) }},
-                {{ $nextAllowance->format('M j') }}<br>
-                Only <span class="days-away">{{ $daysUntil }}</span> more days away!
+                @if($kid->points_enabled && $kid->points === 0)
+                    <span style="color: #ef4444; font-weight: 600;">
+                        Uh oh! You're at zero points. No allowance will be posted this {{ $nextAllowance->format('l, M j') }}.
+                        <br>Do some extra chores or help out to earn points back!
+                    </span>
+                @else
+                    Next allowance: ${{ number_format($kid->allowance_amount, 2) }} on {{ ucfirst($kid->allowance_day) }},
+                    {{ $nextAllowance->format('M j') }}<br>
+                    Only <span class="days-away">{{ $daysUntil }}</span> more days away!
+                @endif
             </div>
         </div>
 
