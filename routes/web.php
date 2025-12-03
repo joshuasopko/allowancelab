@@ -22,9 +22,12 @@ Route::post('/check-username', [KidController::class, 'checkUsername'])->name('c
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
-        $kids = $user->kids;
+        $kids = $user->accessibleKids();
         return view('parent.dashboard', compact('user', 'kids'));
     })->name('dashboard');
+
+    // Manage Family
+    Route::get('/manage-family', [App\Http\Controllers\ManageFamilyController::class, 'index'])->name('manage-family');
 
     // Kid management
     Route::post('/kids', [App\Http\Controllers\KidController::class, 'store'])->name('kids.store');

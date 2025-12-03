@@ -46,7 +46,8 @@
 
         <div class="menu-divider"></div>
 
-        <a href="#" class="menu-item">Manage Family</a>
+        <a href="{{ route('manage-family') }}"
+            class="menu-item {{ request()->routeIs('manage-family') ? 'active' : '' }}">Manage Family</a>
         <a href="#" class="menu-item">Help</a>
 
         <div class="menu-divider mobile-only"></div>
