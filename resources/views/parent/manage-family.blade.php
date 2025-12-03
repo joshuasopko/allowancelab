@@ -27,6 +27,21 @@
             @if($isOwner)
                 <!-- Invite Users Tab -->
                 <div class="tab-content active" id="invite-users-tab">
+                    <!-- Success/Error Messages -->
+                    @if(session('success'))
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            @foreach($errors->all() as $error)
+                                {{ $error }}
+                            @endforeach
+                        </div>
+                    @endif
 
                     <!-- Co-Parent Invite Section -->
                     <div class="invite-section">
@@ -41,7 +56,9 @@
                                 <i class="fas fa-user-plus"></i> Invite Parent
                             </button>
 
-                            <form class="invite-form" id="coParentForm" style="display: none;">
+                            <form class="invite-form" id="coParentForm" style="display: none;" method="POST"
+                                action="{{ route('family.invite') }}">
+                                @csrf
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="coParentName">Full Name</label>

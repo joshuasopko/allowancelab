@@ -2934,6 +2934,33 @@ Manage Family Styles
     }
 }
 
+/* Alert Messages */
+.alert {
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.alert i {
+    font-size: 18px;
+}
+
 @media (max-width: 768px) {
     .mobile-add-kid-wrapper {
         display: block;

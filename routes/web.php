@@ -18,6 +18,10 @@ Route::post('/invite/{token}', [KidController::class, 'acceptInvite'])->name('in
 Route::post('/check-username', [KidController::class, 'checkUsername'])->name('check.username');
 
 
+// Family invite acceptance (public routes)
+Route::get('/family/accept/{token}', [App\Http\Controllers\FamilyInviteController::class, 'show'])->name('family.accept-invite');
+Route::post('/family/accept/{token}', [App\Http\Controllers\FamilyInviteController::class, 'accept'])->name('family.process-invite');
+
 // Parent routes (protected by 'auth' middleware)
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
@@ -28,7 +32,8 @@ Route::middleware('auth')->group(function () {
 
     // Manage Family
     Route::get('/manage-family', [App\Http\Controllers\ManageFamilyController::class, 'index'])->name('manage-family');
-
+    // Family invitation routes
+    Route::post('/family/invite', [App\Http\Controllers\ManageFamilyController::class, 'sendInvite'])->name('family.invite');
     // Kid management
     Route::post('/kids', [App\Http\Controllers\KidController::class, 'store'])->name('kids.store');
     Route::patch('/kids/{kid}/balance', [App\Http\Controllers\KidController::class, 'updateBalance'])->name('kids.updateBalance');
