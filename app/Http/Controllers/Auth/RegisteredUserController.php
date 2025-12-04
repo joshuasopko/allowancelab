@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use App\Models\Family;
+use App\Mail\WelcomeEmail;
+use Illuminate\Support\Facades\Mail;
 
 class RegisteredUserController extends Controller
 {
@@ -53,6 +55,9 @@ class RegisteredUserController extends Controller
 
         // Attach user to the family
         $user->families()->attach($family->id, ['role' => 'owner']);
+
+        // Send welcome email
+        Mail::to($user->email)->send(new WelcomeEmail($user));
 
         event(new Registered($user));
 
