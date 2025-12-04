@@ -565,6 +565,57 @@
                 gap: 30px;
             }
         }
+
+        /* Hide desktop buttons on mobile */
+        .desktop-only {
+            display: flex;
+        }
+
+        @media (max-width: 550px) {
+            .desktop-only {
+                display: none;
+            }
+        }
+
+        /* Mobile login buttons below header */
+        .mobile-login-buttons {
+            display: none;
+            gap: 12px;
+            padding: 16px 20px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .mobile-login-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .mobile-login-btn.btn-parent {
+            background: #10b981;
+            color: white;
+        }
+
+        .mobile-login-btn.btn-kid {
+            background: #3b82f6;
+            color: white;
+        }
+
+        @media (max-width: 550px) {
+            .mobile-login-buttons {
+                display: flex;
+            }
+
+            nav.nav-links {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -579,6 +630,12 @@
             <a href="{{ route('kid.login') }}" class="kid-login">Kid Login</a>
         </nav>
     </header>
+
+    <!-- Mobile Login Buttons (below header) -->
+    <div class="mobile-login-buttons">
+        <a href="{{ route('login') }}" class="mobile-login-btn btn-parent">Parent Login</a>
+        <a href="{{ route('kid.login') }}" class="mobile-login-btn btn-kid">Kid Login</a>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
