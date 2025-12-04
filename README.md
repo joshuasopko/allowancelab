@@ -1,59 +1,349 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AllowanceLab
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Project Overview
+AllowanceLab is a family allowance management application that positions parents as "the bank" while teaching children financial responsibility through a point-based accountability system. The app bridges the gap between overly complex banking apps like Greenlight and existing chore trackers that are either too simple or complicated.
 
-## About Laravel
+**Live URL:** https://allowancelab.com  
+**Owner:** Mr. Joshua (joshua.sopko@gmail.com)  
+**Personal Context:** 6 children, making this both a personal solution and potential public product
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Core Philosophy
+- Parents maintain full financial control (they are "the bank")
+- Children learn responsibility through weekly point system
+- Kids start each week with maximum points (default: 10)
+- If points drop to zero by allowance day, no allowance is posted
+- Parents can adjust points, add/subtract money, set allowances
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
+- **Framework:** Laravel 11 with Breeze authentication
+- **Database:** PostgreSQL
+- **Hosting:** Railway (us-west1)
+- **Email:** Resend API (hello@allowancelab.com)
+- **Version Control:** GitHub
+- **Local Environment:** Laravel Herd (PHP 8.4.15)
+- **Production Environment:** Railway (PHP 8.2.29)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Architecture
 
-## Learning Laravel
+### Family-Based Structure
+- Application uses family-based architecture (not user-based)
+- Multiple parents can manage the same children's accounts
+- Parents belong to families via `family_parent` pivot table
+- Children belong to families via `family_id` foreign key
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Key Models
+- **Family:** Container for parents and kids
+- **Parent:** Users who manage family accounts
+- **Kid:** Children who receive allowances and earn/lose points
+- **Transaction:** Records all money movements (parent actions, allowances, etc.)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Database Tables
+- `families`: Family containers
+- `users`: Parent accounts (authenticated users)
+- `family_parent`: Pivot table linking parents to families
+- `kids`: Children accounts linked to families
+- `transactions`: All monetary transactions with type tracking
+- `allowances`: Scheduled allowance rules per kid
+- `password_reset_tokens`: Laravel auth
+- `sessions`: Laravel sessions
+- `cache` & `cache_locks`: Laravel cache
+- `jobs` & `job_batches` & `failed_jobs`: Queue system
 
-## Laravel Sponsors
+## Key Features (Current MVP)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Parent Dashboard
+- View all kids' balances and points
+- Quick actions: add/subtract money, adjust points
+- Add new children to family
+- Invite other parents to join family
+- View recent transactions
 
-### Premium Partners
+### Kid Dashboard  
+- View current balance and points
+- See transaction history (ledger)
+- Visual indicators for transaction types
+- Mobile-responsive design
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Allowance System
+- Automated posting daily at 2:00 AM (America/Chicago)
+- Only posts if kid has points > 0
+- Parents can set allowance amount and day of week per kid
+- Allowances can be enabled/disabled per kid
 
-## Contributing
+### Points System
+- Automated reset every Sunday at 2:01 AM (America/Chicago)
+- Default starting points: 10 (configurable per kid)
+- Parents can manually adjust points anytime
+- Points visible on both parent and kid dashboards
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Transaction Tracking
+- All money movements recorded with types:
+  - `parent_add`: Parent added money
+  - `parent_subtract`: Parent subtracted money
+  - `allowance`: Automated allowance posting
+  - `allowance_denied`: Attempted post but points were 0
+- Ledger views with filtering capabilities
+- Real-time balance updates
 
-## Code of Conduct
+### Family Management
+- Email invitation system for additional parents
+- Invite codes stored in database
+- Email sent via Resend API
+- Parents can manage all kids in family
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Automated Tasks (Cron Jobs)
 
-## Security Vulnerabilities
+### Schedule Configuration
+Located in: `app/Console/Kernel.php`
+```php
+$schedule->command('allowances:post')->dailyAt('02:00');
+$schedule->command('kids:reset-points')->weeklyOn(0, '02:01'); // Sunday 2:01 AM
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Railway Cron Configuration
+Railway cron service configured separately to trigger schedule:run
 
-## License
+## Development Workflow
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Branch Strategy
+- **main:** Production branch (auto-deploys to Railway)
+- **dev:** Development branch (work here, test locally)
+
+### Deploy Process
+1. Work and test on `dev` branch locally
+2. When ready to deploy:
+```bash
+git checkout main
+git merge dev
+git push origin main
+```
+3. Railway auto-deploys when `main` updates
+
+### Testing Emails
+Use Gmail + aliasing for unlimited test accounts:
+- joshua.sopko+test1@gmail.com
+- joshua.sopko+test2@gmail.com
+- joshua.sopko+anything@gmail.com
+
+All deliver to main inbox but treated as unique users.
+
+## Environment Configuration
+
+### Railway Environment Variables
+```
+APP_NAME=AllowanceLab
+APP_ENV=production
+APP_KEY=[generated]
+APP_DEBUG=false
+APP_TIMEZONE=America/Chicago
+APP_URL=https://allowancelab.com
+
+DB_CONNECTION=pgsql
+DB_HOST=[Railway PostgreSQL]
+DB_PORT=[Railway PostgreSQL]
+DB_DATABASE=railway
+DB_USERNAME=postgres
+DB_PASSWORD=[Railway PostgreSQL]
+
+MAIL_MAILER=resend
+MAIL_FROM_ADDRESS=hello@allowancelab.com
+MAIL_FROM_NAME="Joshua @ AllowanceLab"
+RESEND_API_KEY=[Resend API Key]
+
+QUEUE_CONNECTION=database
+SESSION_DRIVER=database
+```
+
+### Railway Custom Start Command
+```bash
+php artisan migrate --force && php artisan optimize && /start-container.sh
+```
+
+### Local Environment (.env)
+Same as Railway but with local database credentials and APP_DEBUG=true
+
+## Important File Locations
+
+### Controllers
+- `app/Http/Controllers/ParentDashboardController.php`
+- `app/Http/Controllers/KidDashboardController.php`
+- `app/Http/Controllers/Auth/RegisteredUserController.php`
+
+### Models
+- `app/Models/Family.php`
+- `app/Models/User.php` (Parent)
+- `app/Models/Kid.php`
+- `app/Models/Transaction.php`
+- `app/Models/Allowance.php`
+
+### Views
+- `resources/views/parent/dashboard.blade.php`
+- `resources/views/kid/dashboard.blade.php`
+- `resources/views/parent/add-kid.blade.php`
+- `resources/views/parent/invite-parent.blade.php`
+
+### Commands
+- `app/Console/Commands/PostAllowances.php`
+- `app/Console/Commands/ResetKidPoints.php`
+
+### Emails
+- `app/Mail/WelcomeEmail.php`
+- `app/Mail/InviteParentEmail.php`
+
+## UI/UX Principles
+
+### Design Philosophy
+- Mobile-first responsive design (primary access method)
+- Clean, professional interface
+- Dynamic theme colors based on kid avatar selection
+- Comprehensive confirmation modals for destructive actions
+- Inline validation with shake animations
+- Real-time balance updates
+
+### CSS Organization
+- Main styles: `public/css/app.css`
+- Kid-specific styles use "kid-" prefix to prevent conflicts
+- Unique class and function names throughout
+
+### JavaScript
+- Organized in separate files by feature
+- Proper event delegation
+- Confirmation modals for important actions
+
+## Database Management
+
+### Reset Database (Railway Console)
+```bash
+php artisan migrate:fresh --force
+```
+
+### Quick Data Cleanup (Railway Tinker)
+```bash
+php artisan tinker
+User::truncate();
+Family::truncate();
+exit
+```
+
+### Deploy with Database Reset
+Temporarily change Railway start command to:
+```bash
+php artisan migrate:fresh --force && php artisan optimize && /start-container.sh
+```
+Then change back after deploy.
+
+## Current Status
+
+### Working Features ✅
+- Parent registration and authentication
+- Family creation and management
+- Add children to family
+- Set allowance amounts and schedules
+- Add/subtract money from kid accounts
+- Adjust kid points manually
+- Automated allowance posting (daily 2:00 AM)
+- Automated points reset (Sunday 2:01 AM)
+- Email delivery via Resend API
+- Invite additional parents via email
+- Parent dashboard (desktop + mobile)
+- Kid dashboard (desktop + mobile)
+- Transaction ledger with filtering
+- Visual indicators for denied allowances
+- Multi-parent family management
+- Real-time balance calculations
+
+### Known Considerations
+- Local PHP 8.4.15 vs Railway PHP 8.2.29 (keep packages PHP 8.2 compatible)
+- Symfony packages must stay at 7.x (not 8.x)
+- Queue system configured but not actively used (emails send synchronously via Resend API)
+
+## Future Roadmap
+
+### Version 1.1 - Manual Savings Goals
+- Kids can set savings goals
+- Visual progress tracking
+- Goal completion notifications
+
+### Version 1.2 - Chore Tracking
+- Parents assign chores
+- Kids mark chores complete
+- Parent approval workflow
+- Points tied to chore completion
+
+### Version 2.0+ - TBD
+- Waiting for real family usage feedback before planning
+
+## Development Best Practices
+
+### Commit Strategy
+- Frequent commits with descriptive messages
+- Always test locally before merging to main
+- Use step-by-step implementation approach
+
+### Code Style
+- Proper Laravel conventions
+- Clear comments above code snippets
+- Organized Blade templating
+- Unique naming to prevent conflicts
+
+### Version Control
+- Work on `dev` branch
+- Merge to `main` only when ready to deploy
+- Never push broken code to `main`
+
+## Support & Resources
+
+### Cloudflare Email Routing
+- hello@allowancelab.com forwards to joshua.sopko@gmail.com
+- DNS records configured and verified
+- Free email forwarding service
+
+### Resend Dashboard
+- Monitor email delivery
+- View logs and analytics
+- Domain: allowancelab.com (verified)
+
+### Railway Dashboard
+- View deployment logs
+- Monitor application health
+- Manage environment variables
+- Access PostgreSQL database
+
+## Quick Reference Commands
+
+### Git Workflow
+```bash
+git checkout dev              # Switch to dev branch
+git add .                     # Stage changes
+git commit -m "message"       # Commit changes
+git push origin dev           # Push dev branch
+git checkout main             # Switch to main
+git merge dev                 # Merge dev into main
+git push origin main          # Deploy to Railway
+```
+
+### Laravel Commands
+```bash
+php artisan migrate           # Run migrations
+php artisan migrate:fresh     # Drop and recreate tables
+php artisan optimize          # Clear and cache config
+php artisan tinker            # Interactive console
+php artisan schedule:run      # Manually run scheduled tasks
+```
+
+### Composer Commands
+```bash
+composer install              # Install dependencies
+composer update               # Update dependencies
+composer require package      # Add new package
+composer remove package       # Remove package
+```
+
+## Contact
+- **Developer:** Mr. Joshua
+- **Email:** joshua.sopko@gmail.com
+- **Live Site:** https://allowancelab.com
+- **Repository:** [GitHub repository URL]
+
+---
+Last Updated: December 4, 2025
