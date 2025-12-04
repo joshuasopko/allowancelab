@@ -1,8 +1,15 @@
 <!-- Kid Sidebar -->
 <aside class="kid-sidebar mobile-hidden" id="kidSidebar">
+
     <!-- Welcome Message -->
     <div class="kid-sidebar-welcome">
-        Welcome back, {{ $kid->name }}!
+        <div class="kid-sidebar-welcome-title">
+            Step into the lab,<br><span class="kid-name-colored"
+                style="color: {{ $kid->color }};">{{ $kid->name }}.</span>
+        </div>
+        <div class="kid-sidebar-welcome-subtitle">
+            Let's grow that allowance beaker!
+        </div>
     </div>
 
     <!-- Birthday Countdown -->

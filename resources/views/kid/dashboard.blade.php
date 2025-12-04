@@ -147,7 +147,7 @@
         /* Theme colored border and shadow for main card */
         .kid-card {
             /* border: 1px solid
-                                                                                                                                                                {{ $kid->color }}
+                                                                                                                                                                                                                {{ $kid->color }}
             !important;
             */ box-shadow: 0 4px 16px rgba({{ $r }},
                     {{ $g }}
@@ -199,8 +199,13 @@
         }
     </style>
 
-    <!-- Mobile Welcome Message -->
-    <div class="kid-mobile-welcome">Welcome back, {{ $kid->name }}!</div>
+    <!-- Mobile Welcome Section -->
+    <div class="mobile-kid-welcome">
+        <h1 class="mobile-kid-welcome-title">
+            Step into the lab,<br><span class="kid-name-colored" style="color: {{ $kid->color }};">{{ $kid->name }}</span>.
+        </h1>
+        <p class="mobile-kid-welcome-subtitle">Let's grow that allowance beaker!</p>
+    </div>
 
     <!-- Kid Card -->
     <div class="kid-card">

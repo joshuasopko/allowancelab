@@ -32,8 +32,11 @@ Route::middleware('auth')->group(function () {
 
     // Manage Family
     Route::get('/manage-family', [App\Http\Controllers\ManageFamilyController::class, 'index'])->name('manage-family');
-    // Family invitation routes
+    // Family invitation and management routes
     Route::post('/family/invite', [App\Http\Controllers\ManageFamilyController::class, 'sendInvite'])->name('family.invite');
+    Route::delete('/family/member/{user}', [App\Http\Controllers\ManageFamilyController::class, 'removeMember'])->name('family.remove-member');
+    Route::post('/family/invite/{invite}/resend', [App\Http\Controllers\ManageFamilyController::class, 'resendInvite'])->name('family.resend-invite');
+    Route::delete('/family/invite/{invite}', [App\Http\Controllers\ManageFamilyController::class, 'cancelInvite'])->name('family.cancel-invite');
     // Kid management
     Route::post('/kids', [App\Http\Controllers\KidController::class, 'store'])->name('kids.store');
     Route::patch('/kids/{kid}/balance', [App\Http\Controllers\KidController::class, 'updateBalance'])->name('kids.updateBalance');

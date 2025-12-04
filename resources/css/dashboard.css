@@ -117,6 +117,19 @@ body {
     flex-direction: column;
 }
 
+/* Sidebar Welcome Subtitle */
+.sidebar-welcome-greeting {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.sidebar-welcome-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: #9ca3af;
+    line-height: 1.4;
+}
+
 .sidebar-welcome {
     padding: 0 24px 24px 24px;
     font-size: 18px;
@@ -124,6 +137,9 @@ body {
     color: #444;
     border-bottom: 1px solid #e0e0e0;
     margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .sidebar-features {
@@ -406,7 +422,7 @@ body {
     margin-bottom: 0;
 }
 
-.action-btn {
+.kid-card-action-btn {
     padding: 14px 20px;
     border: none;
     border-radius: 10px;
@@ -1424,7 +1440,7 @@ body {
         flex: 1 !important;
     }
 
-    .action-btn,
+    .kid-card-action-btn,
     .dropdown-form {
         order: 0 !important;
     }
@@ -2362,6 +2378,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    margin-bottom: 30px;
 }
 
 .save-btn:hover {
@@ -2682,6 +2699,10 @@ button#togglePasswordBtn {
 Manage Family Styles 
 ===============================
 */
+.manage-family-tabs .tab-btn:first-child {
+    padding-left: 0;
+}
+
 .manage-family-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -2961,6 +2982,511 @@ Manage Family Styles
     font-size: 18px;
 }
 
+/* User Accounts Tab Styles */
+.accounts-section {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 20px;
+}
+
+.accounts-ledger {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.account-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.2s;
+}
+
+.account-row:last-child {
+    border-bottom: none;
+}
+
+.account-row:hover {
+    background: #f9fafb;
+}
+
+.account-row.pending {
+    background: #fffbeb;
+}
+
+.account-row.pending:hover {
+    background: #fef3c7;
+}
+
+.account-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.account-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.pending-avatar {
+    background: #f59e0b;
+}
+
+.account-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.account-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.account-email {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.account-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+    margin-right: 20px;
+}
+
+.account-role {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.role-owner {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.role-coparent {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.account-status {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.account-date {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.account-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.family-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-danger-outline {
+    background: white;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.btn-danger-outline:hover {
+    background: #fef2f2;
+}
+
+.you-badge,
+.owner-badge {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.you-badge {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.owner-badge {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9ca3af;
+    font-size: 15px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .account-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .account-info {
+        width: 100%;
+    }
+
+    .account-meta {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-right: 0;
+    }
+
+    .account-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .kid-card-action-btn,
+    .family-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Confirmation Modal */
+.confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.confirm-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.confirm-modal-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fef3c7;
+}
+
+.confirm-modal-icon i {
+    font-size: 32px;
+    color: #f59e0b;
+}
+
+.confirm-modal-icon.danger {
+    background: #fee2e2;
+}
+
+.confirm-modal-icon.danger i {
+    color: #ef4444;
+}
+
+.confirm-modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.confirm-modal-message {
+    font-size: 15px;
+    color: #6b7280;
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.confirm-btn-cancel,
+.confirm-btn-confirm {
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.confirm-btn-cancel {
+    background: white;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+.confirm-btn-cancel:hover {
+    background: #f9fafb;
+    color: #1f2937;
+}
+
+.confirm-btn-confirm {
+    background: #ef4444;
+    color: white;
+}
+
+.confirm-btn-confirm:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.confirm-btn-confirm.secondary {
+    background: #2563eb;
+}
+
+.confirm-btn-confirm.secondary:hover {
+    background: #1d4ed8;
+}
+
+/* Kids Accounts Specific Styles */
+.kid-row {
+    background: #fafafa;
+}
+
+.kid-row:hover {
+    background: #f5f5f5;
+}
+
+.kid-account-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.kid-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kid-meta-item {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.kid-meta-separator {
+    color: #d1d5db;
+    font-size: 12px;
+}
+
+.kid-allowance-badge {
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+/* Back to Dashboard Button */
+.back-to-dashboard-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: white;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.back-to-dashboard-btn:hover {
+    background: #f9fafb;
+    color: #1f2937;
+    border-color: #9ca3af;
+}
+
+.back-to-dashboard-btn i {
+    font-size: 12px;
+}
+
+/* Mobile Back Links */
+.mobile-back-link {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+    border: 1px solid #6b7280;
+    border-radius: 8px;
+    max-width: 175px;
+}
+
+.mobile-back-link:hover {
+    color: #374151;
+}
+
+.mobile-back-link i {
+    font-size: 12px;
+}
+
+.mobile-back-top {
+    margin-bottom: 16px;
+}
+
+.mobile-back-bottom {
+    margin-top: 24px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .mobile-back-link {
+        display: flex;
+    }
+}
+
+/* Mobile Responsive for Kids Accounts */
+@media (max-width: 768px) {
+    .kid-meta-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .kid-meta-separator {
+        display: none;
+    }
+}
+
 @media (max-width: 768px) {
     .mobile-add-kid-wrapper {
         display: block;
@@ -3179,5 +3705,105 @@ Manage Family Styles
 
     .transaction-modal-body {
         padding: 16px;
+    }
+
+    .back-btn,
+    .back-to-dashboard-btn {
+        display: none;
+    }
+}
+
+/* Mobile Welcome Section */
+.mobile-welcome {
+    display: none;
+    padding: 0px 0 18px 0;
+}
+
+.mobile-welcome-greeting {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.mobile-welcome-subtitle {
+    font-size: 15px;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .mobile-welcome {
+        display: block;
+    }
+}
+
+@media (max-width: 1020px) {
+
+    .points-adjustment-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .points-control,
+    .points-reason {
+        width: 100%;
+    }
+}
+
+/* Mobile: Stack points badge below age */
+@media (max-width: 480px) {
+    .card-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .kid-info {
+        width: 100%;
+        order: 1;
+    }
+
+    .kid-info .avatar {
+        flex-shrink: 0;
+    }
+
+    .points-badge {
+        position: static;
+        order: 2;
+        margin-left: 80px;
+        /* margin-top: 6px; */
+        font-size: 14px;
+        border-radius: 12px;
+    }
+
+    .status-badge.status-pending {
+        font-size: 12px;
+        padding: 4px 8px;
+        margin-top: 6px;
+        margin-bottom: 8px;
+    }
+
+    #qrCodeDisplay svg,
+    #qrCodeDisplayManage svg {
+        max-width: 220px !important;
+        height: auto !important;
+    }
+
+    #qrCodeDisplay>div,
+    #qrCodeDisplayManage>div {
+        padding: 10px !important;
+    }
+
+    #qrCodeDisplay>div>div,
+    #qrCodeDisplayManage>div>div {
+        padding: 12px !important;
+    }
+
+    .manage-family-tabs .tab-btn {
+        padding: 10px 10px;
+        font-size: 14px;
+        white-space: nowrap;
     }
 }

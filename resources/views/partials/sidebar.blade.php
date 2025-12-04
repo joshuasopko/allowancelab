@@ -6,7 +6,24 @@
         $lastName = isset($nameParts[1]) ? ucfirst(strtolower($nameParts[1])) : $firstName;
     @endphp
 
-    <div class="sidebar-welcome">Welcome, {{ $firstName }}!</div>
+    <div class="sidebar-welcome">
+        @php
+            $hour = now()->hour;
+            if ($hour < 12) {
+                $greeting = 'Good morning';
+            } elseif ($hour < 18) {
+                $greeting = 'Good afternoon';
+            } else {
+                $greeting = 'Good evening';
+            }
+        @endphp
+        <div class="sidebar-welcome-greeting">
+            {{ $greeting }}, {{ Auth::user()->first_name ?? explode(' ', Auth::user()->name)[0] }}
+        </div>
+        <div class="sidebar-welcome-subtitle">
+            You're managing a family of {{ Auth::user()->accessibleKids()->count() }} kids.
+        </div>
+    </div>
 
     <div class="sidebar-menu">
         <a href="#" class="menu-item">

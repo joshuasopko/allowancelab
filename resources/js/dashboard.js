@@ -908,9 +908,10 @@ function showInviteMethod(method) {
     }
 }
 
-// Create invite if none exists (for "skip for now" case)
+/// Create invite if none exists (for "skip for now" case)
 function createInviteForManage() {
-    const kidId = window.location.pathname.split('/').pop().split('/')[0];
+    const pathParts = window.location.pathname.split('/');
+    const kidId = pathParts[2]; // /kids/4/manage -> ['', 'kids', '4', 'manage']
 
     fetch(`/kids/${kidId}/create-invite`, {
         method: 'POST',
@@ -948,7 +949,8 @@ function copyInviteLinkManage() {
 // Send email invite from manage page
 function sendEmailInviteManage() {
     const email = document.getElementById('kidEmailInputManage').value;
-    const kidId = window.location.pathname.split('/').pop().split('/')[0];
+    const pathParts = window.location.pathname.split('/');
+    const kidId = pathParts[2]; // /kids/4/manage -> ['', 'kids', '4', 'manage']
 
     if (!email) {
         showToast('Please enter an email address', 'error');
@@ -991,7 +993,8 @@ function sendEmailInviteManage() {
 
 // Generate QR code from manage page
 function generateQRCodeManage() {
-    const kidId = window.location.pathname.split('/').pop().split('/')[0];
+    const pathParts = window.location.pathname.split('/');
+    const kidId = pathParts[2]; // /kids/4/manage -> ['', 'kids', '4', 'manage']
 
     fetch(`/kids/${kidId}/qr-code`, {
         method: 'GET',

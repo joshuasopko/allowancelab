@@ -3,6 +3,23 @@
 @section('title', 'Parent Dashboard - AllowanceLab')
 
 @section('content')
+@section('content')
+    <!-- Mobile Welcome Section -->
+    <div class="mobile-welcome">
+        @php
+            $hour = now()->hour;
+            if ($hour < 12) {
+                $greeting = 'Good morning';
+            } elseif ($hour < 18) {
+                $greeting = 'Good afternoon';
+            } else {
+                $greeting = 'Good evening';
+            }
+        @endphp
+        <h2 class="mobile-welcome-greeting">{{ $greeting }}, {{ $user->first_name ?? explode(' ', $user->name)[0] }}!</h2>
+        <p class="mobile-welcome-subtitle">Manage your family of {{ $kids->count() }} below.</p>
+    </div>
+
     @if($kids->count() > 0)
         @foreach($kids as $kid)
             <div class="kid-card">
@@ -63,12 +80,15 @@
 
                 <!-- Action Buttons -->
                 <div class="action-buttons">
-                    <button class="action-btn btn-deposit" onclick="toggleForm('deposit-{{ $kid->id }}')">Deposit Money</button>
-                    <button class="action-btn btn-spend" onclick="toggleForm('spend-{{ $kid->id }}')">Record Spend</button>
+                    <button class="kid-card-action-btn btn-deposit" onclick="toggleForm('deposit-{{ $kid->id }}')">Deposit
+                        Money</button>
+                    <button class="kid-card-action-btn btn-spend" onclick="toggleForm('spend-{{ $kid->id }}')">Record Spend</button>
                     @if($kid->points_enabled)
-                        <button class="action-btn btn-points" onclick="toggleForm('points-{{ $kid->id }}')">Adjust Points</button>
+                        <button class="kid-card-action-btn btn-points" onclick="toggleForm('points-{{ $kid->id }}')">Adjust
+                            Points</button>
                     @endif
-                    <button class="action-btn btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}', this)">View Ledger</button>
+                    <button class="kid-card-action-btn btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}', this)">View
+                        Ledger</button>
                 </div>
 
                 <!-- Deposit Form -->

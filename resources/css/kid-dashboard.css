@@ -13,6 +13,56 @@
 }
 
 /* Kid Header */
+
+/* Kid Family Badge - Desktop Only */
+.kid-family-badge {
+    display: none;
+    justify-content: flex-end;
+    width: 100%;
+    padding: 0 32px;
+    /* Match content card padding */
+    box-sizing: border-box;
+    font-size: 20px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+@media (min-width: 780px) {
+    .kid-family-badge {
+        display: flex;
+    }
+}
+
+/* Kid Welcome Section */
+.kid-welcome-section {
+    padding: 24px 0;
+    text-align: center;
+}
+
+.kid-welcome-header {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+}
+
+.kid-welcome-subtext {
+    font-size: 16px;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .kid-welcome-header {
+        font-size: 22px;
+    }
+
+    .kid-welcome-subtext {
+        font-size: 14px;
+    }
+}
+
 .kid-header {
     background: white;
     border-bottom: 1px solid #e0e0e0;
@@ -117,11 +167,25 @@
     transform: translateX(-100%);
 }
 
+/* Kid Sidebar Welcome */
 .kid-sidebar-welcome {
-    padding: 0 24px 24px 24px;
+    padding: 0px 20px 24px 20px;
+    /* border-bottom: 1px solid #e5e7eb; */
+}
+
+.kid-sidebar-welcome-title {
     font-size: 18px;
-    font-weight: 600;
-    color: #444;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+}
+
+.kid-sidebar-welcome-subtitle {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
 }
 
 .kid-birthday-countdown {
@@ -247,13 +311,31 @@
     margin: 0 auto;
 }
 
-/* Mobile Welcome Message */
-.kid-mobile-welcome {
+/* Mobile Kid Welcome Section */
+.mobile-kid-welcome {
     display: none;
-    font-size: 18px;
-    font-weight: 600;
-    color: #444;
-    margin-bottom: 20px;
+    padding: 0px 0 18px 5px;
+}
+
+.mobile-kid-welcome-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.mobile-kid-welcome-subtitle {
+    font-size: 15px;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .mobile-kid-welcome {
+        display: block;
+    }
 }
 
 /* Kid Card */
@@ -1246,4 +1328,16 @@
         display: flex;
     }
 
+}
+
+/* Version Number */
+.version-number {
+    position: fixed;
+    bottom: 10px;
+    right: 20px;
+    font-size: 11px;
+    color: #ccc;
+    font-weight: 500;
+    z-index: 10;
+    pointer-events: none;
 }

@@ -11,6 +11,10 @@
 @endsection
 
 @section('content')
+    <!-- Mobile Back Button (Top) -->
+    <a href="{{ route('dashboard') }}" class="mobile-back-link mobile-back-top">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
     <!-- Page Header -->
     <div class="manage-header">
         <div class="manage-kid-info">
@@ -31,7 +35,7 @@
     </div>
 
     <!-- Profile Tab Content -->
-    <div class="tab-content" id="profileTab">
+    <div class="tab-content active" id="profileTab">
 
         <!-- Account Status Section -->
         <div class="account-status-section">
@@ -171,197 +175,201 @@
         </div>
 
         <form action="{{ route('kids.update', $kid) }}" method="POST" class="manage-form">
+            @csrf
+            @method('PATCH')
 
-            <form action="{{ route('kids.update', $kid) }}" method="POST" class="manage-form">
-                @csrf
-                @method('PATCH')
+            <!-- Basic Info Section -->
+            <div class="form-section">
+                <h3 class="section-title">Basic Information</h3>
 
-                <!-- Basic Info Section -->
-                <div class="form-section">
-                    <h3 class="section-title">Basic Information</h3>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Name</label>
-                            <input type="text" class="form-input" name="name" value="{{ $kid->name }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Birthday</label>
-                            <input type="date" class="form-input" name="birthday"
-                                value="{{ $kid->birthday->format('Y-m-d') }}" required>
-                        </div>
-                    </div>
-
-                    @if($kid->username)
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Username</label>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    <input type="text" class="form-input" value="{{ $kid->username }}" readonly
-                                        style="flex: 1;">
-                                    <button type="button" class="btn-change-credential" onclick="openChangeUsernameModal()">
-                                        <i class="fas fa-edit"></i> Change
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Password</label>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    <input type="password" class="form-input" id="kidPasswordField"
-                                        value="{{ $kid->password_plaintext ?? '********' }}" readonly style="flex: 1;">
-                                    <button type="button" class="btn-show-password"
-                                        onclick="togglePasswordVisibility('kidPasswordField', 'togglePasswordIcon')"
-                                        id="togglePasswordBtn">
-                                        <i class="fas fa-eye" id="togglePasswordIcon"></i>
-                                    </button>
-                                    <button type="button" class="btn-change-credential" onclick="openResetPasswordModal()">
-                                        <i class="fas fa-key"></i> Reset
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Appearance Section -->
-                <div class="form-section">
-                    <h3 class="section-title">Appearance</h3>
-
+                <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Avatar Color</label>
-                        <div class="avatar-preview-row">
-                            <div class="avatar-preview-circle" id="avatarPreviewManage"
-                                style="background: {{ $kid->color }};">
-                                {{ strtoupper(substr($kid->name, 0, 1)) }}
-                            </div>
-                            <span class="color-name" id="colorNameManage"></span>
-                        </div>
-                        <div class="color-grid">
-                            <div class="color-option {{ $kid->color == '#80d4b0' ? 'selected' : '' }}"
-                                style="background: #80d4b0;" data-color="#80d4b0" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#ff9999' ? 'selected' : '' }}"
-                                style="background: #ff9999;" data-color="#ff9999" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#b19cd9' ? 'selected' : '' }}"
-                                style="background: #b19cd9;" data-color="#b19cd9" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#87ceeb' ? 'selected' : '' }}"
-                                style="background: #87ceeb;" data-color="#87ceeb" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#ffb380' ? 'selected' : '' }}"
-                                style="background: #ffb380;" data-color="#ffb380" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#e066a6' ? 'selected' : '' }}"
-                                style="background: #e066a6;" data-color="#e066a6" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#ffd966' ? 'selected' : '' }}"
-                                style="background: #ffd966;" data-color="#ffd966" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#a8c686' ? 'selected' : '' }}"
-                                style="background: #a8c686;" data-color="#a8c686" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#5ab9b3' ? 'selected' : '' }}"
-                                style="background: #5ab9b3;" data-color="#5ab9b3" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#9bb7d4' ? 'selected' : '' }}"
-                                style="background: #9bb7d4;" data-color="#9bb7d4" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#ff9966' ? 'selected' : '' }}"
-                                style="background: #ff9966;" data-color="#ff9966" onclick="selectColorManage(this)">
-                            </div>
-                            <div class="color-option {{ $kid->color == '#d4a5d4' ? 'selected' : '' }}"
-                                style="background: #d4a5d4;" data-color="#d4a5d4" onclick="selectColorManage(this)">
-                            </div>
-                        </div>
-                        <input type="hidden" name="color" id="colorInputManage" value="{{ $kid->color }}">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-input" name="name" value="{{ $kid->name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Birthday</label>
+                        <input type="date" class="form-input" name="birthday"
+                            value="{{ $kid->birthday->format('Y-m-d') }}" required>
                     </div>
                 </div>
 
-                <!-- Allowance Section -->
-                <div class="form-section">
-                    <h3 class="section-title">Allowance Settings</h3>
-
+                @if($kid->username)
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Weekly Allowance</label>
-                            <input type="text" inputmode="decimal" class="form-input" name="allowance_amount"
-                                value="{{ number_format($kid->allowance_amount, 2) }}" required>
+                            <label class="form-label">Username</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" class="form-input" value="{{ $kid->username }}" readonly
+                                    style="flex: 1;">
+                                <button type="button" class="btn-change-credential" onclick="openChangeUsernameModal()">
+                                    <i class="fas fa-edit"></i> Change
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Allowance Day</label>
-                            <select class="form-input" name="allowance_day" id="allowanceDaySelect"
-                                data-original="{{ $kid->allowance_day }}" required>
-                                <option value="monday" {{ $kid->allowance_day == 'monday' ? 'selected' : '' }}>Monday
-                                </option>
-                                <option value="tuesday" {{ $kid->allowance_day == 'tuesday' ? 'selected' : '' }}>Tuesday
-                                </option>
-                                <option value="wednesday" {{ $kid->allowance_day == 'wednesday' ? 'selected' : '' }}>
-                                    Wednesday
-                                </option>
-                                <option value="thursday" {{ $kid->allowance_day == 'thursday' ? 'selected' : '' }}>
-                                    Thursday
-                                </option>
-                                <option value="friday" {{ $kid->allowance_day == 'friday' ? 'selected' : '' }}>Friday
-                                </option>
-                                <option value="saturday" {{ $kid->allowance_day == 'saturday' ? 'selected' : '' }}>
-                                    Saturday
-                                </option>
-                                <option value="sunday" {{ $kid->allowance_day == 'sunday' ? 'selected' : '' }}>Sunday
-                                </option>
-                            </select>
+                            <label class="form-label">Password</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="password" class="form-input" id="kidPasswordField"
+                                    value="{{ $kid->password_plaintext ?? '********' }}" readonly style="flex: 1;">
+                                <button type="button" class="btn-show-password"
+                                    onclick="togglePasswordVisibility('kidPasswordField', 'togglePasswordIcon')"
+                                    id="togglePasswordBtn">
+                                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                                </button>
+                                <button type="button" class="btn-change-credential" onclick="openResetPasswordModal()">
+                                    <i class="fas fa-key"></i> Reset
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Points Section -->
-                <div class="form-section">
-                    <h3 class="section-title">Points System</h3>
-
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="points_enabled" id="usePointsManage" class="checkbox-input" value="1"
-                            {{ $kid->points_enabled ? 'checked' : '' }} onchange="toggleMaxPointsManage()">
-                        <label class="checkbox-label" for="usePointsManage">
-                            Use point system?
-                        </label>
-                    </div>
-
-                    <div class="form-group max-points-group" id="maxPointsGroupManage"
-                        style="{{ $kid->points_enabled ? '' : 'display: none;' }}">
-                        <label class="form-label">Max Points (per week)</label>
-                        <input type="number" class="form-input" name="max_points" value="{{ $kid->max_points }}" min="1"
-                            max="100">
-                        <small style="color: #666;">Recommended: 10 points</small>
-                    </div>
-                </div>
-
-                <!-- Save Button -->
-                <div class="form-actions">
-                    <button type="submit" class="save-btn">Save Changes</button>
-                </div>
-            </form>
-
-            <!-- Remove Account -->
-            <div class="form-section danger-zone">
-                <h3 class="section-title" style="color: #f44336;">Remove Account</h3>
-                <p style="color: #666; margin-bottom: 16px;">Permanently remove this child's account and all their
-                    transaction
-                    history, point adjustments, and data.</p>
-                <button type="button" class="delete-btn" onclick="confirmDeleteKid()">Remove Child Account</button>
+                @endif
             </div>
-            <!-- Allowance Day Change Confirmation Modal -->
-            <div class="allowance-confirm-modal" id="allowanceDayModal">
-                <div class="modal-backdrop-allow" onclick="cancelAllowanceDayChange()"></div>
-                <div class="modal-content-allow">
-                    <h3>Change Allowance Day?</h3>
-                    <p id="allowanceDayMessage"></p>
-                    <div class="modal-actions">
-                        <button type="button" class="btn-cancel" onclick="cancelAllowanceDayChange()">Cancel</button>
-                        <button type="button" class="btn-confirm" onclick="confirmAllowanceDayChange()">Continue</button>
+
+            <!-- Appearance Section -->
+            <div class="form-section">
+                <h3 class="section-title">Appearance</h3>
+
+                <div class="form-group">
+                    <label class="form-label">Avatar Color</label>
+                    <div class="avatar-preview-row">
+                        <div class="avatar-preview-circle" id="avatarPreviewManage"
+                            style="background: {{ $kid->color }};">
+                            {{ strtoupper(substr($kid->name, 0, 1)) }}
+                        </div>
+                        <span class="color-name" id="colorNameManage"></span>
+                    </div>
+                    <div class="color-grid">
+                        <div class="color-option {{ $kid->color == '#80d4b0' ? 'selected' : '' }}"
+                            style="background: #80d4b0;" data-color="#80d4b0" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#ff9999' ? 'selected' : '' }}"
+                            style="background: #ff9999;" data-color="#ff9999" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#b19cd9' ? 'selected' : '' }}"
+                            style="background: #b19cd9;" data-color="#b19cd9" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#87ceeb' ? 'selected' : '' }}"
+                            style="background: #87ceeb;" data-color="#87ceeb" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#ffb380' ? 'selected' : '' }}"
+                            style="background: #ffb380;" data-color="#ffb380" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#e066a6' ? 'selected' : '' }}"
+                            style="background: #e066a6;" data-color="#e066a6" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#ffd966' ? 'selected' : '' }}"
+                            style="background: #ffd966;" data-color="#ffd966" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#a8c686' ? 'selected' : '' }}"
+                            style="background: #a8c686;" data-color="#a8c686" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#5ab9b3' ? 'selected' : '' }}"
+                            style="background: #5ab9b3;" data-color="#5ab9b3" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#9bb7d4' ? 'selected' : '' }}"
+                            style="background: #9bb7d4;" data-color="#9bb7d4" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#ff9966' ? 'selected' : '' }}"
+                            style="background: #ff9966;" data-color="#ff9966" onclick="selectColorManage(this)">
+                        </div>
+                        <div class="color-option {{ $kid->color == '#d4a5d4' ? 'selected' : '' }}"
+                            style="background: #d4a5d4;" data-color="#d4a5d4" onclick="selectColorManage(this)">
+                        </div>
+                    </div>
+                    <input type="hidden" name="color" id="colorInputManage" value="{{ $kid->color }}">
+                </div>
+            </div>
+
+            <!-- Allowance Section -->
+            <div class="form-section">
+                <h3 class="section-title">Allowance Settings</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Weekly Allowance</label>
+                        <input type="text" inputmode="decimal" class="form-input" name="allowance_amount"
+                            value="{{ number_format($kid->allowance_amount, 2) }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Allowance Day</label>
+                        <select class="form-input" name="allowance_day" id="allowanceDaySelect"
+                            data-original="{{ $kid->allowance_day }}" required>
+                            <option value="monday" {{ $kid->allowance_day == 'monday' ? 'selected' : '' }}>Monday
+                            </option>
+                            <option value="tuesday" {{ $kid->allowance_day == 'tuesday' ? 'selected' : '' }}>Tuesday
+                            </option>
+                            <option value="wednesday" {{ $kid->allowance_day == 'wednesday' ? 'selected' : '' }}>
+                                Wednesday
+                            </option>
+                            <option value="thursday" {{ $kid->allowance_day == 'thursday' ? 'selected' : '' }}>
+                                Thursday
+                            </option>
+                            <option value="friday" {{ $kid->allowance_day == 'friday' ? 'selected' : '' }}>Friday
+                            </option>
+                            <option value="saturday" {{ $kid->allowance_day == 'saturday' ? 'selected' : '' }}>
+                                Saturday
+                            </option>
+                            <option value="sunday" {{ $kid->allowance_day == 'sunday' ? 'selected' : '' }}>Sunday
+                            </option>
+                        </select>
                     </div>
                 </div>
+            </div>
+
+            <!-- Points Section -->
+            <div class="form-section">
+                <h3 class="section-title">Points System</h3>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" name="points_enabled" id="usePointsManage" class="checkbox-input" value="1"
+                        {{ $kid->points_enabled ? 'checked' : '' }} onchange="toggleMaxPointsManage()">
+                    <label class="checkbox-label" for="usePointsManage">
+                        Use point system?
+                    </label>
+                </div>
+
+                <div class="form-group max-points-group" id="maxPointsGroupManage"
+                    style="{{ $kid->points_enabled ? '' : 'display: none;' }}">
+                    <label class="form-label">Max Points (per week)</label>
+                    <input type="number" class="form-input" name="max_points" value="{{ $kid->max_points }}" min="1"
+                        max="100">
+                    <small style="color: #666;">Recommended: 10 points</small>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="form-actions">
+                <button type="submit" class="save-btn">Save Changes</button>
             </div>
         </form>
+
+            <!-- Mobile Back Button (Top) -->
+            <a href="{{ route('dashboard') }}" class="mobile-back-link mobile-back-top">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+
+        <!-- Remove Account -->
+        <div class="form-section danger-zone">
+            <h3 class="section-title" style="color: #f44336;">Remove Account</h3>
+            <p style="color: #666; margin-bottom: 16px;">Permanently remove this child's account and all their
+                transaction
+                history, point adjustments, and data.</p>
+            <button type="button" class="delete-btn" onclick="confirmDeleteKid()">Remove Child Account</button>
+        </div>
+
+        <!-- Allowance Day Change Confirmation Modal -->
+        <div class="allowance-confirm-modal" id="allowanceDayModal">
+            <div class="modal-backdrop-allow" onclick="cancelAllowanceDayChange()"></div>
+            <div class="modal-content-allow">
+                <h3>Change Allowance Day?</h3>
+                <p id="allowanceDayMessage"></p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="cancelAllowanceDayChange()">Cancel</button>
+                    <button type="button" class="btn-confirm" onclick="confirmAllowanceDayChange()">Continue</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 @endsection
 
@@ -511,6 +519,130 @@
                 document.getElementById('allowanceDayModal').classList.remove('active');
             };
         });
+    </script>
+
+    <script>
+        // adding scripts for the invite feature if parent user skips kid account creation initially
+        const kidId = {{ $kid->id }};
+        let currentInviteToken = null;
+
+        // Show/hide invite methods
+        function showInviteMethod(method) {
+            // Hide all method contents
+            document.getElementById('copyLinkContentManage').style.display = 'none';
+            document.getElementById('emailContentManage').style.display = 'none';
+            document.getElementById('qrContentManage').style.display = 'none';
+
+            // Show selected method
+            if (method === 'copyLink') {
+                createInviteAndShowLink();
+            } else if (method === 'email') {
+                document.getElementById('emailContentManage').style.display = 'block';
+            } else if (method === 'qr') {
+                document.getElementById('qrContentManage').style.display = 'block';
+            }
+        }
+
+        // Create invite and show link
+        function createInviteAndShowLink() {
+            fetch(`/kids/${kidId}/create-invite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentInviteToken = data.token;
+                        const inviteUrl = `${window.location.origin}/invite/${data.token}`;
+                        document.getElementById('inviteLinkInputManage').value = inviteUrl;
+                        document.getElementById('copyLinkContentManage').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error creating invite:', error);
+                    alert('Failed to create invite link');
+                });
+        }
+
+        // Copy invite link
+        function copyInviteLinkManage() {
+            const input = document.getElementById('inviteLinkInputManage');
+            input.select();
+            document.execCommand('copy');
+
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+            }, 2000);
+        }
+
+        // Send email invite
+        function sendEmailInviteManage() {
+            const email = document.getElementById('kidEmailInputManage').value;
+
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+
+            fetch(`/kids/${kidId}/send-email-invite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ email: email })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Invite sent successfully!');
+                    } else {
+                        alert('Failed to send invite: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending email:', error);
+                    alert('Failed to send email invite');
+                });
+        }
+
+        // Generate QR code
+        function generateQRCodeManage() {
+            fetch(`/kids/${kidId}/generate-qr`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const display = document.getElementById('qrCodeDisplayManage');
+                        display.innerHTML = `
+                        <div style="margin-bottom: 20px;">${data.qrCode}</div>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Scan this code to accept the invite</p>
+                        <p style="font-size: 12px; color: #999;">Expires: ${data.expiresAt}</p>
+                    `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error generating QR code:', error);
+                    alert('Failed to generate QR code');
+                });
+        }
+
+        // Toggle resend invite options (for pending invites)
+        function toggleResendInvite() {
+            const options = document.getElementById('resendInviteOptions');
+            options.style.display = options.style.display === 'none' ? 'block' : 'none';
+        }
     </script>
 
 @endsection

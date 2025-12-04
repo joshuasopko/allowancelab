@@ -13,6 +13,19 @@ use App\Mail\KidInviteMail;
 
 class KidController extends Controller
 {
+    /**
+     * Check if the authenticated user can access this kid
+     */
+    private function authorizeKidAccess(Kid $kid)
+    {
+        $user = Auth::user();
+        $userFamilyIds = $user->families()->pluck('families.id')->toArray();
+
+        if (!in_array($kid->family_id, $userFamilyIds)) {
+            abort(403, 'Unauthorized access to this kid.');
+        }
+    }
+
     // Store a new kid
     public function store(Request $request)
     {
@@ -37,9 +50,13 @@ class KidController extends Controller
             $nextAllowanceDate = Carbon::today()->setTime(0, 0, 1);
         }
 
+        // Get user's family
+        $user = Auth::user();
+        $family = $user->families()->first();
+
         // Create the kid without username/password (they'll set it when they accept invite)
         $kid = Kid::create([
-            'user_id' => Auth::id(),
+            'family_id' => $family->id,
             'name' => ucwords(strtolower($request->name)),
             'username' => null, // Kid will create this during registration
             'password' => null, // Kid will create this during registration
@@ -72,10 +89,7 @@ class KidController extends Controller
     // Update kid balance
     public function updateBalance(Request $request, Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         $request->validate([
             'amount' => 'required|numeric',
@@ -90,10 +104,7 @@ class KidController extends Controller
     // Update kid points
     public function updatePoints(Request $request, Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         $request->validate([
             'points_change' => 'required|integer',
@@ -263,10 +274,7 @@ class KidController extends Controller
     // Display the Manage Kid page
     public function manage(Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         return view('parent.manage-kid', compact('kid'));
     }
@@ -274,10 +282,7 @@ class KidController extends Controller
     // Update kid information
     public function update(Request $request, Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -307,10 +312,7 @@ class KidController extends Controller
     // Delete kid and all related data
     public function destroy(Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         // Delete related data first
         $kid->transactions()->delete();
@@ -325,10 +327,7 @@ class KidController extends Controller
     // Create an invite for a kid
     public function createInvite(Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         // Check if invite already exists
         $invite = $kid->invite;
@@ -348,10 +347,7 @@ class KidController extends Controller
     // Send email invite
     public function sendEmailInvite(Request $request, Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         $request->validate([
             'email' => 'required|email',
@@ -386,10 +382,7 @@ class KidController extends Controller
     // Generate QR code for invite
     public function generateQRCode(Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         // Get or create invite
         $invite = $kid->invite;
@@ -522,10 +515,7 @@ class KidController extends Controller
     // Change kid's username
     public function changeUsername(Request $request, Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         $request->validate([
             'username' => [
@@ -563,10 +553,7 @@ class KidController extends Controller
     // Reset kid's password
     public function resetPassword(Request $request, Kid $kid)
     {
-        // Make sure this kid belongs to the logged-in parent
-        if ($kid->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeKidAccess($kid);
 
         $request->validate([
             'password' => 'required|string|min:4',
@@ -592,5 +579,4 @@ class KidController extends Controller
             'message' => 'Password reset successfully',
         ]);
     }
-
 }
