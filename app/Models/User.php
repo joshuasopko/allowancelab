@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -67,6 +68,12 @@ class User extends Authenticatable
     {
         $familyIds = $this->families()->pluck('families.id');
         return Kid::whereIn('family_id', $familyIds)->get();
+    }
+
+    // Override password reset notification to use custom branded email
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
 }
