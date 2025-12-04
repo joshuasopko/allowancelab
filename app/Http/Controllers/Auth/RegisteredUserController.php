@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use App\Models\Family;
 
 class RegisteredUserController extends Controller
 {
@@ -43,6 +44,15 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Create a family for this user
+        $family = Family::create([
+            'name' => $request->first_name . "'s Family",
+            'owner_id' => $user->id,
+        ]);
+
+        // Attach user to the family
+        $user->families()->attach($family->id, ['role' => 'owner']);
 
         event(new Registered($user));
 
