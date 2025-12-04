@@ -48,7 +48,7 @@ class RegisteredUserController extends Controller
         // Create a family for this user
         $family = Family::create([
             'name' => $request->first_name . "'s Family",
-            'owner_id' => $user->id,
+            'owner_user_id' => $user->id,
         ]);
 
         // Attach user to the family
