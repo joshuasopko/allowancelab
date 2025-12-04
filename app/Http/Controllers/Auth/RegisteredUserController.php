@@ -57,7 +57,7 @@ class RegisteredUserController extends Controller
         $user->families()->attach($family->id, ['role' => 'owner']);
 
         // Send welcome email
-        Mail::to($user->email)->send(new WelcomeEmail($user));
+        Mail::to($user->email)->queue(new WelcomeEmail($user));
 
         event(new Registered($user));
 
