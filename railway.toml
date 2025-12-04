@@ -1,0 +1,5 @@
+[build]
+builderImage = "ghcr.io/railwayapp/builder:latest"
+
+[build.env]
+PHP_EXTENSIONS = "ctype,curl,dom,fileinfo,filter,hash,mbstring,openssl,pcre,pdo,session,tokenizer,xml,gd,pdo_pgsql,pgsql"
