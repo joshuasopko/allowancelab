@@ -1,0 +1,7 @@
+{
+  "phases": {
+    "setup": {
+      "nixPkgs": ["php82Extensions.gd", "php82Extensions.pdo_pgsql"]
+    }
+  }
+}
