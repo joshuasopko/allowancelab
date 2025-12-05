@@ -689,11 +689,11 @@
             width: auto;
         }
 
-        .pwa-title {
-            font-size: 36px;
+        .pwa-welcome {
+            font-size: 28px;
             font-weight: 700;
             color: #1a1a1a;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
         .pwa-subtitle {
@@ -712,7 +712,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 16px;
             padding: 24px 32px;
             border-radius: 16px;
             font-size: 20px;
@@ -724,14 +723,6 @@
 
         .pwa-btn:active {
             transform: scale(0.98);
-        }
-
-        .pwa-btn-icon {
-            font-size: 32px;
-        }
-
-        .pwa-btn-text {
-            flex: 1;
         }
 
         .pwa-btn-kid {
@@ -765,16 +756,14 @@
             <div class="pwa-logo">
                 <img src="{{ asset('/images/Allowance-Lab-logo.png') }}" alt="AllowanceLab">
             </div>
-            <h1 class="pwa-title">AllowanceLab</h1>
+            <h1 class="pwa-welcome">Welcome! Let's get started.</h1>
             <p class="pwa-subtitle">Choose your login</p>
             <div class="pwa-buttons">
                 <a href="{{ route('kid.login') }}?pwa=1" class="pwa-btn pwa-btn-kid">
-                    <span class="pwa-btn-icon">👧</span>
-                    <span class="pwa-btn-text">Kid Login</span>
+                    Kid Login
                 </a>
                 <a href="{{ route('login') }}?pwa=1" class="pwa-btn pwa-btn-parent">
-                    <span class="pwa-btn-icon">👨‍👩‍👧</span>
-                    <span class="pwa-btn-text">Parent Login</span>
+                    Parent Login
                 </a>
             </div>
         </div>
