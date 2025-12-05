@@ -696,7 +696,7 @@
         </div>
 
         <!-- PWA Install Button (Mobile Only) -->
-        <button id="pwa-install-btn" class="pwa-install-button" style="display: none;">
+        <button id="pwa-install-btn" class="pwa-install-button">
             <span class="pwa-install-icon">📱</span>
             Add to Home Screen
         </button>
@@ -912,6 +912,10 @@
         let deferredPrompt;
         const installButton = document.getElementById('pwa-install-btn');
 
+        // Detect iOS devices
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
         // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -925,33 +929,43 @@
             });
         }
 
-        // Capture the beforeinstallprompt event
+        // Hide button if already installed as PWA
+        if (isStandalone && installButton) {
+            installButton.style.display = 'none';
+        }
+
+        // Capture the beforeinstallprompt event (Android)
         window.addEventListener('beforeinstallprompt', (e) => {
             // Prevent the default mini-infobar from appearing on mobile
             e.preventDefault();
             // Stash the event so it can be triggered later
             deferredPrompt = e;
-            // Show the install button
-            if (installButton) {
-                installButton.style.display = 'inline-flex';
-            }
         });
 
         // Handle install button click
         if (installButton) {
             installButton.addEventListener('click', async () => {
-                if (!deferredPrompt) {
+                // iOS: Show instructions
+                if (isIOS) {
+                    alert('To install AllowanceLab:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nThe app will appear on your home screen!');
                     return;
                 }
-                // Show the install prompt
-                deferredPrompt.prompt();
-                // Wait for the user to respond to the prompt
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
-                // Clear the deferredPrompt
-                deferredPrompt = null;
-                // Hide the install button
-                installButton.style.display = 'none';
+
+                // Android: Use native prompt
+                if (deferredPrompt) {
+                    // Show the install prompt
+                    deferredPrompt.prompt();
+                    // Wait for the user to respond to the prompt
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`User response to the install prompt: ${outcome}`);
+                    // Clear the deferredPrompt
+                    deferredPrompt = null;
+                    if (outcome === 'accepted') {
+                        installButton.style.display = 'none';
+                    }
+                } else {
+                    alert('To install this app, use your browser menu and select "Add to Home Screen" or "Install App".');
+                }
             });
         }
 
