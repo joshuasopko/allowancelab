@@ -26,6 +26,7 @@ class Kid extends Authenticatable
         'allowance_amount',
         'allowance_day',
         'max_points',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -37,6 +38,7 @@ class Kid extends Authenticatable
         'balance' => 'decimal:2',
         'points_enabled' => 'boolean',
         'allowance_amount' => 'decimal:2',
+        'last_login_at' => 'datetime',
     ];
 
     // Relationship: Kid belongs to a Family

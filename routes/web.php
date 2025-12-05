@@ -26,7 +26,7 @@ Route::post('/family/accept/{token}', [App\Http\Controllers\FamilyInviteControll
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
-        $kids = $user->accessibleKids();
+        $kids = $user->accessibleKids()->sortBy('birthday');
         return view('parent.dashboard', compact('user', 'kids'));
     })->name('dashboard');
 

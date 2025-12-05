@@ -46,7 +46,7 @@
                     <div>
                         <strong>Account Active</strong>
                         @if($kid->last_login_at)
-                            <span class="last-used">Last used: {{ $kid->last_login_at->diffForHumans() }}</span>
+                            <span class="last-used">Last login: {{ $kid->last_login_at->format('D M jS') }} | {{ $kid->last_login_at->format('g:i a') }}</span>
                         @else
                             <span class="last-used">Never logged in</span>
                         @endif

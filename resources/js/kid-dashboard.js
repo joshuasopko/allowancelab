@@ -412,6 +412,7 @@ function kidSubmitDeposit(event) {
                     type: 'deposit',
                     amount: numAmount,
                     note: note,
+                    timestamp: Math.floor(Date.now() / 1000),
                     date: new Date().toISOString().split('T')[0],
                     parentInitiated: false,
                     initiated_by: 'kid'
@@ -516,6 +517,7 @@ function kidSubmitSpend(event) {
                     type: 'spend',
                     amount: -numAmount,
                     note: note,
+                    timestamp: Math.floor(Date.now() / 1000),
                     date: new Date().toISOString().split('T')[0],
                     parentInitiated: false,
                     initiated_by: 'kid'
