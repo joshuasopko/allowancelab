@@ -27,7 +27,21 @@ class KidAuthController extends Controller
 
         if ($kid && Hash::check($request->password, $kid->password)) {
             $kid->update(['last_login_at' => now()]);
-            Auth::guard('kid')->login($kid);
+
+            // Check if remember me is requested
+            $remember = $request->boolean('remember');
+            Auth::guard('kid')->login($kid, $remember);
+
+            // If PWA mode and remember me, extend cookie to 6 months
+            if ($remember && $request->has('pwa')) {
+                $recaller = Auth::guard('kid')->getRecallerName();
+                $value = request()->cookie($recaller);
+
+                if ($value) {
+                    cookie()->queue($recaller, $value, 60 * 24 * 180); // 180 days = 6 months
+                }
+            }
+
             return redirect()->route('kid.dashboard');
         }
 

@@ -258,6 +258,19 @@
                 align-self: flex-start;
             }
         }
+
+        /* PWA Mode Styles */
+        body.pwa-mode header {
+            display: none;
+        }
+
+        body.pwa-mode main {
+            min-height: 100vh;
+        }
+
+        body.pwa-mode .register-link {
+            display: none;
+        }
     </style>
 </head>
 
@@ -343,6 +356,33 @@
             </form>
         </div>
     </main>
+
+    <script>
+        // PWA Mode Detection
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPWAParam = urlParams.has('pwa');
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || isPWAParam;
+
+        if (isPWA) {
+            // Add PWA mode class to body
+            document.body.classList.add('pwa-mode');
+
+            // Auto-check and hide remember me checkbox
+            const rememberCheckbox = document.getElementById('remember_me');
+            const rememberContainer = document.querySelector('.remember-me');
+            if (rememberCheckbox) {
+                rememberCheckbox.checked = true;
+                if (rememberContainer) {
+                    rememberContainer.style.display = 'none';
+                }
+            }
+
+            // If logged in parent, redirect to dashboard
+            @if (Auth::check())
+                window.location.href = '{{ route('dashboard') }}';
+            @endif
+        }
+    </script>
 </body>
 
 </html>

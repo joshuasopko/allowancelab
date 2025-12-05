@@ -232,6 +232,15 @@
                 font-size: 16px;
             }
         }
+
+        /* PWA Mode Styles */
+        body.pwa-mode header {
+            display: none;
+        }
+
+        body.pwa-mode main {
+            min-height: 100vh;
+        }
     </style>
 </head>
 
@@ -284,6 +293,9 @@
                     @enderror
                 </div>
 
+                <!-- Hidden Remember Me (for PWA mode) -->
+                <input type="hidden" id="remember_me" name="remember" value="0">
+
                 <!-- Forgot Password Message -->
                 <div style="text-align: center; margin-top: -8px; margin-bottom: 16px;">
                     <p style="font-size: 14px; color: #888;">
@@ -303,6 +315,29 @@
             </form>
         </div>
     </main>
+
+    <script>
+        // PWA Mode Detection
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPWAParam = urlParams.has('pwa');
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || isPWAParam;
+
+        if (isPWA) {
+            // Add PWA mode class to body
+            document.body.classList.add('pwa-mode');
+
+            // Auto-check hidden remember me checkbox
+            const rememberCheckbox = document.getElementById('remember_me');
+            if (rememberCheckbox) {
+                rememberCheckbox.value = '1';
+            }
+
+            // If logged in kid, redirect to dashboard
+            @if (Auth::guard('kid')->check())
+                window.location.href = '{{ route('kid.dashboard') }}';
+            @endif
+        }
+    </script>
 </body>
 
 </html>

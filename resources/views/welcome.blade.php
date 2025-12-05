@@ -663,10 +663,125 @@
                 display: inline-flex;
             }
         }
+
+        /* PWA Home Screen Styles */
+        #pwa-home {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 40px 20px;
+        }
+
+        .pwa-home-container {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .pwa-logo {
+            margin-bottom: 32px;
+        }
+
+        .pwa-logo img {
+            height: 120px;
+            width: auto;
+        }
+
+        .pwa-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+
+        .pwa-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 48px;
+        }
+
+        .pwa-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .pwa-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 20px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .pwa-btn:active {
+            transform: scale(0.98);
+        }
+
+        .pwa-btn-icon {
+            font-size: 32px;
+        }
+
+        .pwa-btn-text {
+            flex: 1;
+        }
+
+        .pwa-btn-kid {
+            background: #42a5f5;
+            color: white;
+        }
+
+        .pwa-btn-kid:hover {
+            background: #1e88e5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(66, 165, 245, 0.4);
+        }
+
+        .pwa-btn-parent {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .pwa-btn-parent:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+        }
     </style>
 </head>
 
 <body>
+    <!-- PWA Home Screen (shown only in standalone mode) -->
+    <div id="pwa-home" style="display: none;">
+        <div class="pwa-home-container">
+            <div class="pwa-logo">
+                <img src="{{ asset('/images/Allowance-Lab-logo.png') }}" alt="AllowanceLab">
+            </div>
+            <h1 class="pwa-title">AllowanceLab</h1>
+            <p class="pwa-subtitle">Choose your login</p>
+            <div class="pwa-buttons">
+                <a href="{{ route('kid.login') }}?pwa=1" class="pwa-btn pwa-btn-kid">
+                    <span class="pwa-btn-icon">👧</span>
+                    <span class="pwa-btn-text">Kid Login</span>
+                </a>
+                <a href="{{ route('login') }}?pwa=1" class="pwa-btn pwa-btn-parent">
+                    <span class="pwa-btn-icon">👨‍👩‍👧</span>
+                    <span class="pwa-btn-text">Parent Login</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marketing Website (hidden in standalone mode) -->
+    <div id="website-content">
     <!-- Header -->
     <header>
         <div class="logo-container">
@@ -889,8 +1004,31 @@
             © 2025 AllowanceLab. All rights reserved.
         </div>
     </footer>
+    </div> <!-- End #website-content -->
 
     <script>
+        // PWA Mode Detection and Conditional Rendering
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+        const isKidLoggedIn = {{ Auth::guard('kid')->check() ? 'true' : 'false' }};
+
+        if (isPWA) {
+            // If user is logged in, redirect to appropriate dashboard
+            if (isLoggedIn) {
+                window.location.href = '{{ route('dashboard') }}';
+            } else if (isKidLoggedIn) {
+                window.location.href = '{{ route('kid.dashboard') }}';
+            } else {
+                // Show PWA home screen
+                document.getElementById('pwa-home').style.display = 'flex';
+                document.getElementById('website-content').style.display = 'none';
+            }
+        } else {
+            // Show marketing website
+            document.getElementById('pwa-home').style.display = 'none';
+            document.getElementById('website-content').style.display = 'block';
+        }
+
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {

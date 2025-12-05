@@ -28,6 +28,26 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // If PWA mode and remember me is checked, extend the remember cookie to 6 months
+        if ($request->has('pwa') || $request->input('remember')) {
+            $isPWA = $request->has('pwa') ||
+                     $request->header('X-PWA-Mode') === '1' ||
+                     ($request->hasHeader('User-Agent') &&
+                      (str_contains($request->header('User-Agent'), 'Mobile') ||
+                       str_contains($request->header('User-Agent'), 'Android') ||
+                       str_contains($request->header('User-Agent'), 'iPhone')));
+
+            if ($isPWA && $request->input('remember')) {
+                // Extend remember cookie to 6 months for PWA users
+                $recaller = Auth::guard()->getRecallerName();
+                $value = request()->cookie($recaller);
+
+                if ($value) {
+                    cookie()->queue($recaller, $value, 60 * 24 * 180); // 180 days = 6 months
+                }
+            }
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
