@@ -1,0 +1,20 @@
+{
+  "name": "AllowanceLab - Family Allowance Manager",
+  "short_name": "AllowanceLab",
+  "description": "Simple tools for real-world money lessons. Teaching kids financial responsibility one allowance at a time.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/Allowance-Lab-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "education", "lifestyle"],
+  "screenshots": []
+}

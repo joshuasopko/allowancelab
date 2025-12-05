@@ -4,7 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
     <title>AllowanceLab - Earn. Learn. Grow.</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/images/Allowance-Lab-logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AllowanceLab">
+
     <style>
         * {
             margin: 0;
@@ -616,6 +627,42 @@
                 display: none;
             }
         }
+
+        /* PWA Install Button */
+        .pwa-install-button {
+            margin-top: 24px;
+            background: white;
+            color: #4CAF50;
+            border: 2px solid #4CAF50;
+            padding: 14px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+        }
+
+        .pwa-install-button:hover {
+            background: #4CAF50;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .pwa-install-icon {
+            font-size: 20px;
+        }
+
+        /* Only show PWA button on mobile devices */
+        @media (max-width: 768px) {
+            .pwa-install-button {
+                display: inline-flex;
+            }
+        }
     </style>
 </head>
 
@@ -647,6 +694,12 @@
             <a href="{{ route('register') }}" class="btn-primary">Get Started</a>
             <a href="#how-it-works" class="btn-secondary">See How It Works</a>
         </div>
+
+        <!-- PWA Install Button (Mobile Only) -->
+        <button id="pwa-install-btn" class="pwa-install-button" style="display: none;">
+            <span class="pwa-install-icon">📱</span>
+            Add to Home Screen
+        </button>
     </section>
 
     <!-- How It Works -->
@@ -853,6 +906,62 @@
                     }
                 }
             });
+        });
+
+        // PWA Service Worker Registration and Install Prompt
+        let deferredPrompt;
+        const installButton = document.getElementById('pwa-install-btn');
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Capture the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the default mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install button
+            if (installButton) {
+                installButton.style.display = 'inline-flex';
+            }
+        });
+
+        // Handle install button click
+        if (installButton) {
+            installButton.addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    return;
+                }
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                // Clear the deferredPrompt
+                deferredPrompt = null;
+                // Hide the install button
+                installButton.style.display = 'none';
+            });
+        }
+
+        // Hide install button if app is already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            deferredPrompt = null;
+            if (installButton) {
+                installButton.style.display = 'none';
+            }
         });
     </script>
 </body>
