@@ -26,7 +26,7 @@
     </div>
 
     <div class="sidebar-menu">
-        <a href="#" class="menu-item">
+        <a href="{{ route('parent.account') }}" class="menu-item {{ request()->routeIs('parent.account') ? 'active' : '' }}">
             <div class="menu-item-main">My Account</div>
             <div class="menu-subtext">{{ $lastName }} Family</div>
         </a>

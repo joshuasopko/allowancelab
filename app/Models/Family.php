@@ -14,6 +14,29 @@ class Family extends Model
         'owner_user_id',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($family) {
+            // Delete all kids (which will cascade to transactions and point adjustments)
+            $family->kids()->each(function ($kid) {
+                $kid->delete();
+            });
+
+            // Delete all family invites
+            $family->invites()->delete();
+
+            // Detach all members from family
+            $family->members()->detach();
+
+            // Delete the owner user account
+            if ($family->owner) {
+                $family->owner->delete();
+            }
+        });
+    }
+
     // Relationship: Family has one owner (SuperAdmin)
     public function owner()
     {

@@ -22,6 +22,9 @@ Route::post('/check-username', [KidController::class, 'checkUsername'])->name('c
 Route::get('/family/accept/{token}', [App\Http\Controllers\FamilyInviteController::class, 'show'])->name('family.accept-invite');
 Route::post('/family/accept/{token}', [App\Http\Controllers\FamilyInviteController::class, 'accept'])->name('family.process-invite');
 
+// Email verification (public route)
+Route::get('/parent/verify-email/{token}', [App\Http\Controllers\ParentAccountController::class, 'verifyEmailChange'])->name('parent.account.verify-email');
+
 // Parent routes (protected by 'auth' middleware)
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
@@ -31,6 +34,14 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     // Manage Family
+    // Parent Account
+    Route::get('/parent/account', [App\Http\Controllers\ParentAccountController::class, 'index'])->name('parent.account');
+    Route::patch('/parent/account/profile', [App\Http\Controllers\ParentAccountController::class, 'updateProfile'])->name('parent.account.update-profile');
+    Route::post('/parent/account/email', [App\Http\Controllers\ParentAccountController::class, 'requestEmailChange'])->name('parent.account.request-email-change');
+    Route::patch('/parent/account/password', [App\Http\Controllers\ParentAccountController::class, 'changePassword'])->name('parent.account.change-password');
+    Route::patch('/parent/account/timezone', [App\Http\Controllers\ParentAccountController::class, 'updateTimezone'])->name('parent.account.update-timezone');
+    Route::delete('/parent/account', [App\Http\Controllers\ParentAccountController::class, 'deleteAccount'])->name('parent.account.delete');
+
     Route::get('/manage-family', [App\Http\Controllers\ManageFamilyController::class, 'index'])->name('manage-family');
     // Family invitation and management routes
     Route::post('/family/invite', [App\Http\Controllers\ManageFamilyController::class, 'sendInvite'])->name('family.invite');
