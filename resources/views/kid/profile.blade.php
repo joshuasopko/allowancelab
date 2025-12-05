@@ -98,7 +98,7 @@
 
         <!-- Family Name Block -->
         <div class="kid-family-block">
-            You are part of the <strong>{{ $parent->last_name }}</strong> family!
+            You are part of the <strong>{{ $parent?->last_name ?? 'your' }}</strong> family!
         </div>
 
         <!-- Mobile Back Button (below header) -->

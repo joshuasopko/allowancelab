@@ -93,7 +93,7 @@ class KidAuthController extends Controller
     public function profile()
     {
         $kid = Auth::guard('kid')->user();
-        $parent = $kid->user; // Get the parent
+        $parent = $kid->family->owner; // Get the family owner
 
         return view('kid.profile', compact('kid', 'parent'));
     }
