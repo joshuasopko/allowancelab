@@ -629,38 +629,42 @@
         }
 
         /* PWA Install Button */
+        .pwa-install-container {
+            margin-top: 32px;
+            text-align: center;
+            display: none;
+        }
+
+        .pwa-install-text {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
         .pwa-install-button {
-            margin-top: 24px;
             background: white;
             color: #4CAF50;
             border: 2px solid #4CAF50;
-            padding: 14px 40px;
-            font-size: 18px;
+            padding: 10px 28px;
+            font-size: 15px;
             font-weight: 600;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.15);
         }
 
         .pwa-install-button:hover {
             background: #4CAF50;
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-        }
-
-        .pwa-install-icon {
-            font-size: 20px;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.25);
         }
 
         /* Only show PWA button on mobile devices */
         @media (max-width: 768px) {
-            .pwa-install-button {
-                display: inline-flex;
+            .pwa-install-container {
+                display: block;
             }
         }
 
@@ -800,10 +804,12 @@
         </div>
 
         <!-- PWA Install Button (Mobile Only) -->
-        <button id="pwa-install-btn" class="pwa-install-button">
-            <span class="pwa-install-icon">📱</span>
-            Add to Home Screen
-        </button>
+        <div class="pwa-install-container">
+            <p class="pwa-install-text">Want AllowanceLab on your mobile homescreen?</p>
+            <button id="pwa-install-btn" class="pwa-install-button">
+                Add to Home Screen
+            </button>
+        </div>
     </section>
 
     <!-- How It Works -->
@@ -1038,6 +1044,7 @@
         // PWA Service Worker Registration and Install Prompt
         let deferredPrompt;
         const installButton = document.getElementById('pwa-install-btn');
+        const installContainer = document.querySelector('.pwa-install-container');
 
         // Detect iOS devices
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -1056,9 +1063,9 @@
             });
         }
 
-        // Hide button if already installed as PWA
-        if (isStandalone && installButton) {
-            installButton.style.display = 'none';
+        // Hide container if already installed as PWA
+        if (isStandalone && installContainer) {
+            installContainer.style.display = 'none';
         }
 
         // Capture the beforeinstallprompt event (Android)
@@ -1087,8 +1094,8 @@
                     console.log(`User response to the install prompt: ${outcome}`);
                     // Clear the deferredPrompt
                     deferredPrompt = null;
-                    if (outcome === 'accepted') {
-                        installButton.style.display = 'none';
+                    if (outcome === 'accepted' && installContainer) {
+                        installContainer.style.display = 'none';
                     }
                 } else {
                     alert('To install this app, use your browser menu and select "Add to Home Screen" or "Install App".');
@@ -1096,12 +1103,12 @@
             });
         }
 
-        // Hide install button if app is already installed
+        // Hide install container if app is already installed
         window.addEventListener('appinstalled', () => {
             console.log('PWA was installed');
             deferredPrompt = null;
-            if (installButton) {
-                installButton.style.display = 'none';
+            if (installContainer) {
+                installContainer.style.display = 'none';
             }
         });
     </script>
