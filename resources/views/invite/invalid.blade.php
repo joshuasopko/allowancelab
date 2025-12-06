@@ -2,9 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invalid Invite - AllowanceLab</title>
+    @include('partials.head', ['title' => 'Invalid Invite - AllowanceLab'])
     @vite(['resources/css/dashboard.css'])
     <style>
         body {

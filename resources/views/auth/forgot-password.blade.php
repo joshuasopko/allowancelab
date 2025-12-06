@@ -2,9 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - AllowanceLab</title>
+    @include('partials.head', ['title' => 'Reset Password - AllowanceLab'])
     <style>
         * {
             margin: 0;
