@@ -30,9 +30,16 @@ class AuthenticatedSessionController extends Controller
 
         // Auto-detect and save timezone if not set
         $user = Auth::user();
-        if (empty($user->timezone) && $request->has('timezone')) {
-            $user->timezone = $request->input('timezone');
-            $user->save();
+        if ($request->has('timezone')) {
+            try {
+                if (empty($user->timezone)) {
+                    $user->timezone = $request->input('timezone');
+                    $user->save();
+                }
+            } catch (\Exception $e) {
+                // Timezone column may not exist yet, ignore error
+                \Log::info('Timezone update skipped: ' . $e->getMessage());
+            }
         }
 
         // If PWA mode and remember me is checked, extend the remember cookie to 6 months

@@ -40,14 +40,25 @@ class RegisteredUserController extends Controller
             'timezone' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $user = User::create([
+        // Build user data
+        $userData = [
             'name' => $request->first_name . ' ' . $request->last_name,
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'timezone' => $request->timezone ?? 'America/Chicago',
-        ]);
+        ];
+
+        // Add timezone only if column exists
+        try {
+            $userData['timezone'] = $request->timezone ?? 'America/Chicago';
+            $user = User::create($userData);
+        } catch (\Exception $e) {
+            // If timezone column doesn't exist, create user without it
+            unset($userData['timezone']);
+            $user = User::create($userData);
+            \Log::info('User created without timezone: ' . $e->getMessage());
+        }
 
         // Create a family for this user
         $family = Family::create([
