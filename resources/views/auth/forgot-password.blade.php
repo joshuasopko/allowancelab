@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    @include('partials.head', ['title' => 'Reset Password - AllowanceLab'])
+    @include('partials.head')
+    <title>Reset Password - AllowanceLab</title>
     <style>
         * {
             margin: 0;

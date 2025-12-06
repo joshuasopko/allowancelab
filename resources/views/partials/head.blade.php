@@ -4,7 +4,7 @@
 <meta name="theme-color" content="#4CAF50">
 
 <!-- Favicon -->
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/x-icon" href="/icon.ico">
 
 <!-- PWA Manifest -->
 <link rel="manifest" href="/manifest.json">
@@ -14,5 +14,3 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="AllowanceLab">
-
-<title>{{ $title ?? config('app.name', 'AllowanceLab') }}</title>

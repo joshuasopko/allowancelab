@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    @include('partials.head', ['title' => 'Create Your Account - AllowanceLab'])
+    @include('partials.head')
+    <title>Create Your Account - AllowanceLab</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * {

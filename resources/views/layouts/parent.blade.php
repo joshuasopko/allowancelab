@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    @include('partials.head', ['title' => '@yield('title', 'AllowanceLab')'])
+    @include('partials.head')
+    <title>@yield('title', 'AllowanceLab')</title>
 
     @vite(['resources/css/dashboard.css', 'resources/js/dashboard.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">

@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    @include('partials.head', ['title' => 'Invalid Invite - AllowanceLab'])
+    @include('partials.head')
+    <title>Invalid Invite - AllowanceLab</title>
     @vite(['resources/css/dashboard.css'])
     <style>
         body {

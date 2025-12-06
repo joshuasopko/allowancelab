@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    @include('partials.head', ['title' => 'Accept Family Invitation - AllowanceLab'])
+    @include('partials.head')
+    <title>Accept Family Invitation - AllowanceLab</title>
     <style>
         * {
             margin: 0;

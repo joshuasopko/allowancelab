@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    @include('partials.head', ['title' => 'AllowanceLab - Earn. Learn. Grow.'])
+    @include('partials.head')
+    <title>AllowanceLab - Earn. Learn. Grow.</title>
 
     <style>
         * {
