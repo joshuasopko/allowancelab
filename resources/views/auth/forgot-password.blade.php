@@ -178,7 +178,7 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             header {
                 padding: 16px 20px;
             }

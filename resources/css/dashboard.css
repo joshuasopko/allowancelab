@@ -115,6 +115,10 @@ body {
     padding: 32px 0;
     display: flex;
     flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 /* Sidebar Welcome Subtitle */
@@ -202,7 +206,7 @@ body {
     display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .menu-divider.mobile-only {
         display: block;
     }
@@ -1376,7 +1380,7 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .hamburger {
         display: flex;
     }
@@ -2762,7 +2766,7 @@ Manage Family Styles
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .manage-family-tabs {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -2922,7 +2926,7 @@ Manage Family Styles
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .invite-section {
         padding: 16px;
     }
@@ -3187,7 +3191,7 @@ Manage Family Styles
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .account-row {
         flex-direction: column;
         align-items: flex-start;
@@ -3468,14 +3472,14 @@ Manage Family Styles
     margin-bottom: 24px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .mobile-back-link {
         display: flex;
     }
 }
 
 /* Mobile Responsive for Kids Accounts */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .kid-meta-row {
         flex-direction: column;
         align-items: flex-start;
@@ -3487,7 +3491,7 @@ Manage Family Styles
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .mobile-add-kid-wrapper {
         display: block;
         padding: 0px 24px 15px;
@@ -3496,7 +3500,7 @@ Manage Family Styles
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .logo-img {
         height: 80px;
         width: auto;
@@ -3733,7 +3737,7 @@ Manage Family Styles
     margin: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .mobile-welcome {
         display: block;
     }
@@ -4188,7 +4192,7 @@ Manage Family Styles
 }
 
 /* Responsive Styles */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .stats-grid {
         grid-template-columns: 1fr;
     }

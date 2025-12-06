@@ -611,7 +611,7 @@
             }
 
             /* Mobile Responsive */
-            @media (max-width: 768px) {
+            @media (max-width: 900px) {
                 .kid-stats-row {
                     grid-template-columns: 1fr;
                 }
@@ -848,7 +848,7 @@
             }
 
             /* Responsive */
-            @media (max-width: 768px) {
+            @media (max-width: 900px) {
                 .kid-profile-header {
                     margin-bottom: 20px;
                 }
@@ -942,7 +942,7 @@
                 display: none;
             }
 
-            @media (max-width: 768px) {
+            @media (max-width: 900px) {
                 .kid-back-btn-desktop {
                     display: none;
                 }

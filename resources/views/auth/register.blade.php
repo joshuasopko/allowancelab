@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Create Account - AllowanceLab</title>
     <style>
         * {
@@ -166,7 +166,7 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             header {
                 padding: 16px 20px;
             }
@@ -214,6 +214,9 @@
 
             <form method="POST" action="{{ route('register') }}">
                 @csrf
+
+                <!-- Hidden timezone field -->
+                <input type="hidden" name="timezone" id="detected_timezone">
 
                 <!-- First Name -->
                 <div class="form-group">
@@ -277,6 +280,17 @@
             </form>
         </div>
     </main>
+
+    <script>
+        // Auto-detect and set user's timezone
+        document.addEventListener('DOMContentLoaded', function() {
+            const timezoneField = document.getElementById('detected_timezone');
+            if (timezoneField) {
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                timezoneField.value = timezone;
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -28,6 +28,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Auto-detect and save timezone if not set
+        $user = Auth::user();
+        if (empty($user->timezone) && $request->has('timezone')) {
+            $user->timezone = $request->input('timezone');
+            $user->save();
+        }
+
         // If PWA mode and remember me is checked, extend the remember cookie to 6 months
         if ($request->has('pwa') || $request->input('remember')) {
             $isPWA = $request->has('pwa') ||

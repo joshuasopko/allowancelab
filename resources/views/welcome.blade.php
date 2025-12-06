@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#4CAF50">
     <title>AllowanceLab - Earn. Learn. Grow.</title>
 
@@ -499,7 +499,7 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             header {
                 padding: 16px 20px;
             }
@@ -662,7 +662,7 @@
         }
 
         /* Only show PWA button on mobile devices */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .pwa-install-container {
                 display: block;
             }
@@ -689,8 +689,9 @@
         }
 
         .pwa-logo img {
-            height: 120px;
-            width: auto;
+            width: 80%;
+            max-width: 280px;
+            height: auto;
         }
 
         .pwa-welcome {

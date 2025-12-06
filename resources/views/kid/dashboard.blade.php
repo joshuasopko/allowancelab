@@ -190,7 +190,7 @@
             border-left-color: #ef5350 !important;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .kid-parent-legend {
                 width: 100%;
                 justify-content: center;

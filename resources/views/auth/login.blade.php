@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Parent Login - AllowanceLab</title>
     <style>
         * {
@@ -223,7 +223,7 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             header {
                 padding: 16px 20px;
             }
@@ -303,6 +303,9 @@
             <form method="POST" action="{{ route('login') }}">
                 @csrf
 
+                <!-- Hidden timezone field -->
+                <input type="hidden" name="timezone" id="detected_timezone">
+
                 <!-- Email -->
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
@@ -358,6 +361,15 @@
     </main>
 
     <script>
+        // Auto-detect and set user's timezone
+        document.addEventListener('DOMContentLoaded', function() {
+            const timezoneField = document.getElementById('detected_timezone');
+            if (timezoneField) {
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                timezoneField.value = timezone;
+            }
+        });
+
         // PWA Mode Detection
         const urlParams = new URLSearchParams(window.location.search);
         const isPWAParam = urlParams.has('pwa');

@@ -53,7 +53,7 @@
     margin: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .kid-welcome-header {
         font-size: 22px;
     }
@@ -102,7 +102,7 @@
     margin-left: -20px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .kid-logo-section .logo-img {
         max-width: 95%;
         margin-left: 0;
@@ -332,7 +332,7 @@
     margin: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .mobile-kid-welcome {
         display: block;
     }
@@ -1219,7 +1219,7 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .kid-form-input {
         font-size: 20px;
         padding: 8px 12px;
