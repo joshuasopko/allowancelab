@@ -34,8 +34,9 @@ AllowanceLab is a family allowance management system where parents act as "the b
 ### Points System
 - Kids start each week with `max_points` (default: 10)
 - Points can be adjusted by parents anytime via `point_adjustments` table
-- Points reset on their `allowance_day` by scheduled command `points:reset`
+- Points reset on their `allowance_day` by scheduled command `allowance:process`
 - Allowance only posts if kid has `points >= 1` on their allowance day
+- After allowance evaluation, points are reset to `max_points` (regardless of whether allowance was awarded)
 - Points system can be disabled per kid via `points_enabled` boolean
 
 ## Common Development Commands
@@ -47,8 +48,7 @@ php artisan migrate                 # Run database migrations
 php artisan migrate:fresh --force   # Reset database (use with caution)
 php artisan tinker                  # Interactive PHP console
 php artisan schedule:run            # Manually trigger scheduled tasks
-php artisan allowance:post          # Manually post allowances
-php artisan points:reset            # Manually reset points
+php artisan allowance:process       # Manually process allowances and reset points
 ```
 
 ### Testing
@@ -109,25 +109,30 @@ git checkout main && git merge dev && git push origin main
 
 ## Scheduled Tasks (routes/console.php)
 
-Two critical cron jobs run daily:
+The scheduler runs hourly on Railway but only processes allowances at 2:00 AM:
 
 ```php
-Schedule::command('allowance:post')->dailyAt('02:00');  // America/Chicago
-Schedule::command('points:reset')->dailyAt('02:01');    // America/Chicago
+Schedule::command('allowance:process')->hourly();  // America/Chicago
 ```
 
-### Allowance Posting (app/Console/Commands/PostAllowances.php)
-- Runs daily at 2:00 AM Central Time
-- Filters kids by `allowance_day` matching current day (e.g., 'monday')
-- **Awards allowance:** If kid has `points >= 1`, adds `allowance_amount` to balance
-- **Denies allowance:** If kid has `points < 1`, creates $0 transaction with denial message
-- Only processes kids with active accounts (`username IS NOT NULL`)
+### Weekly Allowance Processing (app/Console/Commands/ProcessWeeklyAllowance.php)
+- **Schedule:** Runs hourly via Railway cron (`php artisan schedule:run` every hour)
+- **Execution:** Only executes logic at 2:00 AM Central Time (skips all other hours)
+- **Target kids:** Filters by `allowance_day` matching current day (e.g., 'monday') and active accounts (`username IS NOT NULL`)
 
-### Points Reset (app/Console/Commands/ResetPoints.php)
-- Runs daily at 2:01 AM Central Time (after allowance posting)
-- Resets points to `max_points` for kids whose `allowance_day` is today
-- Only resets if `points_enabled = true`
-- Creates record in `point_adjustments` table for audit trail
+**Processing sequence for each eligible kid:**
+1. **Check points and post allowance:**
+   - If `points >= 1`: Awards `allowance_amount` to balance, creates deposit transaction
+   - If `points < 1`: Denies allowance, creates $0 transaction with denial message
+2. **Reset points (always happens after allowance check):**
+   - Resets points to `max_points` (regardless of whether allowance was awarded)
+   - Only resets if `points_enabled = true`
+   - Creates record in `point_adjustments` table for audit trail
+
+**Railway Configuration:**
+- Railway cron service must run `php artisan schedule:run` every hour (at minimum)
+- The command self-checks the hour and only processes at 2:00 AM
+- This design allows flexible Railway cron scheduling while maintaining precise 2:00 AM execution
 
 ## Environment and Deployment
 
@@ -143,7 +148,9 @@ Schedule::command('points:reset')->dailyAt('02:01');    // America/Chicago
 - Timezone: America/Chicago
 - Auto-deploys when `main` branch is pushed
 - Start command: `php artisan migrate --force && php artisan optimize && /start-container.sh`
-- Separate cron service runs `php artisan schedule:run` every minute
+- **Cron schedule:** `php artisan schedule:run` runs hourly (minimum requirement)
+  - Railway cron can be configured to run hourly: `0 * * * *` (every hour at minute 0)
+  - The Laravel scheduler then executes `allowance:process` which self-checks for 2:00 AM
 
 ### Email Configuration
 - **Service:** Resend API
@@ -283,8 +290,7 @@ $kid->save();
 - `resources/views/kid/auth/login.blade.php` - Kid login form
 
 ### Commands
-- `app/Console/Commands/PostAllowances.php` - Daily allowance posting
-- `app/Console/Commands/ResetPoints.php` - Weekly points reset
+- `app/Console/Commands/ProcessWeeklyAllowance.php` - Weekly allowance processing (checks points, posts allowance, resets points)
 - `routes/console.php` - Schedule configuration
 
 ### Configuration

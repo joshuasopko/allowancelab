@@ -8,6 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Schedule allowance processing (both run at 2:00 AM in sequence)
-Schedule::command('allowance:post')->dailyAt('02:00');
-Schedule::command('points:reset')->dailyAt('02:00');
+// Schedule weekly allowance processing
+// Runs hourly but only processes at 2:00 AM for kids whose allowance_day is today
+// This command checks points, posts allowance if points >= 1, then resets points
+Schedule::command('allowance:process')->hourly();
