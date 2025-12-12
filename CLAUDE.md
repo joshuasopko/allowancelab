@@ -152,6 +152,14 @@ Schedule::command('allowance:process')->hourly();  // America/Chicago
   - Railway cron can be configured to run hourly: `0 * * * *` (every hour at minute 0)
   - The Laravel scheduler then executes `allowance:process` which self-checks for 2:00 AM
 
+**Required Railway Environment Variables for PWA/Mobile:**
+```
+SESSION_LIFETIME=262800          # 6 months in minutes (for persistent login)
+SESSION_SECURE_COOKIE=true       # HTTPS-only cookies (required for production)
+SESSION_SAME_SITE=lax           # Allow cookies in PWA standalone mode
+APP_URL=https://allowancelab.com # Full production URL
+```
+
 ### Email Configuration
 - **Service:** Resend API
 - **From address:** hello@allowancelab.com
