@@ -322,8 +322,15 @@ function handleFormSubmit(form, successMessage) {
                             submitBtn.style.color = '';
                             submitBtn.disabled = false;
 
+                            // Close the form dropdown smoothly
                             setTimeout(() => {
-                                location.reload();
+                                const dropdownForm = this.closest('.dropdown-form');
+                                if (dropdownForm) {
+                                    dropdownForm.classList.remove('active');
+                                    if (activeForm === dropdownForm) {
+                                        activeForm = null;
+                                    }
+                                }
                             }, 100);
                         }, 50);
                     }, 300);
@@ -346,34 +353,12 @@ function handleFormSubmit(form, successMessage) {
     });
 }
 
-// ============================================
-// SESSION STORAGE FOR FORM STATE
-// ============================================
-
-// Remember open forms before reload
-window.addEventListener('beforeunload', function () {
-    const activeForm = document.querySelector('.dropdown-form.active');
-    if (activeForm) {
-        sessionStorage.setItem('reopenForm', activeForm.id);
-    }
-});
 
 // ============================================
 // INITIALIZATION
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Reopen form after page loads
-    const formToReopen = sessionStorage.getItem('reopenForm');
-    if (formToReopen) {
-        const form = document.getElementById(formToReopen);
-        if (form) {
-            form.classList.add('active');
-            activeForm = form;  // Set the activeForm variable
-        }
-        sessionStorage.removeItem('reopenForm');
-    }
-
     // Update avatar preview when name changes
     const kidNameInput = document.getElementById('kidName');
     if (kidNameInput) {
