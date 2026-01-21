@@ -81,7 +81,7 @@
         /* Invite Info Banner */
         .invite-info {
             background: #e8f5e9;
-            border: 2px solid #4CAF50;
+            border: 2px solid #10b981;
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 24px;
@@ -120,7 +120,7 @@
 
         .form-input:focus {
             outline: none;
-            border-color: #4CAF50;
+            border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
         }
 
@@ -158,7 +158,7 @@
         .submit-btn {
             width: 100%;
             padding: 16px;
-            background: #4CAF50;
+            background: #10b981;
             color: white;
             border: none;
             border-radius: 8px;
@@ -208,7 +208,7 @@
         .back-link {
             display: inline-block;
             padding: 12px 32px;
-            background: #4CAF50;
+            background: #10b981;
             color: white;
             text-decoration: none;
             border-radius: 8px;

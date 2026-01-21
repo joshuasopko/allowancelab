@@ -531,7 +531,7 @@
             .points-current-number {
                 font-size: 36px;
                 font-weight: 700;
-                color: #4CAF50;
+                color: #10b981;
                 line-height: 1;
             }
 
@@ -547,7 +547,7 @@
 
             .points-pill-message {
                 font-size: 15px;
-                color: #4CAF50;
+                color: #10b981;
                 text-align: center;
                 line-height: 1.4;
                 margin-top: 4px;
@@ -578,7 +578,7 @@
             }
 
             .legend-color-tab.green {
-                background: #4CAF50;
+                background: #10b981;
             }
 
             .legend-color-tab.yellow {
@@ -803,7 +803,7 @@
                 width: 100%;
                 max-width: 400px;
                 padding: 16px;
-                background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+                background: linear-gradient(135deg, #10b981 0%, #45a049 100%);
                 color: white;
                 border: none;
                 border-radius: 12px;

@@ -178,7 +178,7 @@
         }
 
         .switch-login a {
-            color: #4CAF50;
+            color: #10b981;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.2s;

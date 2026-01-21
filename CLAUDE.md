@@ -255,6 +255,44 @@ $kid->points = $newPoints;
 $kid->save();
 ```
 
+### Creating and Managing Goals
+```php
+// Create a goal
+$goal = Goal::create([
+    'family_id' => $kid->family_id,
+    'kid_id' => $kid->id,
+    'created_by_user_id' => Auth::id(), // or null if kid created
+    'title' => 'New Bike',
+    'description' => 'Saving for a mountain bike',
+    'target_amount' => 250.00,
+    'auto_allocation_percentage' => 20, // 20% of weekly allowance
+]);
+
+// Manual deposit to goal
+$goal->current_amount += $amount;
+$kid->balance -= $amount;
+$goal->save();
+$kid->save();
+
+GoalTransaction::create([
+    'goal_id' => $goal->id,
+    'kid_id' => $kid->id,
+    'family_id' => $goal->family_id,
+    'amount' => $amount,
+    'transaction_type' => 'manual_deposit',
+    'description' => 'Manual deposit to goal',
+    'performed_by_user_id' => Auth::id(),
+    'created_at' => now(),
+]);
+
+// Redeem completed goal (parent only)
+$kid->balance += $goal->current_amount;
+$goal->status = 'redeemed';
+$goal->redeemed_at = now();
+$goal->save();
+$kid->save();
+```
+
 ## Current Feature Status
 
 ### Implemented
@@ -266,9 +304,9 @@ $kid->save();
 - Transaction ledger with parent/kid initiated tracking
 - Email delivery via Resend API
 - Mobile-responsive dashboards for both parents and kids
+- **Goals feature (v1.1)** - Savings goals with auto-allocation and manual fund transfers
 
 ### Future Roadmap
-- **v1.1:** Manual savings goals for kids
 - **v1.2:** Chore tracking with parent approval workflow
 - **v2.0+:** TBD based on real family usage feedback
 
@@ -282,6 +320,8 @@ $kid->save();
 - `app/Models/PointAdjustment.php` - Points change audit trail
 - `app/Models/FamilyInvite.php` - Parent invitation system
 - `app/Models/Invite.php` - Kid invitation system
+- `app/Models/Goal.php` - Kid savings goals
+- `app/Models/GoalTransaction.php` - Goal fund movement records
 
 ### Controllers
 - `app/Http/Controllers/KidController.php` - Parent-side kid management
@@ -289,6 +329,7 @@ $kid->save();
 - `app/Http/Controllers/KidDashboardController.php` - Kid-initiated transactions
 - `app/Http/Controllers/ManageFamilyController.php` - Family member management
 - `app/Http/Controllers/FamilyInviteController.php` - Family invite acceptance
+- `app/Http/Controllers/GoalController.php` - Goals management for kids and parents
 
 ### Views
 - `resources/views/parent/dashboard.blade.php` - Parent main view
@@ -296,9 +337,10 @@ $kid->save();
 - `resources/views/kids/manage.blade.php` - Individual kid settings
 - `resources/views/manage-family.blade.php` - Family management
 - `resources/views/kid/auth/login.blade.php` - Kid login form
+- `resources/views/goals/` - Goals views (index, create, edit, show, parent-index)
 
 ### Commands
-- `app/Console/Commands/ProcessWeeklyAllowance.php` - Weekly allowance processing (checks points, posts allowance, resets points)
+- `app/Console/Commands/ProcessWeeklyAllowance.php` - Weekly allowance processing (checks points, posts allowance, processes goal auto-allocations, resets points)
 - `routes/console.php` - Schedule configuration
 
 ### Configuration

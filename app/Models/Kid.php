@@ -65,9 +65,55 @@ class Kid extends Authenticatable
         return $this->hasOne(Invite::class);
     }
 
+    // Relationship: Kid has many goals
+    public function goals()
+    {
+        return $this->hasMany(Goal::class);
+    }
+
     // Helper: Check if kid has a pending invite
     public function hasPendingInvite()
     {
         return $this->invite && $this->invite->isPending();
+    }
+
+    // Helper: Get active goals count
+    public function getActiveGoalsCount()
+    {
+        return $this->goals()->whereIn('status', ['active', 'ready_to_redeem'])->count();
+    }
+
+    // Helper: Check if kid has any ready to redeem goals (actually complete)
+    public function hasReadyToRedeemGoals()
+    {
+        return $this->goals()
+            ->where(function($query) {
+                $query->where('status', 'ready_to_redeem')
+                      ->orWhere(function($q) {
+                          $q->where('status', 'active')
+                            ->whereRaw('current_amount >= target_amount');
+                      });
+            })
+            ->exists();
+    }
+
+    // Helper: Get count of ready to redeem goals (actually complete)
+    public function getReadyToRedeemGoalsCount()
+    {
+        return $this->goals()
+            ->where(function($query) {
+                $query->where('status', 'ready_to_redeem')
+                      ->orWhere(function($q) {
+                          $q->where('status', 'active')
+                            ->whereRaw('current_amount >= target_amount');
+                      });
+            })
+            ->count();
+    }
+
+    // Helper: Get count of pending redemption goals
+    public function getPendingRedemptionGoalsCount()
+    {
+        return $this->goals()->where('status', 'pending_redemption')->count();
     }
 }

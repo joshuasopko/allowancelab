@@ -20,6 +20,25 @@
         <p class="mobile-welcome-subtitle">Manage your family of {{ $kids->count() }} below.</p>
     </div>
 
+    <!-- Pending Redemption Notification Banner -->
+    @if($pendingRedemptionCount > 0)
+        <div class="parent-redemption-notification-banner">
+            <div class="parent-redemption-notification-content">
+                <div class="parent-redemption-notification-icon">🎁</div>
+                <div class="parent-redemption-notification-text">
+                    <strong>{{ $pendingRedemptionCount }} Goal{{ $pendingRedemptionCount > 1 ? 's' : '' }} Pending Redemption</strong>
+                    <div class="parent-redemption-kids-list">
+                        @foreach($kidsWithPendingRedemptions as $kidWithPending)
+                            <a href="{{ route('parent.goals.index', $kidWithPending) }}" class="parent-redemption-kid-link">
+                                {{ $kidWithPending->name }} ({{ $kidWithPending->goals()->where('status', 'pending_redemption')->count() }})
+                            </a>{{ !$loop->last ? ',' : '' }}
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if($kids->count() > 0)
         @foreach($kids as $kid)
             <div class="kid-card">
@@ -248,6 +267,21 @@
 
                 <!-- Card Footer -->
                 <div class="card-footer">
+                    <a href="{{ route('parent.goals.index', $kid) }}" class="manage-link goals-link">
+                        <span>Goals</span>
+                        @php
+                            $activeGoalsCount = $kid->getActiveGoalsCount();
+                            $hasReadyGoals = $kid->hasReadyToRedeemGoals();
+                        @endphp
+                        @if($activeGoalsCount > 0)
+                            <span class="goals-badge" style="background-color: {{ $hasReadyGoals ? '#10b981' : $kid->color }};">
+                                {{ $activeGoalsCount }}
+                                @if($hasReadyGoals)
+                                    <i class="fas fa-check" style="margin-left: 2px;"></i>
+                                @endif
+                            </span>
+                        @endif
+                    </a>
                     <a href="{{ route('kids.manage', $kid) }}" class="manage-link">Manage Kid</a>
                 </div>
             </div>

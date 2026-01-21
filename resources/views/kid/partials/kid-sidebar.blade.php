@@ -45,11 +45,89 @@
             <i class="fas fa-flask"></i>
         </div>
 
-        <!-- Coming Soon Features -->
-        <a href="#" class="kid-menu-item kid-coming-soon-item">
-            My Goals
-            <span class="kid-coming-soon-badge">Coming Soon</span>
+        <!-- Goals Feature -->
+        <a href="{{ route('kid.goals.index') }}"
+            class="kid-menu-item {{ request()->routeIs('kid.goals.*') ? 'active' : '' }}"
+            onclick="localStorage.setItem('goalsLaunchToastDismissed', 'true');">
+            <span>My Goals</span>
+            @if($kid->getActiveGoalsCount() > 0)
+                <span class="kid-goals-counter" style="background-color: {{ $kid->color }};">
+                    {{ $kid->getActiveGoalsCount() }}
+                </span>
+            @endif
         </a>
+
+        <!-- Goals Launch Toast (Persistent until dismissed or goals clicked) -->
+        <div class="kid-goals-sidebar-toast"
+             style="--kid-color: {{ $kid->color }};"
+             x-data="{
+                 show: true,
+                 init() {
+                     const dismissed = localStorage.getItem('goalsLaunchToastDismissed');
+                     if (dismissed === 'true') {
+                         this.show = false;
+                     }
+                 },
+                 dismiss() {
+                     localStorage.setItem('goalsLaunchToastDismissed', 'true');
+                     this.show = false;
+                 },
+                 exploreGoals() {
+                     localStorage.setItem('goalsLaunchToastDismissed', 'true');
+                     window.location.href = '{{ route('kid.goals.index') }}';
+                 }
+             }"
+             x-show="show"
+             x-transition>
+            <div class="kid-goals-sidebar-toast-content">
+                <div class="kid-goals-sidebar-toast-icon">🎯</div>
+                <div class="kid-goals-sidebar-toast-text">
+                    <strong>Goals Are Here!</strong>
+                    <p>Save for something special</p>
+                </div>
+            </div>
+            <div class="kid-goals-sidebar-toast-actions">
+                <button class="kid-goals-sidebar-toast-btn" @click="exploreGoals()">
+                    Explore →
+                </button>
+                <button class="kid-goals-sidebar-toast-close" @click="dismiss()" aria-label="Dismiss">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <!-- Goal Status Indicators (show on all pages) -->
+        @php
+            $readyCount = $kid->getReadyToRedeemGoalsCount();
+            $pendingCount = $kid->getPendingRedemptionGoalsCount();
+        @endphp
+
+        @if($readyCount > 0)
+            <div class="kid-goal-status-indicator kid-goal-ready">
+                <i class="fas fa-gift"></i>
+                <span>{{ $readyCount }} Goal{{ $readyCount > 1 ? 's' : '' }} Ready!</span>
+            </div>
+        @endif
+
+        @if($pendingCount > 0)
+            <div class="kid-goal-status-indicator kid-goal-pending">
+                <i class="fas fa-clock"></i>
+                <span>{{ $pendingCount }} Goal{{ $pendingCount > 1 ? 's' : '' }} Pending</span>
+            </div>
+        @endif
+
+        <!-- Available Funds Submenu (only show on goals page) -->
+        @if(request()->routeIs('kid.goals.*'))
+            <div class="kid-available-funds-submenu" style="border-left: 3px solid {{ $kid->color }};">
+                <div class="kid-available-funds-submenu-content">
+                    <i class="fas fa-wallet kid-available-funds-submenu-icon" style="color: {{ $kid->color }};"></i>
+                    <span class="kid-available-funds-submenu-amount" style="color: {{ $kid->color }};">${{ number_format($kid->balance, 2) }}</span>
+                    <span class="kid-available-funds-submenu-label">available</span>
+                </div>
+            </div>
+        @endif
+
+        <!-- Coming Soon Features -->
 
         <a href="#" class="kid-menu-item kid-coming-soon-item">
             My Chores

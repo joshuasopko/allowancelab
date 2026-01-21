@@ -304,10 +304,18 @@ function kidOpenDepositForm() {
         setTimeout(() => {
             document.getElementById('kidDepositForm').classList.add('open');
             kidActiveForm = 'deposit';
+            // Focus the amount input after form opens
+            setTimeout(() => {
+                document.getElementById('kidDepositAmount').focus();
+            }, 50);
         }, 400);
     } else {
         document.getElementById('kidDepositForm').classList.add('open');
         kidActiveForm = 'deposit';
+        // Focus the amount input after form opens
+        setTimeout(() => {
+            document.getElementById('kidDepositAmount').focus();
+        }, 50);
     }
 }
 
@@ -329,10 +337,18 @@ function kidOpenSpendForm() {
         setTimeout(() => {
             document.getElementById('kidSpendForm').classList.add('open');
             kidActiveForm = 'spend';
+            // Focus the amount input after form opens
+            setTimeout(() => {
+                document.getElementById('kidSpendAmount').focus();
+            }, 50);
         }, 400);
     } else {
         document.getElementById('kidSpendForm').classList.add('open');
         kidActiveForm = 'spend';
+        // Focus the amount input after form opens
+        setTimeout(() => {
+            document.getElementById('kidSpendAmount').focus();
+        }, 50);
     }
 }
 

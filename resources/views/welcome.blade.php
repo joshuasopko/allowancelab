@@ -53,7 +53,7 @@
         }
 
         .nav-links a.parent-login {
-            background: #4CAF50;
+            background: #10b981;
         }
 
         .nav-links a.parent-login:hover {
@@ -112,7 +112,7 @@
         }
 
         .btn-primary {
-            background: #4CAF50;
+            background: #10b981;
             color: white;
             border: none;
             padding: 18px 48px;
@@ -134,8 +134,8 @@
 
         .btn-secondary {
             background: white;
-            color: #4CAF50;
-            border: 2px solid #4CAF50;
+            color: #10b981;
+            border: 2px solid #10b981;
             padding: 16px 48px;
             font-size: 20px;
             font-weight: 600;
@@ -147,7 +147,7 @@
         }
 
         .btn-secondary:hover {
-            background: #4CAF50;
+            background: #10b981;
             color: white;
             transform: translateY(-2px);
         }
@@ -217,7 +217,7 @@
         .step-number {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
+            background: linear-gradient(135deg, #10b981, #45a049);
             color: white;
             border-radius: 50%;
             display: flex;
@@ -313,7 +313,7 @@
             content: "✓";
             position: absolute;
             left: 0;
-            color: #4CAF50;
+            color: #10b981;
             font-weight: 700;
             font-size: 24px;
         }
@@ -322,7 +322,7 @@
             text-align: center;
             font-size: 24px;
             font-weight: 600;
-            color: #4CAF50;
+            color: #10b981;
             margin-top: 40px;
         }
 
@@ -377,7 +377,7 @@
             content: "•";
             position: absolute;
             left: 0;
-            color: #4CAF50;
+            color: #10b981;
             font-weight: 700;
             font-size: 24px;
         }
@@ -413,13 +413,13 @@
 
         .testimonial-author {
             font-size: 16px;
-            color: #4CAF50;
+            color: #10b981;
             font-weight: 600;
         }
 
         .quote-icon {
             font-size: 48px;
-            color: #4CAF50;
+            color: #10b981;
             opacity: 0.2;
             position: absolute;
             top: 20px;
@@ -476,7 +476,7 @@
         }
 
         .footer-links a:hover {
-            color: #4CAF50;
+            color: #10b981;
         }
 
         .footer-bottom {
@@ -632,8 +632,8 @@
 
         .pwa-install-button {
             background: white;
-            color: #4CAF50;
-            border: 2px solid #4CAF50;
+            color: #10b981;
+            border: 2px solid #10b981;
             padding: 10px 28px;
             font-size: 15px;
             font-weight: 600;
@@ -644,7 +644,7 @@
         }
 
         .pwa-install-button:hover {
-            background: #4CAF50;
+            background: #10b981;
             color: white;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(76, 175, 80, 0.25);
@@ -731,7 +731,7 @@
         }
 
         .pwa-btn-parent {
-            background: #4CAF50;
+            background: #10b981;
             color: white;
         }
 

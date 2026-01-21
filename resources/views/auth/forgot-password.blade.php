@@ -103,7 +103,7 @@
 
         .form-input:focus {
             outline: none;
-            border-color: #4CAF50;
+            border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
         }
 
@@ -122,7 +122,7 @@
         .submit-btn {
             width: 100%;
             padding: 16px;
-            background: #4CAF50;
+            background: #10b981;
             color: white;
             border: none;
             border-radius: 8px;
@@ -154,7 +154,7 @@
         }
 
         .back-login a {
-            color: #4CAF50;
+            color: #10b981;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.2s;
@@ -168,7 +168,7 @@
         .success-message {
             padding: 12px;
             background: #e8f5e9;
-            border-left: 4px solid #4CAF50;
+            border-left: 4px solid #10b981;
             border-radius: 8px;
             margin-bottom: 20px;
             color: #2e7d32;

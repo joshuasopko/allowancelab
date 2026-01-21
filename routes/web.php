@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\KidAuthController;
 use App\Http\Controllers\KidController;
+use App\Http\Controllers\GoalController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\KidDashboardController;
@@ -30,7 +31,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
         $kids = $user->accessibleKids()->sortBy('birthday');
-        return view('parent.dashboard', compact('user', 'kids'));
+
+        // Check for pending redemption requests across all kids
+        $pendingRedemptionCount = 0;
+        $kidsWithPendingRedemptions = [];
+        foreach ($kids as $kid) {
+            $count = $kid->goals()->where('status', 'pending_redemption')->count();
+            if ($count > 0) {
+                $pendingRedemptionCount += $count;
+                $kidsWithPendingRedemptions[] = $kid;
+            }
+        }
+
+        return view('parent.dashboard', compact('user', 'kids', 'pendingRedemptionCount', 'kidsWithPendingRedemptions'));
     })->name('dashboard');
 
     // Manage Family
@@ -73,6 +86,19 @@ Route::middleware('auth')->group(function () {
     // Username and password management
     Route::post('/kids/{kid}/change-username', [KidController::class, 'changeUsername'])->name('kids.change-username');
     Route::post('/kids/{kid}/reset-password', [KidController::class, 'resetPassword'])->name('kids.reset-password');
+
+    // Parent goal management routes
+    Route::get('/kids/{kid}/goals', [GoalController::class, 'parentIndex'])->name('parent.goals.index');
+    Route::post('/kids/{kid}/goals', [GoalController::class, 'parentStore'])->name('parent.goals.store');
+    Route::get('/goals/{goal}', [GoalController::class, 'show'])->name('parent.goals.show');
+    Route::get('/goals/{goal}/edit', [GoalController::class, 'edit'])->name('parent.goals.edit');
+    Route::put('/goals/{goal}', [GoalController::class, 'update'])->name('parent.goals.update');
+    Route::delete('/goals/{goal}', [GoalController::class, 'destroy'])->name('parent.goals.destroy');
+    Route::post('/goals/{goal}/add-funds', [GoalController::class, 'addFunds'])->name('parent.goals.add-funds');
+    Route::post('/goals/{goal}/remove-funds', [GoalController::class, 'removeFunds'])->name('parent.goals.remove-funds');
+    Route::post('/goals/{goal}/redeem', [GoalController::class, 'redeem'])->name('parent.goals.redeem');
+    Route::post('/goals/{goal}/approve-redemption', [GoalController::class, 'approveRedemption'])->name('parent.goals.approve-redemption');
+    Route::post('/goals/{goal}/deny-redemption', [GoalController::class, 'denyRedemption'])->name('parent.goals.deny-redemption');
 });
 
 // Kid authentication routes
@@ -89,9 +115,19 @@ Route::prefix('kid')->name('kid.')->group(function () {
         Route::post('/deposit', [KidDashboardController::class, 'recordDeposit'])->name('deposit');
         Route::post('/spend', [KidDashboardController::class, 'recordSpend'])->name('spend');
 
-        // Add this new route:
+        // Kid profile
         Route::get('/profile', [KidAuthController::class, 'profile'])->name('profile');
         Route::patch('/update-color', [KidAuthController::class, 'updateColor'])->name('update-color');
+
+        // Kid goal routes (use kid prefix)
+        Route::get('/goals', [GoalController::class, 'index'])->name('goals.index');
+        Route::post('/goals', [GoalController::class, 'store'])->name('goals.store');
+        Route::get('/goals/{goal}/edit-data', [GoalController::class, 'getEditData'])->name('goals.edit-data');
+        Route::put('/goals/{goal}', [GoalController::class, 'update'])->name('goals.update');
+        Route::delete('/goals/{goal}', [GoalController::class, 'destroy'])->name('goals.destroy');
+        Route::post('/goals/{goal}/add-funds', [GoalController::class, 'addFunds'])->name('goals.add-funds');
+        Route::post('/goals/{goal}/remove-funds', [GoalController::class, 'removeFunds'])->name('goals.remove-funds');
+        Route::post('/goals/{goal}/request-redemption', [GoalController::class, 'requestRedemption'])->name('goals.request-redemption');
     });
 });
 

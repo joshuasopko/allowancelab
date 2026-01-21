@@ -207,6 +207,86 @@
         <p class="mobile-kid-welcome-subtitle">Let's grow that allowance beaker!</p>
     </div>
 
+    <!-- Goals Feature Launch Banner (One-time) -->
+    <div class="kid-goals-launch-banner"
+         style="--kid-color: {{ $kid->color }};"
+         x-data="{
+             show: true,
+             init() {
+                 // Check if user has already dismissed the launch banner
+                 const dismissed = localStorage.getItem('goalsLaunchBannerDismissed');
+                 if (dismissed === 'true') {
+                     this.show = false;
+                 }
+             },
+             dismiss() {
+                 localStorage.setItem('goalsLaunchBannerDismissed', 'true');
+                 this.show = false;
+             },
+             exploreGoals() {
+                 localStorage.setItem('goalsLaunchBannerDismissed', 'true');
+                 window.location.href = '{{ route('kid.goals.index') }}';
+             }
+         }"
+         x-show="show"
+         x-transition>
+        <div class="kid-goals-launch-content">
+            <div class="kid-goals-launch-icon">🎯✨</div>
+            <div class="kid-goals-launch-text">
+                <strong>NEW FEATURE: Goals Are Here!</strong>
+                <p>Start saving for something special! Set goals, track progress, and redeem when ready.</p>
+            </div>
+            <button class="kid-goals-launch-btn-inline" @click="exploreGoals()">Explore Goals →</button>
+            <button class="kid-goals-launch-close" @click="dismiss()" aria-label="Dismiss">✕</button>
+        </div>
+    </div>
+
+    <!-- Goal Completion Notification Banner -->
+    @if($kid->hasReadyToRedeemGoals())
+        <div class="kid-goals-notification-banner"
+             style="--kid-color: {{ $kid->color }}; --kid-color-dark: {{ $kid->color }}dd; cursor: pointer;"
+             x-data="{
+                 show: true,
+                 init() {
+                     // Check if notification was dismissed
+                     const dismissedUntil = sessionStorage.getItem('dashboardGoalNotificationDismissedUntil');
+                     if (dismissedUntil) {
+                         const dismissedDate = new Date(parseInt(dismissedUntil));
+                         const now = new Date();
+                         if (now < dismissedDate) {
+                             this.show = false;
+                         } else {
+                             sessionStorage.removeItem('dashboardGoalNotificationDismissedUntil');
+                         }
+                     }
+                 },
+                 dismiss() {
+                     const dismissUntil = new Date();
+                     dismissUntil.setDate(dismissUntil.getDate() + 7);
+                     sessionStorage.setItem('dashboardGoalNotificationDismissedUntil', dismissUntil.getTime().toString());
+                     this.show = false;
+                 },
+                 navigate() {
+                     window.location.href = '{{ route('kid.goals.index') }}';
+                 }
+             }"
+             @click="navigate()"
+             x-show="show"
+             x-transition>
+            <div class="kid-goals-notification-content">
+                <div class="kid-goals-notification-icon">🎉</div>
+                <div class="kid-goals-notification-text">
+                    You reached your goal! Click here to redeem!
+                </div>
+            </div>
+            <button class="kid-goals-notification-close"
+                    @click.stop="dismiss()"
+                    aria-label="Dismiss notification">
+                ✕
+            </button>
+        </div>
+    @endif
+
     <!-- Kid Card -->
     <div class="kid-card">
         <!-- Card Header -->
@@ -256,8 +336,12 @@
 
         <!-- Action Buttons -->
         <div class="kid-action-buttons">
-            <button class="kid-action-btn kid-deposit-btn" onclick="kidOpenDepositForm()">Record Deposit</button>
-            <button class="kid-action-btn kid-spend-btn" onclick="kidOpenSpendForm()">Record Spend</button>
+            <button class="kid-action-btn kid-deposit-btn" onclick="kidOpenDepositForm()">
+                <i class="fas fa-plus"></i> Record Deposit
+            </button>
+            <button class="kid-action-btn kid-spend-btn" onclick="kidOpenSpendForm()">
+                <i class="fas fa-minus"></i> Record Spend
+            </button>
             <button class="kid-action-btn kid-ledger-btn" id="kidLedgerBtn" onclick="kidToggleLedger()">View Ledger</button>
         </div>
 
@@ -392,5 +476,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Alpine.js for notification banner -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 @endsection

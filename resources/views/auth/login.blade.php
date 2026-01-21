@@ -103,7 +103,7 @@
 
         .form-input:focus {
             outline: none;
-            border-color: #4CAF50;
+            border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
         }
 
@@ -145,7 +145,7 @@
         }
 
         .forgot-password {
-            color: #4CAF50;
+            color: #10b981;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -160,7 +160,7 @@
         .submit-btn {
             width: 100%;
             padding: 16px;
-            background: #4CAF50;
+            background: #10b981;
             color: white;
             border: none;
             border-radius: 8px;
@@ -211,7 +211,7 @@
         }
 
         .register-link a {
-            color: #4CAF50;
+            color: #10b981;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.2s;
@@ -294,7 +294,7 @@
             <!-- Session Status -->
             @if (session('status'))
                 <div
-                    style="padding: 12px; background: #e8f5e9; border-left: 4px solid #4CAF50; border-radius: 8px; margin-bottom: 20px; color: #2e7d32; font-size: 14px;">
+                    style="padding: 12px; background: #e8f5e9; border-left: 4px solid #10b981; border-radius: 8px; margin-bottom: 20px; color: #2e7d32; font-size: 14px;">
                     {{ session('status') }}
                 </div>
             @endif
