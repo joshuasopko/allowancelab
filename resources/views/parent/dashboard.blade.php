@@ -41,73 +41,72 @@
 
     @if($kids->count() > 0)
         @foreach($kids as $kid)
-            <div class="kid-card">
-                <!-- Card Header -->
-                <div class="card-header">
-                    <div class="kid-info">
-                        <div class="avatar" style="background: {{ $kid->color }};">{{ strtoupper(substr($kid->name, 0, 1)) }}</div>
-                        <div>
-                            <h2 class="kid-name">{{ $kid->name }}</h2>
-                            <div class="kid-age">Age {{ \Carbon\Carbon::parse($kid->birthday)->age }}</div>
+            <div class="kid-card-compact" data-kid-id="{{ $kid->id }}">
+                @php
+                    $invite = $kid->invite;
+                    $showPendingBadge = $invite && $invite->status === 'pending' && !$invite->isExpired();
+                    $daysOfWeek = ['sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6];
+                    $targetDay = $daysOfWeek[$kid->allowance_day] ?? 5;
+                    $today = now();
+                    $daysUntil = ($targetDay - $today->dayOfWeek + 7) % 7;
+                    if ($daysUntil === 0) $daysUntil = 7;
+                    $nextAllowance = $today->copy()->addDays($daysUntil);
+                    $pointsPercent = $kid->max_points > 0 ? ($kid->points / $kid->max_points) * 100 : 0;
+                    $pointsClass = $pointsPercent >= 80 ? 'points-high' : ($pointsPercent >= 50 ? 'points-medium' : 'points-low');
+                    $activeGoals = $kid->goals()->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])->get();
+                @endphp
 
-                            @php
-                                $invite = $kid->invite;
-                                $showPendingBadge = $invite && $invite->status === 'pending' && !$invite->isExpired();
-                            @endphp
-
-                            @if($showPendingBadge)
-                                <div class="status-badge status-pending">
-                                    <i class="fas fa-clock"></i> Invite Pending
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                    @if($kid->points_enabled)
-                        @php
-                            $pointsPercent = $kid->max_points > 0 ? ($kid->points / $kid->max_points) * 100 : 0;
-                            $pointsClass = $pointsPercent >= 80 ? 'points-high' : ($pointsPercent >= 50 ? 'points-medium' : 'points-low');
-                        @endphp
-                        <div class="points-badge {{ $pointsClass }}">{{ $kid->points }} / {{ $kid->max_points }}</div>
-                    @endif
-                </div>
-
-                <!-- Balance Section -->
-                <div class="balance-section">
-                    <div class="balance {{ $kid->balance < 0 ? 'negative' : '' }}">${{ number_format($kid->balance, 2) }}</div>
-                    @php
-                        $daysOfWeek = ['sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6];
-                        $targetDay = $daysOfWeek[$kid->allowance_day] ?? 5;
-                        $today = now();
-                        $daysUntil = ($targetDay - $today->dayOfWeek + 7) % 7;
-                        if ($daysUntil === 0)
-                            $daysUntil = 7;
-                        $nextAllowance = $today->copy()->addDays($daysUntil);
-                    @endphp
-                    <div class="next-allowance">
-                        @if($kid->points_enabled && $kid->points === 0)
-                            <span style="color: #ef4444; font-weight: 600;">
-                                {{ $kid->name }} is at 0 points. No allowance on {{ $nextAllowance->format('l, M j') }}.<br>Help them
-                                find ways
-                                to earn points back!
+                <!-- Line 1: Avatar | Name | Balance | Action Buttons -->
+                <div class="kid-card-line-1">
+                    <div class="avatar-compact" style="background: {{ $kid->color }};">{{ strtoupper(substr($kid->name, 0, 1)) }}</div>
+                    <div class="kid-name-compact">
+                        {{ $kid->name }}
+                        @if($showPendingBadge)
+                            <span class="status-badge-compact status-pending">
+                                <i class="fas fa-clock"></i> Invite Pending
                             </span>
-                        @else
-                            Next allowance: ${{ number_format($kid->allowance_amount, 2) }} on
-                            {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}
                         @endif
                     </div>
+                    <div class="balance-compact {{ $kid->balance < 0 ? 'negative' : '' }}">${{ number_format($kid->balance, 2) }}</div>
+                    <div class="action-buttons-compact">
+                        <button class="btn-compact btn-deposit" onclick="toggleForm('deposit-{{ $kid->id }}')">Deposit</button>
+                        <button class="btn-compact btn-spend" onclick="toggleForm('spend-{{ $kid->id }}')">Spend</button>
+                        @if($kid->points_enabled)
+                            <button class="btn-compact btn-points" onclick="toggleForm('points-{{ $kid->id }}')">Points</button>
+                        @endif
+                        <button class="btn-compact btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}', this)">Ledger</button>
+                    </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <button class="kid-card-action-btn btn-deposit" onclick="toggleForm('deposit-{{ $kid->id }}')">Deposit
-                        Money</button>
-                    <button class="kid-card-action-btn btn-spend" onclick="toggleForm('spend-{{ $kid->id }}')">Record Spend</button>
-                    @if($kid->points_enabled)
-                        <button class="kid-card-action-btn btn-points" onclick="toggleForm('points-{{ $kid->id }}')">Adjust
-                            Points</button>
-                    @endif
-                    <button class="kid-card-action-btn btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}', this)">View
-                        Ledger</button>
+                <!-- Line 2: Points Badge | Next Allowance | Manage Kid Link -->
+                <div class="kid-card-line-2">
+                    <div class="kid-card-line-2-left">
+                        @if($kid->points_enabled)
+                            <div class="points-badge-compact {{ $pointsClass }}">{{ $kid->points }}/{{ $kid->max_points }}</div>
+                        @endif
+                    </div>
+                    <div class="next-allowance-compact">
+                        @if($kid->points_enabled && $kid->points === 0)
+                            <span style="color: #ef4444; font-weight: 600;">
+                                ⚠️ 0 points - No allowance on {{ $nextAllowance->format('l, M j') }}
+                            </span>
+                        @else
+                            Next: ${{ number_format($kid->allowance_amount, 2) }} on {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}
+                        @endif
+                    </div>
+                    <div class="kid-card-dropdown">
+                        <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown({{ $kid->id }})">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                        <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}">
+                            <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-bullseye"></i> View Goals
+                            </a>
+                            <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-cog"></i> Manage Kid
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Deposit Form -->
@@ -265,25 +264,82 @@
                     </div>
                 </div>
 
-                <!-- Card Footer -->
-                <div class="card-footer">
-                    <a href="{{ route('parent.goals.index', $kid) }}" class="manage-link goals-link">
-                        <span>Goals</span>
+                <!-- Line 3+: Goals (Conditional) -->
+                @if($activeGoals->count() > 0)
+                    <div class="kid-card-goals-container">
+                    @foreach($activeGoals as $index => $goal)
                         @php
-                            $activeGoalsCount = $kid->getActiveGoalsCount();
-                            $hasReadyGoals = $kid->hasReadyToRedeemGoals();
+                            $progressPercent = $goal->target_amount > 0 ? ($goal->current_amount / $goal->target_amount) * 100 : 0;
+                            $progressPercent = min($progressPercent, 100);
                         @endphp
-                        @if($activeGoalsCount > 0)
-                            <span class="goals-badge" style="background-color: {{ $hasReadyGoals ? '#10b981' : $kid->color }};">
-                                {{ $activeGoalsCount }}
-                                @if($hasReadyGoals)
-                                    <i class="fas fa-check" style="margin-left: 2px;"></i>
+                        <div class="kid-card-goal-row" style="--kid-color: {{ $kid->color }};">
+                            @if($index === 0)
+                                <div class="goal-header-cell">
+                                    <span class="goal-count-badge">Goals: {{ $activeGoals->count() }}</span>
+                                </div>
+                            @else
+                                <div class="goal-header-cell"></div>
+                            @endif
+                            <div class="goal-name-cell">
+                                {{ $goal->title }}
+                                @if($goal->status === 'pending_redemption')
+                                    <span class="goal-pending-badge" style="background: {{ $kid->color }}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
+                                        NEEDS REDEMPTION
+                                    </span>
                                 @endif
-                            </span>
+                            </div>
+                            <div class="goal-progress-cell">
+                                <div class="goal-progress-bar">
+                                    <div class="goal-progress-fill" style="width: {{ $progressPercent }}%;"></div>
+                                </div>
+                                <span class="goal-progress-text">{{ number_format($progressPercent, 0) }}%</span>
+                            </div>
+                            <div class="goal-amount-cell">${{ number_format($goal->current_amount, 2) }} of ${{ number_format($goal->target_amount, 2) }}</div>
+
+                            @if(in_array($goal->status, ['ready_to_redeem', 'pending_redemption']))
+                                <!-- Goal is complete - show redemption button -->
+                                <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                    <a href="{{ route('parent.goals.index', $kid) }}" style="background: #10b981; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-block; transition: background 0.2s;">
+                                        <i class="fas fa-check-circle"></i> GOAL COMPLETE
+                                    </a>
+                                    <form id="redeem-form-{{ $goal->id }}" action="{{ route('parent.goals.redeem', $goal) }}" method="POST" style="margin: 0;">
+                                        @csrf
+                                        <button type="button" onclick="showRedeemConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ $goal->title }}', '{{ number_format($goal->current_amount, 2) }}')" class="btn-goal-view" style="background: {{ $kid->color }}; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                                            <i class="fas fa-gift"></i> Redeem Goal
+                                        </button>
+                                    </form>
+                                </div>
+                            @else
+                                <!-- Goal is active - show add funds button -->
+                                <button class="btn-goal-add-funds" onclick="toggleForm('goal-{{ $goal->id }}')">Add Funds</button>
+                                <a href="{{ route('parent.goals.index', $kid) }}" class="btn-goal-view">View Goals</a>
+                            @endif
+                        </div>
+
+                        @if($goal->status === 'active')
+                            <!-- Add Funds Form for this goal (only for active goals) -->
+                            <div class="dropdown-form" id="goal-{{ $goal->id }}Form" style="padding: 12px 16px 12px 0; background: #f9fafb;">
+                                <form action="{{ route('parent.goals.add-funds', $goal) }}" method="POST" class="inline-form goal-add-funds-form" data-goal-id="{{ $goal->id }}" data-kid-id="{{ $kid->id }}" style="margin-left: auto; max-width: fit-content;">
+                                    @csrf
+                                    <div style="display: flex; gap: 14px; align-items: center;">
+                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                                            <div style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; font-weight: 600;">
+                                                <i class="fas fa-wallet" style="color: {{ $kid->color }};"></i>
+                                                ${{ number_format($kid->balance, 2) }}
+                                            </div>
+                                            <div style="font-size: 11px; color: #6b7280; font-weight: 500;">Available</div>
+                                        </div>
+                                        <input type="text" inputmode="decimal" class="form-input currency-input" name="amount"
+                                            placeholder="0.00" required style="width: 140px; padding: 8px 12px; font-size: 14px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        <button type="submit" class="submit-btn submit-goal-funds" style="background-color: {{ $kid->color }}; padding: 8px 16px; font-size: 13px; white-space: nowrap;">Transfer</button>
+                                    </div>
+                                </form>
+                            </div>
                         @endif
-                    </a>
-                    <a href="{{ route('kids.manage', $kid) }}" class="manage-link">Manage Kid</a>
-                </div>
+                    @endforeach
+                    </div>
+                @endif
+
             </div>
         @endforeach
     @else
@@ -328,4 +384,79 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Funds to Goal Modal -->
+    <div class="goal-fund-modal" id="goalFundModal" style="display: none;">
+        <div class="modal-backdrop" onclick="closeGoalFundModal()"></div>
+        <div class="goal-fund-modal-content">
+            <div class="goal-fund-modal-header">
+                <h2>Add Funds to Goal</h2>
+                <button class="close-btn" onclick="closeGoalFundModal()">&times;</button>
+            </div>
+            <div class="goal-fund-modal-body" id="goalFundModalBody">
+                <!-- Form will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Redeem Goal Confirmation Modal -->
+    <div id="redeemConfirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-gift" style="color: white; font-size: 24px;"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #111827;">Redeem Goal</h3>
+                    <p id="redeemGoalTitle" style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;"></p>
+                </div>
+            </div>
+            <p id="redeemConfirmMessage" style="margin: 16px 0; color: #374151; font-size: 14px; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button onclick="closeRedeemConfirmation()" style="flex: 1; padding: 10px 16px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                    Cancel
+                </button>
+                <button onclick="confirmRedeem()" style="flex: 1; padding: 10px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                    <i class="fas fa-check"></i> Confirm Redemption
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRedeemFormId = null;
+
+        function showRedeemConfirmation(goalId, kidName, goalTitle, amount) {
+            currentRedeemFormId = 'redeem-form-' + goalId;
+            document.getElementById('redeemGoalTitle').textContent = goalTitle;
+            document.getElementById('redeemConfirmMessage').textContent =
+                `This confirms that ${kidName} has received their item. The funds ($${amount}) will remain locked in the goal as a permanent record of the purchase.`;
+            document.getElementById('redeemConfirmModal').style.display = 'flex';
+        }
+
+        function closeRedeemConfirmation() {
+            document.getElementById('redeemConfirmModal').style.display = 'none';
+            currentRedeemFormId = null;
+        }
+
+        function confirmRedeem() {
+            if (currentRedeemFormId) {
+                document.getElementById(currentRedeemFormId).submit();
+            }
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('redeemConfirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRedeemConfirmation();
+            }
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('redeemConfirmModal').style.display === 'flex') {
+                closeRedeemConfirmation();
+            }
+        });
+    </script>
 @endsection
