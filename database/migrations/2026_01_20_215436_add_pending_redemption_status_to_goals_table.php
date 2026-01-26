@@ -13,15 +13,23 @@ return new class extends Migration
     public function up(): void
     {
         // For PostgreSQL (production), modify the enum
-        // SQLite (local dev) doesn't enforce enums, so this change is handled at application level
         if (DB::getDriverName() === 'pgsql') {
             DB::statement("ALTER TYPE goal_status ADD VALUE 'pending_redemption' BEFORE 'redeemed'");
         }
         // For MySQL (if ever used)
-        if (DB::getDriverName() === 'mysql') {
+        elseif (DB::getDriverName() === 'mysql') {
             DB::statement("ALTER TABLE goals MODIFY COLUMN status ENUM('active', 'ready_to_redeem', 'pending_redemption', 'redeemed') DEFAULT 'active'");
         }
-        // SQLite doesn't enforce enums, so no DB change needed - just model-level validation
+        // For SQLite, we need to recreate the table with the new enum values
+        elseif (DB::getDriverName() === 'sqlite') {
+            // SQLite doesn't support ALTER COLUMN, so we need to recreate the table
+            Schema::table('goals', function (Blueprint $table) {
+                $table->dropColumn('status');
+            });
+            Schema::table('goals', function (Blueprint $table) {
+                $table->enum('status', ['active', 'ready_to_redeem', 'pending_redemption', 'redeemed'])->default('active');
+            });
+        }
     }
 
     /**
