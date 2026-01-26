@@ -68,6 +68,7 @@ class Goal extends Model
     public function isReadyToRedeem()
     {
         return $this->status === 'ready_to_redeem' ||
+               $this->status === 'pending_redemption' ||
                ($this->status === 'active' && $this->current_amount >= $this->target_amount);
     }
 

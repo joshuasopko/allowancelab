@@ -541,8 +541,13 @@
     @else
         <div class="goals-empty-state">
             <i class="fas fa-bullseye"></i>
-            <p>You haven't created any goals yet!</p>
-            <button onclick="openCreateModal()" class="btn-add-goal">Create Your First Goal</button>
+            @if($completedGoals->count() > 0)
+                <p>No active goals right now!</p>
+                <button onclick="openCreateModal()" class="btn-add-goal">Create New Goal</button>
+            @else
+                <p>You haven't created any goals yet!</p>
+                <button onclick="openCreateModal()" class="btn-add-goal">Create Your First Goal</button>
+            @endif
         </div>
     @endif
         </div>
@@ -710,7 +715,15 @@
 
                 <div class="form-group">
                     <label for="target_amount">Target Amount * ($)</label>
-                    <input type="number" id="target_amount" x-model="formData.target_amount" required min="0.01" max="999999.99" step="0.01" class="form-input">
+                    <input
+                        type="text"
+                        id="target_amount"
+                        x-model="formData.target_amount"
+                        required
+                        class="form-input"
+                        @input="formData.target_amount = formatCurrency($event.target.value)"
+                        placeholder="$0.00"
+                    >
                 </div>
 
                 <div class="form-group">
@@ -750,16 +763,29 @@
                                        id="auto_allocation_percentage"
                                        x-model="formData.auto_allocation_percentage"
                                        min="0"
-                                       max="100"
+                                       :max="maxAllowedAllocation"
                                        step="5"
                                        class="allocation-slider"
                                        style="--slider-color: {{ $kid->color }};">
                                 <div class="slider-labels">
-                                    <span>$0</span>
-                                    <span x-text="'$' + (weeklyAllowance / 2).toFixed(2)"></span>
-                                    <span x-text="'$' + weeklyAllowance.toFixed(2)"></span>
+                                    <span>0%</span>
+                                    <span x-text="Math.round(maxAllowedAllocation / 2) + '%'"></span>
+                                    <span x-text="maxAllowedAllocation + '%'"></span>
                                 </div>
                             </div>
+
+                                                        <!-- Allocation Warning/Info -->
+                            <div x-show="maxAllowedAllocation < 100" class="allocation-info" x-cloak style="margin: 12px 0; padding: 10px 14px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 6px; font-size: 13px; color: #1e40af;">
+                                <div x-show="!allocationExceedsLimit" style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                                    <span>Only <strong x-text="maxAllowedAllocation"></strong>% allocation remains available</span>
+                                </div>
+                                <div x-show="allocationExceedsLimit" style="display: flex; align-items: center; gap: 8px; color: #dc2626;">
+                                    <i class="fas fa-exclamation-circle" style="color: #dc2626;"></i>
+                                    <span>Exceeds limit by <strong x-text="Math.abs(remainingAllocation)"></strong>% — Max allowed: <strong x-text="maxAllowedAllocation"></strong>%</span>
+                                </div>
+                            </div>
+
 
                             <!-- Preview Info -->
                             <div x-show="autoAllocationAmount > 0" class="auto-allocation-preview" x-cloak>
@@ -796,14 +822,46 @@
                     <template x-if="isEditMode">
                         <button type="button" @click="deleteGoal()" class="btn-danger">Delete Goal</button>
                     </template>
-                    <button type="submit" class="btn-primary" :disabled="submitting">
-                        <span x-show="!submitting" x-text="isEditMode ? 'Update Goal' : 'Create Goal'"></span>
+                    <button type="submit" class="btn-primary" :disabled="submitting || allocationExceedsLimit">
+                        <span x-show="!submitting && !allocationExceedsLimit" x-text="isEditMode ? 'Update Goal' : 'Create Goal'"></span>
                         <span x-show="submitting">Saving...</span>
+                        <span x-show="allocationExceedsLimit && !submitting" style="opacity: 0.7;">Allocation Exceeds Limit</span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-data="{ showDeleteModal: false, deleteCallback: null }" 
+         x-show="showDeleteModal" 
+         x-cloak 
+         class="modal-overlay" 
+         @click.self="showDeleteModal = false"
+         @open-delete-modal.window="showDeleteModal = true; deleteCallback = $event.detail.callback">
+        <div class="modal-container" @click.stop style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Delete Goal</h2>
+                <button @click="showDeleteModal = false" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 32px; flex-shrink: 0; margin-top: 4px;"></i>
+                    <div>
+                        <p style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: #1a1a1a;">Are you sure you want to delete this goal?</p>
+                        <p style="margin: 0; font-size: 14px; color: #666;">Any funds in this goal will be returned to your main account. This action cannot be undone.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #e5e7eb;">
+                <button type="button" @click="showDeleteModal = false" class="btn-secondary">Cancel</button>
+                <button type="button" @click="deleteCallback && deleteCallback(); showDeleteModal = false" class="btn-danger">Delete Goal</button>
+            </div>
+        </div>
+    </div>
+
 
 <!-- Vanilla JS functions for goal card collapse -->
 <script>
@@ -1045,7 +1103,9 @@
             isEditMode: false,
             editGoalId: null,
             currentGoalAmount: 0,
+            currentGoalAllocation: 0, // Track current goal's allocation when editing
             balance: {{ $kid->balance }},
+            totalAllocated: {{ $totalAllocated }}, // Total from all active goals
             submitting: false,
             photoPreview: null,
             photoFile: null,
@@ -1069,6 +1129,31 @@
 
             get weeklyAllowance() {
                 return {{ $kid->allowance_amount }};
+            },
+
+            get remainingAllocation() {
+                // Calculate remaining allocation based on mode
+                if (this.isEditMode) {
+                    // When editing, subtract current goal's allocation from total
+                    const otherGoalsAllocation = this.totalAllocated - this.currentGoalAllocation;
+                    return 100 - otherGoalsAllocation - (parseFloat(this.formData.auto_allocation_percentage) || 0);
+                } else {
+                    // When creating, subtract new allocation from total
+                    return 100 - this.totalAllocated - (parseFloat(this.formData.auto_allocation_percentage) || 0);
+                }
+            },
+
+            get allocationExceedsLimit() {
+                return this.remainingAllocation < 0;
+            },
+
+            get maxAllowedAllocation() {
+                if (this.isEditMode) {
+                    const otherGoalsAllocation = this.totalAllocated - this.currentGoalAllocation;
+                    return 100 - otherGoalsAllocation;
+                } else {
+                    return 100 - this.totalAllocated;
+                }
             },
 
             get autoAllocationAmount() {
@@ -1173,6 +1258,7 @@
                     this.formData.target_amount = data.target_amount || '';
                     this.formData.auto_allocation_percentage = data.auto_allocation_percentage || '';
                     this.currentGoalAmount = parseFloat(data.current_amount) || 0;
+                    this.currentGoalAllocation = parseFloat(data.auto_allocation_percentage) || 0;
 
                     if (data.photo_path) {
                         this.photoPreview = `/storage/${data.photo_path}`;
@@ -1322,6 +1408,7 @@
                     target_amount: '',
                     auto_allocation_percentage: '',
                 };
+                this.currentGoalAllocation = 0;
                 this.photoPreview = null;
                 this.photoFile = null;
             },
@@ -1364,7 +1451,9 @@
                 formData.append('title', this.formData.title);
                 formData.append('description', this.formData.description || '');
                 formData.append('product_url', this.formData.product_url || '');
-                formData.append('target_amount', this.formData.target_amount);
+                // Convert formatted currency ($11.00) back to decimal (11.00)
+                const targetAmount = (this.formData.target_amount || '').replace(/[^0-9.]/g, '');
+                formData.append('target_amount', targetAmount);
                 formData.append('auto_allocation_percentage', this.formData.auto_allocation_percentage || '0');
 
                 if (this.photoFile) {
@@ -1412,30 +1501,49 @@
             },
 
             deleteGoal() {
-                if (!confirm('Are you sure you want to delete this goal? This cannot be undone.')) {
-                    return;
-                }
+                // Dispatch event to open delete confirmation modal
+                window.dispatchEvent(new CustomEvent('open-delete-modal', {
+                    detail: {
+                        callback: () => this.performDelete()
+                    }
+                }));
+            },
 
+            performDelete() {
                 fetch(`/kid/goals/${this.editGoalId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({ _method: 'DELETE' })
                 })
                 .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
+                    if (!response.ok) {
                         return response.json().then(data => {
-                            throw new Error(data.message || 'An error occurred');
+                            throw new Error(data.error || data.message || 'Error deleting goal');
                         });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
                     }
                 })
                 .catch(error => {
-                    alert(error.message);
+                    alert(error.message || 'An unexpected error occurred. Please try again.');
                 });
+            },
+
+            formatCurrency(value) {
+                let numValue = value.replace(/[^0-9]/g, '');
+                if (numValue === '') return '';
+                let cents = parseInt(numValue);
+                let dollars = (cents / 100).toFixed(2);
+                return '$' + dollars;
             }
         }
     }

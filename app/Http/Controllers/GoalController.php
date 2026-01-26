@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Goal;
 use App\Models\GoalTransaction;
 use App\Models\Kid;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,11 @@ class GoalController extends Controller
             ->orderBy('redeemed_at', 'desc')
             ->get();
 
-        return view('goals.index', compact('kid', 'activeGoals', 'completedGoals'));
+        // Calculate total allocated percentage for active goals
+        $totalAllocated = $activeGoals->sum('auto_allocation_percentage');
+        $remainingAllocation = 100 - $totalAllocated;
+
+        return view('goals.index', compact('kid', 'activeGoals', 'completedGoals', 'totalAllocated', 'remainingAllocation'));
     }
 
     /**
@@ -47,16 +52,21 @@ class GoalController extends Controller
         }
 
         $activeGoals = $kid->goals()
-            ->whereIn('status', ['active', 'ready_to_redeem'])
+            ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         $pastGoals = $kid->goals()
+            ->with(['goalTransactions.performedBy'])
             ->where('status', 'redeemed')
             ->orderBy('redeemed_at', 'desc')
             ->get();
 
-        return view('goals.parent-index', compact('kid', 'activeGoals', 'pastGoals'));
+        // Calculate total allocated percentage for active goals
+        $totalAllocated = $activeGoals->sum('auto_allocation_percentage');
+        $remainingAllocation = 100 - $totalAllocated;
+
+        return view('goals.parent-index', compact('kid', 'activeGoals', 'pastGoals', 'totalAllocated', 'remainingAllocation'));
     }
 
     /**
@@ -84,6 +94,25 @@ class GoalController extends Controller
             'auto_allocation_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
+        // Validate total auto-allocation doesn't exceed 100%
+        if ($request->auto_allocation_percentage && $request->auto_allocation_percentage > 0) {
+            $existingAllocation = $kid->goals()
+                ->whereIn('status', ['active', 'ready_to_redeem'])
+                ->sum('auto_allocation_percentage');
+
+            $totalAllocation = $existingAllocation + $request->auto_allocation_percentage;
+
+            if ($totalAllocation > 100) {
+                if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Total auto-allocation would exceed 100%. Currently allocated: ' . number_format($existingAllocation, 0) . '%'
+                    ], 400);
+                }
+                return back()->withErrors(['auto_allocation_percentage' => 'Total auto-allocation would exceed 100%. Currently allocated: ' . number_format($existingAllocation, 0) . '%']);
+            }
+        }
+
         $photoPath = null;
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('goal-photos', 'public');
@@ -98,7 +127,7 @@ class GoalController extends Controller
             }
         }
 
-        Goal::create([
+        $goal = Goal::create([
             'family_id' => $kid->family_id,
             'kid_id' => $kid->id,
             'created_by_user_id' => null, // Kid created it
@@ -112,6 +141,16 @@ class GoalController extends Controller
             'expected_completion_date' => $expectedCompletionDate,
             'status' => 'active',
         ]);
+
+        // Check if this is an AJAX request
+        if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Goal created successfully!',
+                'goal' => $goal,
+                'redirect' => route('kid.goals.index')
+            ]);
+        }
 
         return redirect()->route('kid.goals.index')->with('success', 'Goal created successfully!');
     }
@@ -136,6 +175,19 @@ class GoalController extends Controller
             'auto_allocation_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
+        // Validate total auto-allocation doesn't exceed 100%
+        if ($request->auto_allocation_percentage && $request->auto_allocation_percentage > 0) {
+            $existingAllocation = $kid->goals()
+                ->whereIn('status', ['active', 'ready_to_redeem'])
+                ->sum('auto_allocation_percentage');
+
+            $totalAllocation = $existingAllocation + $request->auto_allocation_percentage;
+
+            if ($totalAllocation > 100) {
+                return back()->withErrors(['auto_allocation_percentage' => 'Total auto-allocation would exceed 100%. Currently allocated: ' . number_format($existingAllocation, 0) . '%']);
+            }
+        }
+
         $photoPath = null;
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('goal-photos', 'public');
@@ -150,7 +202,7 @@ class GoalController extends Controller
             }
         }
 
-        Goal::create([
+        $goal = Goal::create([
             'family_id' => $kid->family_id,
             'kid_id' => $kid->id,
             'created_by_user_id' => Auth::id(),
@@ -164,6 +216,16 @@ class GoalController extends Controller
             'expected_completion_date' => $expectedCompletionDate,
             'status' => 'active',
         ]);
+
+        // Check if this is an AJAX request
+        if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Goal created successfully!',
+                'goal' => $goal,
+                'redirect' => route('parent.goals.index', $kid)
+            ]);
+        }
 
         return redirect()->route('parent.goals.index', $kid)->with('success', 'Goal created successfully!');
     }
@@ -212,7 +274,25 @@ class GoalController extends Controller
 
         // Prevent editing of pending_redemption or redeemed goals
         if (in_array($goal->status, ['pending_redemption', 'redeemed'])) {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'error' => 'This goal cannot be edited because it is ' . ($goal->status === 'redeemed' ? 'completed' : 'pending redemption') . '.'
+                ], 403);
+            }
             return back()->with('error', 'This goal cannot be edited because it is ' . ($goal->status === 'redeemed' ? 'completed' : 'pending redemption') . '.');
+        }
+
+        // Return JSON for AJAX requests (from parent modal)
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'title' => $goal->title,
+                'description' => $goal->description,
+                'product_url' => $goal->product_url,
+                'target_amount' => $goal->target_amount,
+                'auto_allocation_percentage' => $goal->auto_allocation_percentage,
+                'current_amount' => $goal->current_amount,
+                'photo_path' => $goal->photo_path,
+            ]);
         }
 
         return view('goals.edit', compact('goal'));
@@ -248,6 +328,26 @@ class GoalController extends Controller
             'target_amount' => 'required|numeric|min:0.01|max:999999.99',
             'auto_allocation_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
+
+        // Validate total auto-allocation doesn't exceed 100% (excluding this goal's current allocation)
+        if ($request->auto_allocation_percentage && $request->auto_allocation_percentage > 0) {
+            $existingAllocation = $goal->kid->goals()
+                ->whereIn('status', ['active', 'ready_to_redeem'])
+                ->where('id', '!=', $goal->id) // Exclude current goal
+                ->sum('auto_allocation_percentage');
+
+            $totalAllocation = $existingAllocation + $request->auto_allocation_percentage;
+
+            if ($totalAllocation > 100) {
+                if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Total auto-allocation would exceed 100%. Currently allocated: ' . number_format($existingAllocation, 0) . '%'
+                    ], 400);
+                }
+                return back()->withErrors(['auto_allocation_percentage' => 'Total auto-allocation would exceed 100%. Currently allocated: ' . number_format($existingAllocation, 0) . '%']);
+            }
+        }
 
         if ($request->hasFile('photo')) {
             // Delete old photo if exists
@@ -320,38 +420,130 @@ class GoalController extends Controller
     }
 
     /**
-     * Remove the specified goal (only if no funds)
+     * Remove the specified goal and return funds to main account
      */
-    public function destroy(Goal $goal)
+    public function destroy(Request $request, Goal $goal)
     {
         if (Auth::guard('kid')->check()) {
             $kid = Auth::guard('kid')->user();
             if ($goal->kid_id !== $kid->id) {
                 abort(403, 'Unauthorized access to this goal.');
             }
+            $isParent = false;
         } else {
             $familyIds = Auth::user()->families()->pluck('families.id');
             if (!$familyIds->contains($goal->family_id)) {
                 abort(403, 'Unauthorized access to this goal.');
             }
+            $isParent = true;
         }
 
-        if ($goal->current_amount > 0) {
-            return back()->with('error', 'Cannot delete a goal with funds. Please remove all funds first.');
+        // Prevent deletion of redeemed goals
+        if ($goal->status === 'redeemed') {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Cannot delete a redeemed goal. It is a permanent record.'
+                ], 400);
+            }
+            return back()->with('error', 'Cannot delete a redeemed goal. It is a permanent record.');
         }
 
-        // Delete photo if exists
-        if ($goal->photo_path) {
-            Storage::disk('public')->delete($goal->photo_path);
+        $kidId = $goal->kid_id;
+
+        DB::transaction(function () use ($goal, $isParent) {
+            $kid = $goal->kid;
+            $goalTitle = $goal->title;
+            $fundsToReturn = $goal->current_amount;
+
+            // Return funds to main account if there are any
+            if ($fundsToReturn > 0) {
+                $kid->balance += $fundsToReturn;
+                $kid->save();
+
+                // Create transaction record in main ledger
+                Transaction::create([
+                    'kid_id' => $kid->id,
+                    'type' => 'deposit',
+                    'amount' => $fundsToReturn,
+                    'description' => 'Goal deleted, funds returned: ' . $goalTitle,
+                    'category' => 'goal_transfer',
+                    'initiated_by' => $isParent ? 'parent' : 'kid',
+                ]);
+            }
+
+            // Delete photo if exists
+            if ($goal->photo_path) {
+                Storage::disk('public')->delete($goal->photo_path);
+            }
+
+            $goal->delete();
+        });
+
+        // Handle AJAX requests
+        if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Goal deleted successfully! Funds have been returned to the account.'
+            ]);
         }
 
-        $goal->delete();
-
+        // Handle regular form submissions
         if (Auth::guard('kid')->check()) {
-            return redirect()->route('kid.goals.index')->with('success', 'Goal deleted successfully!');
+            return redirect()->route('kid.goals.index')->with('success', 'Goal deleted successfully! Funds have been returned to your account.');
         } else {
-            return redirect()->route('parent.goals.index', $goal->kid)->with('success', 'Goal deleted successfully!');
+            return redirect()->route('parent.goals.index', $kidId)->with('success', 'Goal deleted successfully! Funds have been returned to the account.');
         }
+    }
+
+    /**
+     * Get the fund form HTML for modal (parent only)
+     */
+    public function getFundForm(Goal $goal)
+    {
+        // Verify parent has access to this goal
+        $familyIds = Auth::user()->families()->pluck('families.id');
+        if (!$familyIds->contains($goal->family_id)) {
+            abort(403, 'Unauthorized access to this goal.');
+        }
+
+        $kid = $goal->kid;
+
+        $html = '
+            <div class="goal-fund-form">
+                <div class="goal-fund-info">
+                    <h3 style="margin: 0 0 8px 0; font-size: 18px; color: #1a1a1a;">' . htmlspecialchars($goal->title) . '</h3>
+                    <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">
+                        Progress: $' . number_format($goal->current_amount, 2) . ' of $' . number_format($goal->target_amount, 2) . '
+                    </p>
+                    <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">
+                        <strong>' . htmlspecialchars($kid->name) . '\'s Available Balance:</strong> $' . number_format($kid->balance, 2) . '
+                    </p>
+                </div>
+                <form action="' . route('parent.goals.add-funds', $goal) . '" method="POST" id="goalFundForm">
+                    ' . csrf_field() . '
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Amount to Add</label>
+                        <input type="number"
+                               step="0.01"
+                               min="0.01"
+                               max="' . $kid->balance . '"
+                               name="amount"
+                               class="form-input"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;"
+                               placeholder="0.00"
+                               required>
+                    </div>
+                    <button type="submit"
+                            class="submit-btn"
+                            style="width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                        Add Funds to Goal
+                    </button>
+                </form>
+            </div>
+        ';
+
+        return response($html);
     }
 
     /**
@@ -365,12 +557,14 @@ class GoalController extends Controller
                 abort(403, 'Unauthorized access to this goal.');
             }
             $performedById = null;
+            $isParent = false;
         } else {
             $familyIds = Auth::user()->families()->pluck('families.id');
             if (!$familyIds->contains($goal->family_id)) {
                 abort(403, 'Unauthorized access to this goal.');
             }
             $performedById = Auth::id();
+            $isParent = true;
         }
 
         $request->validate([
@@ -387,7 +581,16 @@ class GoalController extends Controller
             ], 400);
         }
 
-        DB::transaction(function () use ($goal, $kid, $request, $performedById) {
+        // Validate amount doesn't exceed what's needed to complete the goal
+        $amountNeeded = $goal->target_amount - $goal->current_amount;
+        if ($request->amount > $amountNeeded) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only add $' . number_format($amountNeeded, 2) . ' to complete this goal.'
+            ], 400);
+        }
+
+        DB::transaction(function () use ($goal, $kid, $request, $performedById, $isParent) {
             // Deduct from kid's main balance
             $kid->balance -= $request->amount;
             $kid->save();
@@ -395,9 +598,11 @@ class GoalController extends Controller
             // Add to goal
             $goal->current_amount += $request->amount;
 
-            // Set status to ready_to_redeem if goal is complete
+            // Determine new status if goal is complete
             if ($goal->status === 'active' && $goal->current_amount >= $goal->target_amount) {
-                $goal->status = 'ready_to_redeem';
+                // If parent added funds, go straight to pending_redemption
+                // If kid added funds, go to ready_to_redeem (they need to request redemption)
+                $goal->status = $isParent ? 'pending_redemption' : 'ready_to_redeem';
             }
 
             $goal->save();
@@ -413,14 +618,28 @@ class GoalController extends Controller
                 'performed_by_user_id' => $performedById,
                 'created_at' => now(),
             ]);
+
+            // Create main transaction ledger entry
+            Transaction::create([
+                'kid_id' => $kid->id,
+                'type' => 'spend',
+                'amount' => $request->amount,
+                'description' => 'Transferred to goal: ' . $goal->title,
+                'category' => 'goal_transfer',
+                'initiated_by' => $isParent ? 'parent' : 'kid',
+            ]);
         });
+
+        $refreshedGoal = $goal->fresh();
+        $refreshedKid = $kid->fresh();
 
         return response()->json([
             'success' => true,
             'message' => 'Funds added successfully!',
-            'new_goal_amount' => $goal->fresh()->current_amount,
-            'new_balance' => $kid->fresh()->balance,
-            'goal_status' => $goal->fresh()->status,
+            'new_balance' => $refreshedKid->balance,
+            'goal_current_amount' => $refreshedGoal->current_amount,
+            'goal_target_amount' => $refreshedGoal->target_amount,
+            'goal_status' => $refreshedGoal->status,
         ]);
     }
 
@@ -435,12 +654,14 @@ class GoalController extends Controller
                 abort(403, 'Unauthorized access to this goal.');
             }
             $performedById = null;
+            $isParent = false;
         } else {
             $familyIds = Auth::user()->families()->pluck('families.id');
             if (!$familyIds->contains($goal->family_id)) {
                 abort(403, 'Unauthorized access to this goal.');
             }
             $performedById = Auth::id();
+            $isParent = true;
         }
 
         $request->validate([
@@ -457,7 +678,7 @@ class GoalController extends Controller
             ], 400);
         }
 
-        DB::transaction(function () use ($goal, $kid, $request, $performedById) {
+        DB::transaction(function () use ($goal, $kid, $request, $performedById, $isParent) {
             // Remove from goal
             $goal->current_amount -= $request->amount;
 
@@ -482,6 +703,16 @@ class GoalController extends Controller
                 'description' => 'Manual withdrawal from goal',
                 'performed_by_user_id' => $performedById,
                 'created_at' => now(),
+            ]);
+
+            // Create main transaction ledger entry
+            Transaction::create([
+                'kid_id' => $kid->id,
+                'type' => 'deposit',
+                'amount' => $request->amount,
+                'description' => 'Withdrawn from goal: ' . $goal->title,
+                'category' => 'goal_transfer',
+                'initiated_by' => $isParent ? 'parent' : 'kid',
             ]);
         });
 
@@ -555,31 +786,26 @@ class GoalController extends Controller
         $kid = $goal->kid;
 
         DB::transaction(function () use ($goal, $kid) {
-            // Return all funds to kid's main balance
-            $kid->balance += $goal->current_amount;
-            $kid->save();
-
-            // Create redemption transaction
+            // Create redemption transaction (funds stay locked in goal)
             GoalTransaction::create([
                 'goal_id' => $goal->id,
                 'kid_id' => $kid->id,
                 'family_id' => $goal->family_id,
-                'amount' => -$goal->current_amount,
+                'amount' => 0, // No funds transferred
                 'transaction_type' => 'redemption',
-                'description' => 'Goal redeemed - funds returned to main balance',
+                'description' => 'Goal redeemed - item purchased',
                 'performed_by_user_id' => Auth::id(),
                 'created_at' => now(),
             ]);
 
-            // Mark goal as redeemed
-            $goal->current_amount = 0;
+            // Mark goal as redeemed (funds remain locked in goal)
             $goal->status = 'redeemed';
             $goal->redeemed_at = now();
             $goal->redeemed_by_user_id = Auth::id();
             $goal->save();
         });
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Goal redeemed successfully! Funds returned to main balance.');
+        return redirect()->route('parent.goals.index', $kid)->with('success', 'Goal redeemed successfully! ' . $kid->name . ' can now enjoy their purchase.');
     }
 
     /**
@@ -600,31 +826,26 @@ class GoalController extends Controller
         $kid = $goal->kid;
 
         DB::transaction(function () use ($goal, $kid) {
-            // Return all funds to kid's main balance
-            $kid->balance += $goal->current_amount;
-            $kid->save();
-
-            // Create redemption transaction
+            // Create redemption transaction (funds stay locked in goal)
             GoalTransaction::create([
                 'goal_id' => $goal->id,
                 'kid_id' => $kid->id,
                 'family_id' => $goal->family_id,
-                'amount' => -$goal->current_amount,
+                'amount' => 0, // No funds transferred
                 'transaction_type' => 'redemption',
                 'description' => 'Goal redemption approved by parent',
                 'performed_by_user_id' => Auth::id(),
                 'created_at' => now(),
             ]);
 
-            // Mark goal as redeemed
-            $goal->current_amount = 0;
+            // Mark goal as redeemed (funds remain locked in goal)
             $goal->status = 'redeemed';
             $goal->redeemed_at = now();
             $goal->redeemed_by_user_id = Auth::id();
             $goal->save();
         });
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Redemption approved! Funds returned to ' . $kid->name . '\'s main balance.');
+        return redirect()->route('parent.goals.index', $kid)->with('success', 'Redemption approved! ' . $kid->name . ' can now enjoy their purchase.');
     }
 
     /**
