@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/goals/{goal}/edit', [GoalController::class, 'edit'])->name('parent.goals.edit');
     Route::put('/goals/{goal}', [GoalController::class, 'update'])->name('parent.goals.update');
     Route::delete('/goals/{goal}', [GoalController::class, 'destroy'])->name('parent.goals.destroy');
+    Route::get('/goals/{goal}/fund-form', [GoalController::class, 'getFundForm'])->name('parent.goals.fund-form');
     Route::post('/goals/{goal}/add-funds', [GoalController::class, 'addFunds'])->name('parent.goals.add-funds');
     Route::post('/goals/{goal}/remove-funds', [GoalController::class, 'removeFunds'])->name('parent.goals.remove-funds');
     Route::post('/goals/{goal}/redeem', [GoalController::class, 'redeem'])->name('parent.goals.redeem');

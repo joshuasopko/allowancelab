@@ -12,6 +12,56 @@ let currentTypeFilter = 'all';
 let currentDateRange = '30';
 
 // ============================================
+// LEDGER FUNCTIONS
+// ============================================
+
+// Refresh ledger for a specific kid
+async function refreshLedger(kidId) {
+    try {
+        const response = await fetch(`/kids/${kidId}/transactions?days=30&type=all`);
+        if (!response.ok) return;
+
+        const transactions = await response.json();
+
+        // Find the ledger table for this kid
+        const ledgerTable = document.getElementById(`ledger-${kidId}-table`);
+        if (!ledgerTable) return;
+
+        // Update ledger with new transactions (limit to 8 most recent to match backend)
+        if (transactions && transactions.length > 0) {
+            const recentTransactions = transactions.slice(0, 8);
+            ledgerTable.innerHTML = recentTransactions.map(t => {
+                let typeLabel = t.type_label;
+                if (t.note === 'Weekly Allowance' || t.note === 'Allowance earned') {
+                    typeLabel = 'Allowance';
+                } else if (t.note === 'Allowance not earned - insufficient points') {
+                    typeLabel = 'Allowance';
+                }
+
+                const isKidInitiated = t.initiated_by === 'kid';
+                const rowClass = t.note === 'Allowance not earned - insufficient points' ? 'allowance-not-earned' : '';
+
+                return `
+                    <div class="ledger-row ${rowClass}" data-type="${t.type}" ${isKidInitiated ? `style="background: ${t.kid_color}15;"` : ''}>
+                        <div class="ledger-kid-icon-cell">
+                            ${isKidInitiated ? `<span class="ledger-kid-icon" style="color: ${t.kid_color};">K</span>` : ''}
+                        </div>
+                        <div class="ledger-date">${t.date} | ${t.time}</div>
+                        <div class="ledger-type ${t.type}">${typeLabel}</div>
+                        <div class="ledger-amount ${t.type}">${t.amount_display}</div>
+                        <div class="ledger-note">${t.note || 'No note'}</div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            ledgerTable.innerHTML = '<div class="ledger-empty">No transactions yet</div>';
+        }
+    } catch (error) {
+        console.error('Error refreshing ledger:', error);
+    }
+}
+
+// ============================================
 // FORM TOGGLE FUNCTIONS
 // ============================================
 
@@ -32,6 +82,18 @@ function toggleForm(formId, buttonElement = null) {
             buttonElement.textContent = 'Close Ledger';
         } else {
             buttonElement.textContent = 'View Ledger';
+        }
+    }
+
+    // Auto-focus on amount input for deposit/spend/points forms when opened
+    if (form.classList.contains('active')) {
+        const amountInput = form.querySelector('input[name="amount"]');
+        if (amountInput) {
+            // Use setTimeout to ensure the form animation completes first
+            setTimeout(() => {
+                amountInput.focus();
+                amountInput.select(); // Also select any existing text
+            }, 100);
         }
     }
 }
@@ -280,23 +342,44 @@ function handleFormSubmit(form, successMessage) {
                 }, 100);
 
                 if (data.new_balance !== undefined) {
-                    const balanceEl = document.querySelector('.balance');
-                    balanceEl.textContent = '$' + parseFloat(data.new_balance).toFixed(2);
-                    balanceEl.classList.toggle('negative', data.new_balance < 0);
+                    // Extract kid ID from form action URL (e.g., /kids/1/deposit)
+                    const kidIdMatch = this.action.match(/\/kids\/(\d+)\//);
+                    if (kidIdMatch) {
+                        const kidId = kidIdMatch[1];
+                        const kidCard = document.querySelector(`[data-kid-id="${kidId}"]`);
+                        if (kidCard) {
+                            const balanceEl = kidCard.querySelector('.balance-compact');
+                            if (balanceEl) {
+                                balanceEl.textContent = '$' + parseFloat(data.new_balance).toFixed(2);
+                                balanceEl.classList.toggle('negative', data.new_balance < 0);
+                            }
+
+                            // Refresh the ledger for this kid
+                            refreshLedger(kidId);
+                        }
+                    }
                 }
 
                 if (data.new_points !== undefined) {
-                    const pointsBadge = document.querySelector('.points-badge');
-                    if (pointsBadge) {
-                        pointsBadge.textContent = data.new_points + ' / 10';
+                    // Extract kid ID from form action URL (e.g., /kids/1/points)
+                    const kidIdMatch = this.action.match(/\/kids\/(\d+)\//);
+                    if (kidIdMatch) {
+                        const kidId = kidIdMatch[1];
+                        const kidCard = document.querySelector(`[data-kid-id="${kidId}"]`);
+                        if (kidCard) {
+                            const pointsBadge = kidCard.querySelector('.points-badge');
+                            if (pointsBadge) {
+                                pointsBadge.textContent = data.new_points + ' / 10';
 
-                        pointsBadge.classList.remove('points-low', 'points-medium', 'points-high');
-                        if (data.new_points >= 8) {
-                            pointsBadge.classList.add('points-high');
-                        } else if (data.new_points >= 5) {
-                            pointsBadge.classList.add('points-medium');
-                        } else {
-                            pointsBadge.classList.add('points-low');
+                                pointsBadge.classList.remove('points-low', 'points-medium', 'points-high');
+                                if (data.new_points >= 8) {
+                                    pointsBadge.classList.add('points-high');
+                                } else if (data.new_points >= 5) {
+                                    pointsBadge.classList.add('points-medium');
+                                } else {
+                                    pointsBadge.classList.add('points-low');
+                                }
+                            }
                         }
                     }
                 }
@@ -383,6 +466,150 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('form[action*="points"]').forEach(form => {
         handleFormSubmit(form, '✓ Adjusted!');
+    });
+
+    // Custom handler for goal add-funds forms with dynamic UI updates
+    document.querySelectorAll('form[action*="goals"][action*="add-funds"]').forEach(form => {
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const submitBtn = this.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            const goalId = this.dataset.goalId;
+            const kidId = this.dataset.kidId;
+
+            // Clear any existing error messages
+            let errorDiv = this.parentElement.querySelector('.form-error-message');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+
+            try {
+                const [response] = await Promise.all([
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }),
+                    new Promise(resolve => setTimeout(resolve, 800))
+                ]);
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    submitBtn.classList.remove('loading');
+
+                    setTimeout(() => {
+                        submitBtn.classList.add('success');
+                        submitBtn.textContent = '✓ Transferred!';
+                    }, 100);
+
+                    // Update kid's balance display
+                    if (data.new_balance !== undefined) {
+                        const kidCard = this.closest('.kid-card-compact');
+                        const balanceEl = kidCard.querySelector('.balance-compact');
+                        if (balanceEl) {
+                            balanceEl.textContent = '$' + parseFloat(data.new_balance).toFixed(2);
+                            balanceEl.classList.toggle('negative', data.new_balance < 0);
+                        }
+
+                        // Update the available balance in the form
+                        const walletDisplay = this.querySelector('.fa-wallet').parentElement;
+                        if (walletDisplay) {
+                            walletDisplay.innerHTML = `<i class="fas fa-wallet" style="color: ${this.closest('.kid-card-compact').querySelector('.avatar-compact').style.background};"></i> $${parseFloat(data.new_balance).toFixed(2)}`;
+                        }
+                    }
+
+                    // Update goal progress
+                    if (data.goal_current_amount !== undefined && data.goal_target_amount !== undefined) {
+                        const goalRow = this.closest('.kid-card-compact').querySelector(`.kid-card-goal-row`);
+                        if (goalRow) {
+                            // Find the matching goal row by checking if the form ID matches
+                            const allGoalRows = this.closest('.kid-card-compact').querySelectorAll('.kid-card-goal-row');
+                            allGoalRows.forEach(row => {
+                                const nextSibling = row.nextElementSibling;
+                                if (nextSibling && nextSibling.id === `goal-${goalId}Form`) {
+                                    const progressPercent = Math.min((data.goal_current_amount / data.goal_target_amount) * 100, 100);
+
+                                    // Update progress bar
+                                    const progressFill = row.querySelector('.goal-progress-fill');
+                                    if (progressFill) {
+                                        progressFill.style.width = progressPercent + '%';
+                                    }
+
+                                    // Update progress text
+                                    const progressText = row.querySelector('.goal-progress-text');
+                                    if (progressText) {
+                                        progressText.textContent = Math.round(progressPercent) + '%';
+                                    }
+
+                                    // Update amount text
+                                    const amountCell = row.querySelector('.goal-amount-cell');
+                                    if (amountCell) {
+                                        amountCell.textContent = `$${parseFloat(data.goal_current_amount).toFixed(2)} of $${parseFloat(data.goal_target_amount).toFixed(2)}`;
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    setTimeout(() => {
+                        this.querySelectorAll('input[type="text"]:not([readonly])').forEach(input => {
+                            input.value = '';
+                        });
+
+                        submitBtn.style.color = 'transparent';
+
+                        setTimeout(() => {
+                            submitBtn.classList.remove('success');
+                            submitBtn.textContent = originalText;
+                            submitBtn.style.transform = 'scale(1)';
+
+                            setTimeout(() => {
+                                submitBtn.style.color = '';
+                                submitBtn.disabled = false;
+
+                                // Close the form dropdown smoothly
+                                setTimeout(() => {
+                                    const dropdownForm = this.closest('.dropdown-form');
+                                    if (dropdownForm) {
+                                        dropdownForm.classList.remove('active');
+                                    }
+                                }, 300);
+                            }, 100);
+                        }, 200);
+                    }, 1500);
+                } else {
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+
+                    // Show error message below the form
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error-message';
+                    errorDiv.textContent = data.message || 'An error occurred';
+                    errorDiv.style.cssText = 'margin-top: 8px; padding: 8px 12px; background: #fee2e2; color: #dc2626; border-radius: 6px; font-size: 13px; font-weight: 600; text-align: right;';
+                    this.parentElement.appendChild(errorDiv);
+                }
+            } catch (error) {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                console.error('Error:', error);
+
+                // Show error message below the form
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'form-error-message';
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.style.cssText = 'margin-top: 8px; padding: 8px 12px; background: #fee2e2; color: #dc2626; border-radius: 6px; font-size: 13px; font-weight: 600; text-align: right;';
+                this.parentElement.appendChild(errorDiv);
+            }
+        });
     });
 
     // Close modal on backdrop click
@@ -1272,3 +1499,71 @@ window.resetPassword = resetPassword;
 
 // Make it globally available
 window.toggleLabTools = toggleLabTools;
+
+// ============================================
+// GOAL FUND MODAL FUNCTIONS
+// ============================================
+
+function openGoalFundModal(kidId, goalId) {
+    const modal = document.getElementById('goalFundModal');
+    const modalBody = document.getElementById('goalFundModalBody');
+
+    // Show modal
+    modal.style.display = 'flex';
+
+    // Load goal fund form via AJAX
+    fetch(`/parent/goals/${goalId}/fund-form`)
+        .then(response => response.text())
+        .then(html => {
+            modalBody.innerHTML = html;
+        })
+        .catch(error => {
+            modalBody.innerHTML = '<p style="color: #ef5350;">Error loading form. Please try again.</p>';
+            console.error('Error loading goal fund form:', error);
+        });
+}
+
+function closeGoalFundModal() {
+    const modal = document.getElementById('goalFundModal');
+    modal.style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('goalFundModal');
+    if (event.target === modal) {
+        closeGoalFundModal();
+    }
+});
+
+// ============================================
+// KID CARD DROPDOWN MENU
+// ============================================
+
+function toggleKidDropdown(kidId) {
+    const dropdown = document.getElementById('kidDropdown' + kidId);
+    const allDropdowns = document.querySelectorAll('.kid-card-dropdown-menu');
+
+    // Close all other dropdowns
+    allDropdowns.forEach(d => {
+        if (d !== dropdown) {
+            d.classList.remove('show');
+        }
+    });
+
+    // Toggle current dropdown
+    dropdown.classList.toggle('show');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.kid-card-dropdown')) {
+        const allDropdowns = document.querySelectorAll('.kid-card-dropdown-menu');
+        allDropdowns.forEach(d => d.classList.remove('show'));
+    }
+});
+
+// Expose functions globally
+window.openGoalFundModal = openGoalFundModal;
+window.closeGoalFundModal = closeGoalFundModal;
+window.toggleKidDropdown = toggleKidDropdown;
