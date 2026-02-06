@@ -348,11 +348,12 @@ function handleFormSubmit(form, successMessage) {
                         const kidId = kidIdMatch[1];
                         const kidCard = document.querySelector(`[data-kid-id="${kidId}"]`);
                         if (kidCard) {
-                            const balanceEl = kidCard.querySelector('.balance-compact');
-                            if (balanceEl) {
+                            // Update ALL balance elements (both desktop and mobile layouts)
+                            const balanceEls = kidCard.querySelectorAll('.balance-compact');
+                            balanceEls.forEach(balanceEl => {
                                 balanceEl.textContent = '$' + parseFloat(data.new_balance).toFixed(2);
                                 balanceEl.classList.toggle('negative', data.new_balance < 0);
-                            }
+                            });
 
                             // Refresh the ledger for this kid
                             refreshLedger(kidId);
@@ -1563,7 +1564,43 @@ document.addEventListener('click', function(event) {
     }
 });
 
+// Toggle More Actions (Points/Ledger buttons)
+function toggleMoreActions(kidId) {
+    const moreActions = document.getElementById(`moreActions${kidId}`);
+    const moreBtn = document.getElementById(`moreBtn${kidId}`);
+    const icon = moreBtn.querySelector('i');
+
+    if (moreActions.style.display === 'none') {
+        moreActions.style.display = 'flex';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    } else {
+        moreActions.style.display = 'none';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
+}
+
+// Toggle Goals Section
+function toggleGoals(kidId) {
+    const goalsContainer = document.getElementById(`goalsContainer${kidId}`);
+    const chevron = document.getElementById(`goalsChevron${kidId}`);
+
+    // Check computed style, not inline style, to handle CSS-set display values
+    const isHidden = window.getComputedStyle(goalsContainer).display === 'none';
+
+    if (isHidden) {
+        goalsContainer.style.display = 'block';
+        chevron.classList.add('rotated');
+    } else {
+        goalsContainer.style.display = 'none';
+        chevron.classList.remove('rotated');
+    }
+}
+
 // Expose functions globally
 window.openGoalFundModal = openGoalFundModal;
 window.closeGoalFundModal = closeGoalFundModal;
 window.toggleKidDropdown = toggleKidDropdown;
+window.toggleMoreActions = toggleMoreActions;
+window.toggleGoals = toggleGoals;

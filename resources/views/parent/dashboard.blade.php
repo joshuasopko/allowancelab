@@ -56,7 +56,7 @@
                     $activeGoals = $kid->goals()->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])->get();
                 @endphp
 
-                <!-- Line 1: Avatar | Name | Balance | Action Buttons -->
+                <!-- Desktop Layout: Line 1 - Avatar | Name | Balance | Action Buttons -->
                 <div class="kid-card-line-1">
                     <div class="avatar-compact" style="background: {{ $kid->color }};">{{ strtoupper(substr($kid->name, 0, 1)) }}</div>
                     <div class="kid-name-compact">
@@ -78,7 +78,7 @@
                     </div>
                 </div>
 
-                <!-- Line 2: Points Badge | Next Allowance | Manage Kid Link -->
+                <!-- Desktop Layout: Line 2 - Points Badge | Next Allowance | Dropdown Menu -->
                 <div class="kid-card-line-2">
                     <div class="kid-card-line-2-left">
                         @if($kid->points_enabled)
@@ -107,6 +107,63 @@
                             </a>
                         </div>
                     </div>
+                </div>
+
+                <!-- Mobile Layout: Row 1 - Avatar | Name on left, Balance on right -->
+                <div class="kid-card-row-1">
+                    <div class="avatar-compact" style="background: {{ $kid->color }};">{{ strtoupper(substr($kid->name, 0, 1)) }}</div>
+                    <div class="kid-name-compact">{{ $kid->name }}</div>
+                    <div class="balance-compact {{ $kid->balance < 0 ? 'negative' : '' }}">${{ number_format($kid->balance, 2) }}</div>
+                </div>
+                @if($showPendingBadge)
+                    <div style="margin-bottom: 8px; margin-top: -4px;">
+                        <span class="status-badge-compact status-pending">
+                            <i class="fas fa-clock"></i> Pending
+                        </span>
+                    </div>
+                @endif
+
+                <!-- Row 2: Points Badge | Next Allowance Info -->
+                <div class="kid-card-row-2">
+                    <div class="kid-card-row-2-left">
+                        @if($kid->points_enabled)
+                            <div class="points-badge-compact {{ $pointsClass }}">{{ $kid->points }}/{{ $kid->max_points }}</div>
+                        @endif
+                    </div>
+                    <div class="next-allowance-compact">
+                        @if($kid->points_enabled && $kid->points === 0)
+                            <span style="color: #ef4444; font-weight: 600; font-size: 11px;">
+                                ⚠️ 0 pts - No allowance
+                            </span>
+                        @else
+                            <span style="font-size: 11px;">Next: ${{ number_format($kid->allowance_amount, 2) }} | {{ ucfirst(substr($kid->allowance_day, 0, 3)) }}, {{ $nextAllowance->format('M j') }}</span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Row 3: Action Buttons with More expand/collapse -->
+                <div class="kid-card-row-3">
+                    <button class="btn-compact btn-deposit" onclick="toggleForm('deposit-{{ $kid->id }}')">
+                        <i class="fas fa-plus-circle"></i> Deposit
+                    </button>
+                    <button class="btn-compact btn-spend" onclick="toggleForm('spend-{{ $kid->id }}')">
+                        <i class="fas fa-minus-circle"></i> Spend
+                    </button>
+                    <button class="btn-compact btn-more" onclick="toggleMoreActions({{ $kid->id }})" id="moreBtn{{ $kid->id }}">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+
+                <!-- More Actions (collapsed by default) -->
+                <div class="kid-card-more-actions" id="moreActions{{ $kid->id }}" style="display: none;">
+                    @if($kid->points_enabled)
+                        <button class="btn-compact btn-points" onclick="toggleForm('points-{{ $kid->id }}')">
+                            <i class="fas fa-star"></i> Points
+                        </button>
+                    @endif
+                    <button class="btn-compact btn-ledger" onclick="toggleForm('ledger-{{ $kid->id }}', this)">
+                        <i class="fas fa-list"></i> Ledger
+                    </button>
                 </div>
 
                 <!-- Deposit Form -->
@@ -264,9 +321,28 @@
                     </div>
                 </div>
 
-                <!-- Line 3+: Goals (Conditional) -->
+                <!-- Goals Section (Conditional & Collapsible) -->
                 @if($activeGoals->count() > 0)
-                    <div class="kid-card-goals-container">
+                    <div class="kid-card-goals-header">
+                        <div class="goals-header-left" onclick="event.stopPropagation(); toggleGoals({{ $kid->id }})">
+                            <span class="goal-count-badge">Goals: {{ $activeGoals->count() }}</span>
+                            <i class="fas fa-chevron-down goals-chevron" id="goalsChevron{{ $kid->id }}"></i>
+                        </div>
+                        <div class="kid-card-dropdown">
+                            <button class="kid-card-dropdown-trigger" onclick="event.stopPropagation(); toggleKidDropdown('{{ $kid->id }}-footer')">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                            <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
+                                <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-bullseye"></i> View Goals
+                                </a>
+                                <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-cog"></i> Manage Kid
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kid-card-goals-container" id="goalsContainer{{ $kid->id }}">
                     @foreach($activeGoals as $index => $goal)
                         @php
                             $progressPercent = $goal->target_amount > 0 ? ($goal->current_amount / $goal->target_amount) * 100 : 0;
@@ -337,6 +413,23 @@
                             </div>
                         @endif
                     @endforeach
+                    </div>
+                @else
+                    <!-- No goals - show 3-dot menu at bottom right (Mobile only) -->
+                    <div class="kid-card-footer">
+                        <div class="kid-card-dropdown">
+                            <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown('{{ $kid->id }}-footer')">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                            <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
+                                <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-bullseye"></i> View Goals
+                                </a>
+                                <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-cog"></i> Manage Kid
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 @endif
 

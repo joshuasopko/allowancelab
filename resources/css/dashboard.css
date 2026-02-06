@@ -943,12 +943,28 @@ body {
     margin-bottom: 16px;
 }
 
-/* Line 1: Avatar | Name | Balance | Action Buttons */
+/* Line 1: Avatar | Name | Balance | Action Buttons (Desktop) */
 .kid-card-line-1 {
     display: flex;
     align-items: center;
     gap: 16px;
     margin-bottom: 12px;
+}
+
+/* Mobile-specific rows (hidden on desktop) */
+.kid-card-row-1,
+.kid-card-row-2,
+.kid-card-row-3,
+.kid-card-more-actions,
+.kid-card-goals-header,
+.kid-card-footer {
+    display: none;
+}
+
+.kid-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .avatar-compact {
@@ -966,13 +982,12 @@ body {
 
 .kid-name-compact {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     color: #1a1a1a;
-    flex-shrink: 0;
-    min-width: 120px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
 .status-badge-compact {
@@ -1006,6 +1021,21 @@ body {
     display: flex;
     gap: 8px;
     margin-left: auto;
+}
+
+/* Line 2: Points Badge | Next Allowance | Manage Kid (Desktop) */
+.kid-card-line-2 {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-left: 64px;
+    font-size: 13px;
+    color: #666;
+}
+
+.kid-card-line-2-left {
+    flex-shrink: 0;
+    min-width: 120px;
 }
 
 .btn-compact {
@@ -1052,20 +1082,7 @@ body {
     background: #607d8b;
 }
 
-/* Line 2: Points Badge | Next Allowance | Manage Kid */
-.kid-card-line-2 {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding-left: 64px;
-    font-size: 13px;
-    color: #666;
-}
-
-.kid-card-line-2-left {
-    flex-shrink: 0;
-    min-width: 120px;
-}
+/* Points Badge Styles */
 
 .points-badge-compact {
     display: inline-block;
@@ -4824,63 +4841,6 @@ Manage Family Styles
         padding: 16px;
     }
 
-    .kid-card-line-1 {
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .avatar-compact {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-    }
-
-    .kid-name-compact {
-        font-size: 16px;
-        min-width: auto;
-        flex: 1;
-    }
-
-    .balance-compact {
-        font-size: 24px;
-        width: 100%;
-        order: 3;
-        margin-right: 0;
-        margin-top: 8px;
-    }
-
-    .action-buttons-compact {
-        width: 100%;
-        order: 4;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-left: 0;
-        margin-top: 12px;
-    }
-
-    .btn-compact {
-        padding: 10px 12px;
-        font-size: 13px;
-    }
-
-    .kid-card-line-2 {
-        flex-wrap: wrap;
-        padding-left: 0;
-        gap: 8px;
-    }
-
-    .kid-card-line-2-left {
-        min-width: auto;
-    }
-
-    .next-allowance-compact {
-        width: 100%;
-        order: 2;
-        margin-right: 0;
-        margin-top: 8px;
-    }
-
     .manage-link-compact {
         width: 100%;
         order: 3;
@@ -4951,5 +4911,177 @@ Manage Family Styles
 
     .goal-fund-modal-body {
         padding: 16px;
+    }
+}
+
+/* ============================================
+   MOBILE OPTIMIZATION - Parent Dashboard
+   ============================================ */
+@media (max-width: 768px) {
+    /* Reduce card padding on mobile */
+    .kid-card {
+        padding: 20px;
+    }
+
+    /* Hide desktop layout */
+    .kid-card-line-1,
+    .kid-card-line-2 {
+        display: none !important;
+    }
+
+    /* Show mobile layout */
+    .kid-card-row-1,
+    .kid-card-row-2,
+    .kid-card-row-3 {
+        display: flex !important;
+    }
+
+    .kid-card-goals-header,
+    .kid-card-footer {
+        display: flex !important;
+    }
+
+    /* Row 1: Avatar | Name | Balance */
+    .kid-card-row-1 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        width: 100%;
+    }
+
+    .kid-card-row-1 .avatar-compact {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+    }
+
+    .kid-card-row-1 .kid-name-compact {
+        font-size: 18px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .kid-card-row-1 .balance-compact {
+        font-size: 20px;
+        font-weight: 700;
+        text-align: right;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-left: auto;
+    }
+
+    /* Row 2: Points Badge | Next Allowance */
+    .kid-card-row-2 {
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding-left: 0;
+    }
+
+    .next-allowance-compact {
+        text-align: right;
+        line-height: 1.4;
+        margin-right: 0;
+        flex: 0 1 auto;
+    }
+
+    /* Row 3: Action Buttons */
+    .kid-card-row-3 {
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .btn-compact {
+        padding: 10px 16px;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .btn-compact.btn-more {
+        background: #e5e7eb;
+        color: #6b7280;
+        flex: 0 0 auto;
+        min-width: 25px;
+        padding: 10px;
+    }
+
+    .btn-compact.btn-more:hover {
+        background: #d1d5db;
+        color: #374151;
+    }
+
+    .btn-compact.btn-more i {
+        font-size: 12px;
+    }
+
+    /* More Actions (collapsed) */
+    .kid-card-more-actions {
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .kid-card-more-actions .btn-compact {
+        flex: 1;
+    }
+
+    /* Goals container - hide on mobile by default, show via JS */
+    .kid-card-goals-container {
+        display: none;
+    }
+
+    /* Goals Header (collapsible) */
+    .kid-card-goals-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0 8px 0;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 12px;
+    }
+
+    .goals-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .goal-count-badge {
+        padding: 6px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .goals-chevron {
+        font-size: 14px;
+        color: #9ca3af;
+        transition: transform 0.2s;
+    }
+
+    .goals-chevron.rotated {
+        transform: rotate(180deg);
+    }
+
+    /* Hide goal header cell on mobile (redundant with goals header badge) */
+    .goal-header-cell {
+        display: none !important;
+    }
+
+    /* Footer for kids with no goals */
+    .kid-card-footer {
+        justify-content: flex-end;
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 12px;
     }
 }
