@@ -127,6 +127,17 @@
             </div>
         @endif
 
+        <!-- Wishes Feature -->
+        <a href="{{ route('kid.wishes.index') }}"
+            class="kid-menu-item {{ request()->routeIs('kid.wishes.*') ? 'active' : '' }}">
+            <span>My Wishes</span>
+            @if($kid->getPendingWishRequestsCount() > 0)
+                <span class="kid-goals-counter" style="background-color: {{ $kid->color }};">
+                    {{ $kid->getPendingWishRequestsCount() }}
+                </span>
+            @endif
+        </a>
+
         <!-- Coming Soon Features -->
 
         <a href="#" class="kid-menu-item kid-coming-soon-item">

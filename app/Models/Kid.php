@@ -116,4 +116,26 @@ class Kid extends Authenticatable
     {
         return $this->goals()->where('status', 'pending_redemption')->count();
     }
+
+    // Wish List Relationships
+    public function wishes()
+    {
+        return $this->hasMany(Wish::class);
+    }
+
+    // Helper: Get count of pending wish requests
+    public function getPendingWishRequestsCount()
+    {
+        return $this->wishes()->where('status', 'pending_approval')->count();
+    }
+
+    // Helper: Get recent wishes (for dashboard display)
+    public function getRecentWishes($limit = 2)
+    {
+        return $this->wishes()
+            ->whereIn('status', ['saved', 'pending_approval'])
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
 }

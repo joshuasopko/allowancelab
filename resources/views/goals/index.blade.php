@@ -17,6 +17,12 @@
     @endphp
 
     <style>
+        /* Override layout wrapper to allow full width */
+        .kid-content-wrapper {
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
         /* Dynamic theme color based on kid's selection */
         .goals-header::after {
             background-color: {{ $kid->color }} !important;
@@ -56,12 +62,54 @@
             border: 2px solid #10b981 !important;
         }
 
+        /* Desktop Page Header */
+        .desktop-page-header {
+            display: none; /* Hidden on mobile */
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 769px) {
+            .desktop-page-header {
+                display: flex;
+            }
+        }
+
+        .desktop-page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .desktop-page-info {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            border: 1px solid currentColor;
+            opacity: 0.85;
+        }
+
         /* Tab Navigation Styles */
         .goals-tabs {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
             gap: 8px;
             margin-bottom: 24px;
             border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0;
+        }
+
+        .goals-tabs-left {
+            display: flex;
+            gap: 8px;
         }
 
         .goals-tab {
@@ -133,41 +181,48 @@
 
     {{-- Goal Redemption Notifications removed - now shown on dashboard instead --}}
 
+    <!-- Mobile Back Link -->
+    <a href="{{ route('kid.dashboard') }}" class="mobile-back-link">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <!-- Desktop Page Header -->
+    <div class="desktop-page-header">
+        <h1 class="desktop-page-title">Your Savings Goals</h1>
+        <div class="desktop-page-info" style="color: {{ $kid->color }};">
+            <i class="fas fa-wallet"></i> ${{ number_format($kid->balance, 2) }} available
+        </div>
+    </div>
+
     <!-- Tab Navigation and Content -->
     <div x-data="{ activeTab: 'active' }">
-        <!-- Tab Headers -->
+        <!-- Tab Headers with New Goal Button -->
         <div class="goals-tabs">
-            <button
-                @click="activeTab = 'active'"
-                :class="{ 'goals-tab-active': activeTab === 'active' }"
-                class="goals-tab">
-                Active Goals
-                @if($activeGoals->count() > 0)
-                    <span class="goals-tab-count" :style="activeTab === 'active' ? 'background-color: {{ $kid->color }};' : ''">{{ $activeGoals->count() }}</span>
-                @endif
-            </button>
-            <button
-                @click="activeTab = 'completed'"
-                :class="{ 'goals-tab-active': activeTab === 'completed' }"
-                class="goals-tab">
-                Completed Goals
-                @if($completedGoals->count() > 0)
-                    <span class="goals-tab-count" :style="activeTab === 'completed' ? 'background-color: {{ $kid->color }};' : ''">{{ $completedGoals->count() }}</span>
-                @endif
-            </button>
+            <div class="goals-tabs-left">
+                <button
+                    @click="activeTab = 'active'"
+                    :class="{ 'goals-tab-active': activeTab === 'active' }"
+                    class="goals-tab">
+                    Active Goals
+                    @if($activeGoals->count() > 0)
+                        <span class="goals-tab-count" :style="activeTab === 'active' ? 'background-color: {{ $kid->color }};' : ''">{{ $activeGoals->count() }}</span>
+                    @endif
+                </button>
+                <button
+                    @click="activeTab = 'completed'"
+                    :class="{ 'goals-tab-active': activeTab === 'completed' }"
+                    class="goals-tab">
+                    Completed Goals
+                    @if($completedGoals->count() > 0)
+                        <span class="goals-tab-count" :style="activeTab === 'completed' ? 'background-color: {{ $kid->color }};' : ''">{{ $completedGoals->count() }}</span>
+                    @endif
+                </button>
+            </div>
+            <button onclick="openCreateModal()" class="btn-add-goal">+ New Goal</button>
         </div>
 
         <!-- Active Tab Content -->
         <div x-show="activeTab === 'active'" x-cloak>
-            <!-- Header with Add Button -->
-            <div class="goals-header">
-                <div class="goals-header-left">
-                    <div class="goals-header-funds" style="color: {{ $kid->color }};">
-                        <i class="fas fa-wallet"></i> ${{ number_format($kid->balance, 2) }} available
-                    </div>
-                </div>
-                <button onclick="openCreateModal()" class="btn-add-goal">+ New Goal</button>
-            </div>
 
             <!-- Active Goals Grid -->
     @if($activeGoals->count() > 0)
@@ -1548,6 +1603,11 @@
         }
     }
 </script>
+
+<!-- Mobile Back Link (Bottom) -->
+<a href="{{ route('kid.dashboard') }}" class="mobile-back-link mobile-back-link-bottom">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+</a>
 
 @endsection
 

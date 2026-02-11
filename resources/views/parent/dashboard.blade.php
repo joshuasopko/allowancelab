@@ -102,6 +102,9 @@
                             <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
                                 <i class="fas fa-bullseye"></i> View Goals
                             </a>
+                            <a href="{{ route('parent.wishes.index', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-heart"></i> View Wishes
+                            </a>
                             <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
                                 <i class="fas fa-cog"></i> Manage Kid
                             </a>
@@ -336,6 +339,9 @@
                                 <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
                                     <i class="fas fa-bullseye"></i> View Goals
                                 </a>
+                                <a href="{{ route('parent.wishes.index', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-heart"></i> View Wishes
+                                </a>
                                 <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
                                     <i class="fas fa-cog"></i> Manage Kid
                                 </a>
@@ -425,11 +431,92 @@
                                 <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
                                     <i class="fas fa-bullseye"></i> View Goals
                                 </a>
+                                <a href="{{ route('parent.wishes.index', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-heart"></i> View Wishes
+                                </a>
                                 <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
                                     <i class="fas fa-cog"></i> Manage Kid
                                 </a>
                             </div>
                         </div>
+                    </div>
+                @endif
+
+                <!-- Wishes Section (Conditional & Collapsible) -->
+                @php
+                    $recentWishes = $kid->getRecentWishes(2);
+                    $pendingWishCount = $kid->getPendingWishRequestsCount();
+                @endphp
+                @if($recentWishes->count() > 0)
+                    <div class="kid-card-wishes-header">
+                        <div class="wishes-header-left" onclick="event.stopPropagation(); toggleWishes({{ $kid->id }})">
+                            <span class="wish-count-badge">Wishes: {{ $recentWishes->count() }}
+                                @if($pendingWishCount > 0)
+                                    <span class="pending-indicator">{{ $pendingWishCount }} pending</span>
+                                @endif
+                            </span>
+                            <i class="fas fa-chevron-down wishes-chevron" id="wishesChevron{{ $kid->id }}"></i>
+                        </div>
+                        <div class="kid-card-dropdown">
+                            <button class="kid-card-dropdown-trigger" onclick="event.stopPropagation(); toggleKidDropdown('{{ $kid->id }}-wishes-footer')">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                            <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-wishes-footer">
+                                <a href="{{ route('parent.wishes.index', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-heart"></i> View Wishes
+                                </a>
+                                <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-bullseye"></i> View Goals
+                                </a>
+                                <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
+                                    <i class="fas fa-cog"></i> Manage Kid
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kid-card-wishes-container" id="wishesContainer{{ $kid->id }}">
+                    @foreach($recentWishes as $index => $wish)
+                        <div class="kid-card-wish-row" style="--kid-wish-color: #3b82f6;">
+                            @if($index === 0)
+                                <div class="wish-header-cell">
+                                    <span class="wish-count-badge">Wishes: {{ $recentWishes->count() }}
+                                        @if($pendingWishCount > 0)
+                                            <span class="pending-indicator">{{ $pendingWishCount }} pending</span>
+                                        @endif
+                                    </span>
+                                </div>
+                            @else
+                                <div class="wish-header-cell"></div>
+                            @endif
+                            <div class="wish-name-cell">
+                                {{ $wish->item_name }}
+                                @if($wish->isPendingApproval())
+                                    <span class="wish-pending-badge">
+                                        PENDING APPROVAL
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="wish-price-cell">${{ number_format($wish->price, 2) }}</div>
+
+                            @if($wish->isPendingApproval())
+                                <!-- Pending approval - show approve/decline buttons -->
+                                <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                    <form action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="margin: 0;">
+                                        @csrf
+                                        <button type="submit" class="btn-wish-approve" onclick="return confirm('Approve this purchase? ${{ number_format($wish->price, 2) }} will be deducted from {{ $kid->name }}\'s balance.')">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                    </form>
+                                    <button onclick="openDeclineWishModal('{{ $wish->id }}', '{{ $kid->id }}')" class="btn-wish-decline">
+                                        <i class="fas fa-times"></i> Decline
+                                    </button>
+                                </div>
+                            @else
+                                <!-- Just saved - show view wishes link -->
+                                <a href="{{ route('parent.wishes.index', $kid) }}" class="btn-wish-view">View Wishes</a>
+                            @endif
+                        </div>
+                    @endforeach
                     </div>
                 @endif
 
