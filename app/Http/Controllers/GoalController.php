@@ -6,6 +6,7 @@ use App\Models\Goal;
 use App\Models\GoalTransaction;
 use App\Models\Kid;
 use App\Models\Transaction;
+use App\Services\UrlScraperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,12 @@ use Carbon\Carbon;
 
 class GoalController extends Controller
 {
+    protected $urlScraper;
+
+    public function __construct(UrlScraperService $urlScraper)
+    {
+        $this->urlScraper = $urlScraper;
+    }
     /**
      * Display a listing of the kid's goals (kid view)
      */
@@ -223,11 +230,11 @@ class GoalController extends Controller
                 'success' => true,
                 'message' => 'Goal created successfully!',
                 'goal' => $goal,
-                'redirect' => route('parent.goals.index', $kid)
+                'redirect' => route('kids.goals', $kid)
             ]);
         }
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Goal created successfully!');
+        return redirect()->route('kids.goals', $kid)->with('success', 'Goal created successfully!');
     }
 
     /**
@@ -394,7 +401,7 @@ class GoalController extends Controller
         if (Auth::guard('kid')->check()) {
             return redirect()->route('kid.goals.index')->with('success', 'Goal updated successfully!');
         } else {
-            return redirect()->route('parent.goals.index', $goal->kid)->with('success', 'Goal updated successfully!');
+            return redirect()->route('kids.goals', $goal->kid)->with('success', 'Goal updated successfully!');
         }
     }
 
@@ -492,7 +499,7 @@ class GoalController extends Controller
         if (Auth::guard('kid')->check()) {
             return redirect()->route('kid.goals.index')->with('success', 'Goal deleted successfully! Funds have been returned to your account.');
         } else {
-            return redirect()->route('parent.goals.index', $kidId)->with('success', 'Goal deleted successfully! Funds have been returned to the account.');
+            return redirect()->route('kids.goals', $kidId)->with('success', 'Goal deleted successfully! Funds have been returned to the account.');
         }
     }
 
@@ -805,7 +812,7 @@ class GoalController extends Controller
             $goal->save();
         });
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Goal redeemed successfully! ' . $kid->name . ' can now enjoy their purchase.');
+        return redirect()->route('kids.goals', $kid)->with('success', 'Goal redeemed successfully! ' . $kid->name . ' can now enjoy their purchase.');
     }
 
     /**
@@ -845,7 +852,7 @@ class GoalController extends Controller
             $goal->save();
         });
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Redemption approved! ' . $kid->name . ' can now enjoy their purchase.');
+        return redirect()->route('kids.goals', $kid)->with('success', 'Redemption approved! ' . $kid->name . ' can now enjoy their purchase.');
     }
 
     /**
@@ -881,6 +888,30 @@ class GoalController extends Controller
             'created_at' => now(),
         ]);
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Redemption denied. Goal remains active for ' . $kid->name . '.');
+        return redirect()->route('kids.goals', $kid)->with('success', 'Redemption denied. Goal remains active for ' . $kid->name . '.');
+    }
+
+    /**
+     * Scrape URL for goal details (parent only)
+     */
+    public function scrapeUrl(Request $request, Kid $kid)
+    {
+        // Verify parent has access to this kid
+        $familyIds = Auth::user()->families()->pluck('families.id');
+        if (!$familyIds->contains($kid->family_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to this kid.'
+            ], 403);
+        }
+
+        // Increase timeout for slow sites like Target
+        set_time_limit(90);
+
+        $request->validate(['url' => 'required|url']);
+
+        $result = $this->urlScraper->scrapeUrl($request->url);
+
+        return response()->json($result);
     }
 }

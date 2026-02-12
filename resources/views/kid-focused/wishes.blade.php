@@ -2,6 +2,12 @@
 
 @section('title', $kid->name . '\'s Wish List - AllowanceLab')
 
+@section('header-right')
+    <a href="{{ route('dashboard') }}" class="add-kid-btn" style="text-decoration: none;">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+@endsection
+
 @section('content')
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

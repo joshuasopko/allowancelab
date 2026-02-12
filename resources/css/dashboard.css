@@ -2637,6 +2637,7 @@ body {
     border-bottom: 3px solid transparent;
     margin-bottom: -2px;
     transition: all 0.2s;
+    text-decoration: none;
 }
 
 .manage-tab:hover:not(:disabled) {
@@ -5280,5 +5281,403 @@ Manage Family Styles
         width: 100%;
         justify-content: center;
         padding: 10px 16px;
+    }
+}
+
+/* ========================================
+   KIDS MENU SIDEBAR STYLES
+   ======================================== */
+
+.dropdown-content.show {
+    max-height: 800px !important;
+}
+
+.menu-dropdown.active-parent {
+    background: #f3f4f6;
+    color: #10b981;
+}
+
+.kid-menu-item {
+    margin-bottom: 4px;
+}
+
+.kid-menu-item.active-kid > .kid-name {
+    background: #e0f2fe;
+    color: #0284c7;
+    font-weight: 600;
+}
+
+.dropdown-item.kid-name {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 24px;
+    cursor: pointer;
+}
+
+.kid-submenu-icon {
+    font-size: 10px;
+    transition: transform 0.3s;
+}
+
+.kid-menu-item.active-kid .kid-submenu-icon {
+    transform: rotate(180deg);
+}
+
+.kid-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: #f1f5f9;
+    margin-left: 12px;
+    border-left: 2px solid #3b82f6;
+}
+
+.kid-submenu.show {
+    max-height: 300px;
+}
+
+.submenu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.submenu-item:hover {
+    background: #e2e8f0;
+    color: #3b82f6;
+}
+
+.submenu-item.active {
+    background: #dbeafe;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.submenu-item i {
+    font-size: 12px;
+    width: 16px;
+    text-align: center;
+}
+
+/* ============================================
+   CATEGORY PILLS SYSTEM (Goals, Wishes, Chores)
+   ============================================ */
+
+.category-pills-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 16px 0 16px;
+    background: white;
+    flex-wrap: wrap;
+}
+
+.category-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.category-pill:hover:not(.category-pill-disabled) {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
+.category-pill.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.category-pill-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.category-pill i {
+    font-size: 12px;
+}
+
+.pill-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+.pill-badge.pending {
+    background: #ef4444;
+    color: white;
+}
+
+.pill-badge.coming-soon {
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+/* Category Content Container */
+.category-content {
+    background: white;
+}
+
+/* Category Item Rows */
+.category-item-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    margin-top: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-bottom: 1px solid #eaeaea;
+    transition: background 0.2s ease;
+}
+
+.category-item-row:hover {
+    background: #eff0f1;
+}
+
+.category-item-row.pending-attention {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+}
+
+.category-item-row.pending-attention:hover {
+    background: #fde68a;
+}
+
+.item-thumbnail {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.item-name-cell {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.item-pending-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #ef4444;
+    color: white;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.item-amount-cell {
+    font-size: 15px;
+    font-weight: 700;
+    color: #3b82f6;
+    white-space: nowrap;
+}
+
+/* Goal Progress in Pills */
+.goal-progress-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+}
+
+.goal-progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 80px;
+}
+
+.goal-progress-fill {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.goal-progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+/* Action Buttons */
+.btn-category-action {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    background: #3b82f6;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-category-action:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-category-action.btn-approve {
+    background: #10b981;
+}
+
+.btn-category-action.btn-approve:hover {
+    background: #059669;
+}
+
+.btn-category-action.btn-decline {
+    background: #ef4444;
+}
+
+.btn-category-action.btn-decline:hover {
+    background: #dc2626;
+}
+
+.btn-category-action.btn-view {
+    background: #6b7280;
+}
+
+.btn-category-action.btn-view:hover {
+    background: #4b5563;
+}
+
+/* View All Button */
+.view-all-btn {
+    display: inline-block;
+    text-align: center;
+    padding: 10px 20px;
+    margin: 12px auto;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    width: auto;
+}
+
+.view-all-btn:hover {
+    color: #4b5563;
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+}
+
+.view-all-btn i {
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+}
+
+.view-all-btn:hover i {
+    transform: translateX(3px);
+}
+
+/* Empty State for Categories */
+.category-empty-state {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    margin-top: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-bottom: 1px solid #eaeaea;
+    color: #9ca3af;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.btn-create-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-create-item:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .category-item-row {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .item-name-cell {
+        flex-basis: 100%;
+        order: -1;
+    }
+
+    .item-thumbnail {
+        width: 40px;
+        height: 40px;
+    }
+
+    .goal-progress-cell {
+        flex-basis: 100%;
+        min-width: 100%;
+    }
+
+    .item-amount-cell {
+        margin-left: auto;
+    }
+
+    .btn-category-action {
+        font-size: 11px;
+        padding: 6px 10px;
     }
 }

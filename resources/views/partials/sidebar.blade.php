@@ -38,6 +38,53 @@
             @yield('sidebar-active')
         @endif
 
+        <!-- Kids Dropdown -->
+        @php
+            $allKids = Auth::user()->accessibleKids();
+            $currentKid = request()->route('kid');
+            $isKidFocusedRoute = request()->routeIs('kids.overview') ||
+                                  request()->routeIs('kids.allowance') ||
+                                  request()->routeIs('kids.goals') ||
+                                  request()->routeIs('kids.wishes');
+        @endphp
+
+        <div class="menu-item menu-dropdown {{ $isKidFocusedRoute ? 'active-parent' : '' }}"
+             onclick="toggleKidsMenu(event)">
+            <span>Kids</span>
+            <i class="fas fa-chevron-down dropdown-icon"></i>
+        </div>
+        <div class="dropdown-content {{ $isKidFocusedRoute ? 'show' : '' }}" id="kidsDropdown">
+            @foreach($allKids as $kid)
+                <div class="kid-menu-item {{ $currentKid && $currentKid->id === $kid->id ? 'active-kid' : '' }}">
+                    <a href="{{ route('kids.overview', $kid) }}"
+                       class="dropdown-item kid-name"
+                       onclick="toggleKidSubmenu(event, {{ $kid->id }})">
+                        {{ $kid->name }}
+                        <i class="fas fa-chevron-down kid-submenu-icon"></i>
+                    </a>
+                    <div class="kid-submenu {{ $currentKid && $currentKid->id === $kid->id ? 'show' : '' }}"
+                         id="kidSubmenu{{ $kid->id }}">
+                        <a href="{{ route('kids.overview', $kid) }}"
+                           class="submenu-item {{ request()->routeIs('kids.overview') && $currentKid && $currentKid->id === $kid->id ? 'active' : '' }}">
+                            <i class="fas fa-chart-pie"></i> Overview
+                        </a>
+                        <a href="{{ route('kids.allowance', $kid) }}"
+                           class="submenu-item {{ request()->routeIs('kids.allowance') && $currentKid && $currentKid->id === $kid->id ? 'active' : '' }}">
+                            <i class="fas fa-coins"></i> Allowance
+                        </a>
+                        <a href="{{ route('kids.goals', $kid) }}"
+                           class="submenu-item {{ request()->routeIs('kids.goals') && $currentKid && $currentKid->id === $kid->id ? 'active' : '' }}">
+                            <i class="fas fa-bullseye"></i> Goals
+                        </a>
+                        <a href="{{ route('kids.wishes', $kid) }}"
+                           class="submenu-item {{ request()->routeIs('kids.wishes') && $currentKid && $currentKid->id === $kid->id ? 'active' : '' }}">
+                            <i class="fas fa-gift"></i> Wishes
+                        </a>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
         <div class="menu-item menu-dropdown" onclick="toggleLabTools(event)">
             <span>Lab Tools</span>
             <i class="fas fa-chevron-down dropdown-icon"></i>

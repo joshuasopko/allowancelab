@@ -29,7 +29,7 @@
                     <strong>{{ $pendingRedemptionCount }} Goal{{ $pendingRedemptionCount > 1 ? 's' : '' }} Pending Redemption</strong>
                     <div class="parent-redemption-kids-list">
                         @foreach($kidsWithPendingRedemptions as $kidWithPending)
-                            <a href="{{ route('parent.goals.index', $kidWithPending) }}" class="parent-redemption-kid-link">
+                            <a href="{{ route('kids.goals', $kidWithPending) }}" class="parent-redemption-kid-link">
                                 {{ $kidWithPending->name }} ({{ $kidWithPending->goals()->where('status', 'pending_redemption')->count() }})
                             </a>{{ !$loop->last ? ',' : '' }}
                         @endforeach
@@ -58,9 +58,9 @@
 
                 <!-- Desktop Layout: Line 1 - Avatar | Name | Balance | Action Buttons -->
                 <div class="kid-card-line-1">
-                    <div class="avatar-compact" style="background: {{ $kid->color }};">{{ strtoupper(substr($kid->name, 0, 1)) }}</div>
+                    <a href="{{ route('kids.overview', $kid) }}" class="avatar-compact" style="background: {{ $kid->color }}; text-decoration: none; color: white;">{{ strtoupper(substr($kid->name, 0, 1)) }}</a>
                     <div class="kid-name-compact">
-                        {{ $kid->name }}
+                        <a href="{{ route('kids.overview', $kid) }}" style="text-decoration: none; color: inherit;">{{ $kid->name }}</a>
                         @if($showPendingBadge)
                             <span class="status-badge-compact status-pending">
                                 <i class="fas fa-clock"></i> Invite Pending
@@ -78,7 +78,7 @@
                     </div>
                 </div>
 
-                <!-- Desktop Layout: Line 2 - Points Badge | Next Allowance | Dropdown Menu -->
+                <!-- Desktop Layout: Line 2 - Points Badge | Next Allowance -->
                 <div class="kid-card-line-2">
                     <div class="kid-card-line-2-left">
                         @if($kid->points_enabled)
@@ -93,22 +93,6 @@
                         @else
                             Next: ${{ number_format($kid->allowance_amount, 2) }} on {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}
                         @endif
-                    </div>
-                    <div class="kid-card-dropdown">
-                        <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown({{ $kid->id }})">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                        <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}">
-                            <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
-                                <i class="fas fa-bullseye"></i> View Goals
-                            </a>
-                            <a href="{{ route('parent.wishes.index', $kid) }}" class="kid-card-dropdown-item">
-                                <i class="fas fa-heart"></i> View Wishes
-                            </a>
-                            <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
-                                <i class="fas fa-cog"></i> Manage Kid
-                            </a>
-                        </div>
                     </div>
                 </div>
 
@@ -324,201 +308,203 @@
                     </div>
                 </div>
 
-                <!-- Goals Section (Conditional & Collapsible) -->
-                @if($activeGoals->count() > 0)
-                    <div class="kid-card-goals-header">
-                        <div class="goals-header-left" onclick="event.stopPropagation(); toggleGoals({{ $kid->id }})">
-                            <span class="goal-count-badge">Goals: {{ $activeGoals->count() }}</span>
-                            <i class="fas fa-chevron-down goals-chevron" id="goalsChevron{{ $kid->id }}"></i>
-                        </div>
-                        <div class="kid-card-dropdown">
-                            <button class="kid-card-dropdown-trigger" onclick="event.stopPropagation(); toggleKidDropdown('{{ $kid->id }}-footer')">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </button>
-                            <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
-                                <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-bullseye"></i> View Goals
-                                </a>
-                                <a href="{{ route('parent.wishes.index', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-heart"></i> View Wishes
-                                </a>
-                                <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-cog"></i> Manage Kid
-                                </a>
-                            </div>
+                <!-- Category Pills Section -->
+                @php
+                    $recentWishes = $kid->getRecentWishes(4);
+                    $pendingWishCount = $kid->getPendingWishRequestsCount();
+                    $pendingGoalCount = $kid->goals()->where('status', 'pending_redemption')->count();
+                    $displayGoals = $activeGoals->take(4);
+                @endphp
+
+                <!-- Pills Row (Always show for all kids) -->
+                <div class="category-pills-row">
+                    <button class="category-pill" onclick="toggleCategory({{ $kid->id }}, 'goals')">
+                        <i class="fas fa-bullseye"></i> Goals
+                        @if($pendingGoalCount > 0)
+                            <span class="pill-badge pending">{{ $pendingGoalCount }}</span>
+                        @endif
+                    </button>
+
+                    <button class="category-pill" onclick="toggleCategory({{ $kid->id }}, 'wishes')">
+                        <i class="fas fa-heart"></i> Wishes
+                        @if($pendingWishCount > 0)
+                            <span class="pill-badge pending">{{ $pendingWishCount }}</span>
+                        @endif
+                    </button>
+
+                    <!-- Placeholder for future Chores -->
+                    <button class="category-pill category-pill-disabled" disabled>
+                        <i class="fas fa-tasks"></i> Chores
+                        <span class="pill-badge coming-soon">Soon</span>
+                    </button>
+
+                    <!-- 3-dot menu -->
+                    <div class="kid-card-dropdown" style="margin-left: auto;">
+                        <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown('{{ $kid->id }}-footer')">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                        <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
+                            <a href="{{ route('kids.goals', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-bullseye"></i> View Goals
+                            </a>
+                            <a href="{{ route('kids.wishes', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-heart"></i> View Wishes
+                            </a>
+                            <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-cog"></i> Manage Kid
+                            </a>
                         </div>
                     </div>
-                    <div class="kid-card-goals-container" id="goalsContainer{{ $kid->id }}">
-                    @foreach($activeGoals as $index => $goal)
-                        @php
-                            $progressPercent = $goal->target_amount > 0 ? ($goal->current_amount / $goal->target_amount) * 100 : 0;
-                            $progressPercent = min($progressPercent, 100);
-                        @endphp
-                        <div class="kid-card-goal-row" style="--kid-color: {{ $kid->color }};">
-                            @if($index === 0)
-                                <div class="goal-header-cell">
-                                    <span class="goal-count-badge">Goals: {{ $activeGoals->count() }}</span>
+                </div>
+
+                <!-- Goals Content (Collapsible) -->
+                <div class="category-content" id="goalsContent{{ $kid->id }}" style="display: none;">
+                    @if($activeGoals->count() > 0)
+                        @foreach($displayGoals as $goal)
+                            @php
+                                $progressPercent = $goal->target_amount > 0 ? ($goal->current_amount / $goal->target_amount) * 100 : 0;
+                                $progressPercent = min($progressPercent, 100);
+                                $truncatedGoalTitle = strlen($goal->title) > 45 ? substr($goal->title, 0, 45) . '...' : $goal->title;
+                            @endphp
+                            <div class="category-item-row {{ $goal->status === 'pending_redemption' ? 'pending-attention' : '' }}" style="--kid-color: {{ $kid->color }};">
+                                <div class="item-name-cell">
+                                    {{ $truncatedGoalTitle }}
+                                    @if($goal->status === 'pending_redemption')
+                                        <span class="item-pending-badge" style="background: {{ $kid->color }};">
+                                            NEEDS REDEMPTION
+                                        </span>
+                                    @endif
                                 </div>
-                            @else
-                                <div class="goal-header-cell"></div>
-                            @endif
-                            <div class="goal-name-cell">
-                                {{ $goal->title }}
-                                @if($goal->status === 'pending_redemption')
-                                    <span class="goal-pending-badge" style="background: {{ $kid->color }}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
-                                        NEEDS REDEMPTION
-                                    </span>
+                                <div class="goal-progress-cell">
+                                    <div class="goal-progress-bar">
+                                        <div class="goal-progress-fill" style="width: {{ $progressPercent }}%; background: {{ $kid->color }};"></div>
+                                    </div>
+                                    <span class="goal-progress-text">{{ number_format($progressPercent, 0) }}%</span>
+                                </div>
+                                <div class="item-amount-cell" style="font-size: 13px; color: #6b7280;">${{ number_format($goal->current_amount, 2) }} of ${{ number_format($goal->target_amount, 2) }}</div>
+
+                                @if(in_array($goal->status, ['ready_to_redeem', 'pending_redemption']))
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                        <form id="redeem-form-{{ $goal->id }}" action="{{ route('parent.goals.redeem', $goal) }}" method="POST" style="margin: 0;">
+                                            @csrf
+                                            <button type="button" onclick="showRedeemConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ addslashes($goal->title) }}', '{{ number_format($goal->current_amount, 2) }}')" class="btn-category-action" style="background: {{ $kid->color }};">
+                                                <i class="fas fa-gift"></i> Redeem
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action" style="background: #78909c;">
+                                            View Goal
+                                        </a>
+                                    </div>
+                                @else
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                        <button class="btn-category-action" onclick="toggleForm('goal-{{ $goal->id }}')" style="background: {{ $kid->color }};">
+                                            Add Funds
+                                        </button>
+                                        <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action" style="background: #78909c;">
+                                            View Goal
+                                        </a>
+                                    </div>
                                 @endif
                             </div>
-                            <div class="goal-progress-cell">
-                                <div class="goal-progress-bar">
-                                    <div class="goal-progress-fill" style="width: {{ $progressPercent }}%;"></div>
-                                </div>
-                                <span class="goal-progress-text">{{ number_format($progressPercent, 0) }}%</span>
-                            </div>
-                            <div class="goal-amount-cell">${{ number_format($goal->current_amount, 2) }} of ${{ number_format($goal->target_amount, 2) }}</div>
 
-                            @if(in_array($goal->status, ['ready_to_redeem', 'pending_redemption']))
-                                <!-- Goal is complete - show redemption button -->
-                                <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                                    <a href="{{ route('parent.goals.index', $kid) }}" style="background: #10b981; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-block; transition: background 0.2s;">
-                                        <i class="fas fa-check-circle"></i> GOAL COMPLETE
-                                    </a>
-                                    <form id="redeem-form-{{ $goal->id }}" action="{{ route('parent.goals.redeem', $goal) }}" method="POST" style="margin: 0;">
+                            @if($goal->status === 'active')
+                                <!-- Add Funds Form -->
+                                <div class="dropdown-form" id="goal-{{ $goal->id }}Form" style="padding: 12px 16px 12px 0; background: #f9fafb;">
+                                    <form action="{{ route('parent.goals.add-funds', $goal) }}" method="POST" class="inline-form goal-add-funds-form" data-goal-id="{{ $goal->id }}" data-kid-id="{{ $kid->id }}" style="margin-left: auto; max-width: fit-content;">
                                         @csrf
-                                        <button type="button" onclick="showRedeemConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ $goal->title }}', '{{ number_format($goal->current_amount, 2) }}')" class="btn-goal-view" style="background: {{ $kid->color }}; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
-                                            <i class="fas fa-gift"></i> Redeem Goal
-                                        </button>
+                                        <div style="display: flex; gap: 14px; align-items: center;">
+                                            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                                                <div style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; font-weight: 600;">
+                                                    <i class="fas fa-wallet" style="color: {{ $kid->color }};"></i>
+                                                    ${{ number_format($kid->balance, 2) }}
+                                                </div>
+                                                <div style="font-size: 11px; color: #6b7280; font-weight: 500;">Available</div>
+                                            </div>
+                                            <input type="text" inputmode="decimal" class="form-input currency-input" name="amount"
+                                                placeholder="0.00" required style="width: 140px; padding: 8px 12px; font-size: 14px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                            <button type="submit" class="submit-btn submit-goal-funds" style="background-color: {{ $kid->color }}; padding: 8px 16px; font-size: 13px; white-space: nowrap;">Transfer</button>
+                                        </div>
                                     </form>
                                 </div>
-                            @else
-                                <!-- Goal is active - show add funds button -->
-                                <button class="btn-goal-add-funds" onclick="toggleForm('goal-{{ $goal->id }}')">Add Funds</button>
-                                <a href="{{ route('parent.goals.index', $kid) }}" class="btn-goal-view">View Goals</a>
                             @endif
-                        </div>
+                        @endforeach
 
-                        @if($goal->status === 'active')
-                            <!-- Add Funds Form for this goal (only for active goals) -->
-                            <div class="dropdown-form" id="goal-{{ $goal->id }}Form" style="padding: 12px 16px 12px 0; background: #f9fafb;">
-                                <form action="{{ route('parent.goals.add-funds', $goal) }}" method="POST" class="inline-form goal-add-funds-form" data-goal-id="{{ $goal->id }}" data-kid-id="{{ $kid->id }}" style="margin-left: auto; max-width: fit-content;">
-                                    @csrf
-                                    <div style="display: flex; gap: 14px; align-items: center;">
-                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                                            <div style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; font-weight: 600;">
-                                                <i class="fas fa-wallet" style="color: {{ $kid->color }};"></i>
-                                                ${{ number_format($kid->balance, 2) }}
-                                            </div>
-                                            <div style="font-size: 11px; color: #6b7280; font-weight: 500;">Available</div>
-                                        </div>
-                                        <input type="text" inputmode="decimal" class="form-input currency-input" name="amount"
-                                            placeholder="0.00" required style="width: 140px; padding: 8px 12px; font-size: 14px; border: 1px solid #d1d5db; border-radius: 6px;">
-                                        <button type="submit" class="submit-btn submit-goal-funds" style="background-color: {{ $kid->color }}; padding: 8px 16px; font-size: 13px; white-space: nowrap;">Transfer</button>
-                                    </div>
-                                </form>
+                        @if($activeGoals->count() > 4)
+                            <div style="text-align: center;">
+                                <a href="{{ route('kids.goals', $kid) }}" class="view-all-btn">
+                                    View All Goals <i class="fas fa-arrow-right"></i>
+                                </a>
                             </div>
                         @endif
-                    @endforeach
-                    </div>
-                @else
-                    <!-- No goals - show 3-dot menu at bottom right (Mobile only) -->
-                    <div class="kid-card-footer">
-                        <div class="kid-card-dropdown">
-                            <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown('{{ $kid->id }}-footer')">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </button>
-                            <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
-                                <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-bullseye"></i> View Goals
-                                </a>
-                                <a href="{{ route('parent.wishes.index', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-heart"></i> View Wishes
-                                </a>
-                                <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-cog"></i> Manage Kid
-                                </a>
-                            </div>
+                    @else
+                        <!-- No Goals - Empty State -->
+                        <div class="category-empty-state">
+                            <span>No Goals created!</span>
+                            <a href="{{ route('kids.goals', $kid) }}" class="btn-create-item">
+                                <i class="fas fa-plus"></i> Create Goal
+                            </a>
                         </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
 
-                <!-- Wishes Section (Conditional & Collapsible) -->
-                @php
-                    $recentWishes = $kid->getRecentWishes(2);
-                    $pendingWishCount = $kid->getPendingWishRequestsCount();
-                @endphp
-                @if($recentWishes->count() > 0)
-                    <div class="kid-card-wishes-header">
-                        <div class="wishes-header-left" onclick="event.stopPropagation(); toggleWishes({{ $kid->id }})">
-                            <span class="wish-count-badge">Wishes: {{ $recentWishes->count() }}
-                                @if($pendingWishCount > 0)
-                                    <span class="pending-indicator">{{ $pendingWishCount }} pending</span>
+                <!-- Wishes Content (Collapsible) -->
+                <div class="category-content" id="wishesContent{{ $kid->id }}" style="display: none;">
+                    @if($recentWishes->count() > 0)
+                        @foreach($recentWishes as $wish)
+                            @php
+                                $truncatedName = strlen($wish->item_name) > 50 ? substr($wish->item_name, 0, 50) . '...' : $wish->item_name;
+                            @endphp
+                            <div class="category-item-row {{ $wish->isPendingApproval() ? 'pending-attention' : '' }}">
+                                @if($wish->image_path)
+                                    <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}" class="item-thumbnail">
                                 @endif
-                            </span>
-                            <i class="fas fa-chevron-down wishes-chevron" id="wishesChevron{{ $kid->id }}"></i>
-                        </div>
-                        <div class="kid-card-dropdown">
-                            <button class="kid-card-dropdown-trigger" onclick="event.stopPropagation(); toggleKidDropdown('{{ $kid->id }}-wishes-footer')">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </button>
-                            <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-wishes-footer">
-                                <a href="{{ route('parent.wishes.index', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-heart"></i> View Wishes
-                                </a>
-                                <a href="{{ route('parent.goals.index', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-bullseye"></i> View Goals
-                                </a>
-                                <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
-                                    <i class="fas fa-cog"></i> Manage Kid
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kid-card-wishes-container" id="wishesContainer{{ $kid->id }}">
-                    @foreach($recentWishes as $index => $wish)
-                        <div class="kid-card-wish-row" style="--kid-wish-color: #3b82f6;">
-                            @if($index === 0)
-                                <div class="wish-header-cell">
-                                    <span class="wish-count-badge">Wishes: {{ $recentWishes->count() }}
-                                        @if($pendingWishCount > 0)
-                                            <span class="pending-indicator">{{ $pendingWishCount }} pending</span>
-                                        @endif
-                                    </span>
+                                <div class="item-name-cell">
+                                    {{ $truncatedName }}
+                                    @if($wish->isPendingApproval())
+                                        <span class="item-pending-badge">
+                                            PENDING APPROVAL
+                                        </span>
+                                    @endif
                                 </div>
-                            @else
-                                <div class="wish-header-cell"></div>
-                            @endif
-                            <div class="wish-name-cell">
-                                {{ $wish->item_name }}
+                                <div class="item-amount-cell">${{ number_format($wish->price, 2) }}</div>
+
                                 @if($wish->isPendingApproval())
-                                    <span class="wish-pending-badge">
-                                        PENDING APPROVAL
-                                    </span>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                        <form action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="margin: 0;">
+                                            @csrf
+                                            <button type="submit" class="btn-category-action btn-approve" onclick="return confirm('Approve this purchase? ${{ number_format($wish->price, 2) }} will be deducted from {{ $kid->name }}\'s balance.')">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <button onclick="openDeclineWishModal('{{ $wish->id }}', '{{ $kid->id }}')" class="btn-category-action btn-decline">
+                                            <i class="fas fa-times"></i> Decline
+                                        </button>
+                                    </div>
+                                @else
+                                    <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-category-action btn-view">
+                                        View
+                                    </a>
                                 @endif
                             </div>
-                            <div class="wish-price-cell">${{ number_format($wish->price, 2) }}</div>
+                        @endforeach
 
-                            @if($wish->isPendingApproval())
-                                <!-- Pending approval - show approve/decline buttons -->
-                                <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                                    <form action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="margin: 0;">
-                                        @csrf
-                                        <button type="submit" class="btn-wish-approve" onclick="return confirm('Approve this purchase? ${{ number_format($wish->price, 2) }} will be deducted from {{ $kid->name }}\'s balance.')">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
-                                    </form>
-                                    <button onclick="openDeclineWishModal('{{ $wish->id }}', '{{ $kid->id }}')" class="btn-wish-decline">
-                                        <i class="fas fa-times"></i> Decline
-                                    </button>
-                                </div>
-                            @else
-                                <!-- Just saved - show view wishes link -->
-                                <a href="{{ route('parent.wishes.index', $kid) }}" class="btn-wish-view">View Wishes</a>
-                            @endif
+                        @if($recentWishes->count() > 4)
+                            <div style="text-align: center;">
+                                <a href="{{ route('kids.wishes', $kid) }}" class="view-all-btn">
+                                    View All Wishes <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        @endif
+                    @else
+                        <!-- No Wishes - Empty State -->
+                        <div class="category-empty-state">
+                            <span>No Wishes created!</span>
+                            <a href="{{ route('parent.wishes.create', $kid) }}" class="btn-create-item">
+                                <i class="fas fa-plus"></i> Create Wish
+                            </a>
                         </div>
-                    @endforeach
-                    </div>
-                @endif
+                    @endif
+                </div>
 
             </div>
         @endforeach

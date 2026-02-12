@@ -2,6 +2,12 @@
 
 @section('tab-title', 'Allowance')
 
+@section('header-right')
+    <a href="{{ route('dashboard') }}" class="add-kid-btn" style="text-decoration: none;">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+@endsection
+
 @section('content')
 <div class="allowance-section">
     <!-- Quick Actions -->

@@ -2,6 +2,12 @@
 
 @section('title', $kid->name . '\'s Goals - AllowanceLab')
 
+@section('header-right')
+    <a href="{{ route('dashboard') }}" class="add-kid-btn" style="text-decoration: none;">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+@endsection
+
 @section('content')
     <!-- Alpine.js for tab switching and collapse plugin -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
@@ -196,7 +202,7 @@
                         @endif
 
                         <div class="goal-title-section">
-                            <h3 class="goal-title">{{ $goal->title }}</h3>
+                            <h3 class="goal-title">{{ strlen($goal->title) > 60 ? substr($goal->title, 0, 60) . '...' : $goal->title }}</h3>
                             @if($goal->product_url)
                                 <a href="{{ $goal->product_url }}" target="_blank" class="goal-link">
                                     <i class="fas fa-external-link-alt"></i> View on {{ parse_url($goal->product_url, PHP_URL_HOST) }}
@@ -585,7 +591,7 @@
                                         </div>
                                     @endif
                                     <div class="goal-card-title-section">
-                                        <h3 class="goal-card-title">{{ $goal->title }}</h3>
+                                        <h3 class="goal-card-title">{{ strlen($goal->title) > 60 ? substr($goal->title, 0, 60) . '...' : $goal->title }}</h3>
                                         @if($goal->description)
                                             <p class="goal-card-description">{{ $goal->description }}</p>
                                         @endif
@@ -634,6 +640,21 @@
                 <input type="hidden" id="goalFormId" value="">
 
                 <div class="form-group">
+                    <label for="goalProductUrl">Product Link (optional)</label>
+                    <div class="input-with-button">
+                        <input type="url" id="goalProductUrl" name="product_url" maxlength="500" class="form-input" placeholder="https://www.amazon.com/...">
+                        <button type="button" onclick="scrapeGoalUrl()" id="scrapeGoalBtn" class="btn-scrape">
+                            <i class="fas fa-magic"></i> Auto-fill
+                        </button>
+                    </div>
+                    <p class="input-hint">Paste a link and we'll try to auto-fill the details! Works best with Target, Walmart, and most online stores.</p>
+                    <div id="scrapeGoalError" class="input-error" style="display: none;"></div>
+                    <div id="scrapeGoalPartialSuccess" class="input-hint" style="display: none; color: #f59e0b; margin-top: 8px;">
+                        <i class="fas fa-info-circle"></i> <span id="scrapeGoalPartialMessage"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label for="goalTitle">Goal Title *</label>
                     <input type="text" id="goalTitle" name="title" required maxlength="255" class="form-input">
                 </div>
@@ -641,11 +662,6 @@
                 <div class="form-group">
                     <label for="goalDescription">Description</label>
                     <textarea id="goalDescription" name="description" maxlength="1000" rows="3" class="form-input"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="goalProductUrl">Product Link</label>
-                    <input type="url" id="goalProductUrl" name="product_url" maxlength="500" class="form-input" placeholder="https://...">
                 </div>
 
                 <div class="form-group">
@@ -1032,6 +1048,98 @@
             hidePhotoError();
         }
 
+        // URL Scraping for Goals
+        let isScrapingGoal = false;
+
+        function scrapeGoalUrl() {
+            const url = document.getElementById('goalProductUrl').value.trim();
+            const scrapeBtn = document.getElementById('scrapeGoalBtn');
+            const scrapeError = document.getElementById('scrapeGoalError');
+            const scrapePartialSuccess = document.getElementById('scrapeGoalPartialSuccess');
+
+            scrapeError.style.display = 'none';
+            scrapePartialSuccess.style.display = 'none';
+
+            if (!url) {
+                scrapeError.textContent = 'Please enter a URL first';
+                scrapeError.style.display = 'block';
+                return;
+            }
+
+            if (isScrapingGoal) return;
+
+            isScrapingGoal = true;
+            scrapeBtn.disabled = true;
+            scrapeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+            fetch('{{ route("parent.goals.scrape-url", $kid) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ url: url })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server returned error: ' + response.status);
+                }
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server did not return JSON. This may be a routing or authentication issue.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    if (data.data.title) {
+                        document.getElementById('goalTitle').value = data.data.title;
+                    }
+                    if (data.data.price) {
+                        const formattedPrice = '$' + parseFloat(data.data.price).toFixed(2);
+                        document.getElementById('goalTargetAmount').value = formattedPrice;
+                    }
+                    if (data.data.image_url) {
+                        // Load scraped image into photo preview
+                        document.getElementById('photoUploadContent').innerHTML = `
+                            <img src="${data.data.image_url}" alt="Preview" class="photo-preview">
+                        `;
+                        document.getElementById('removePhotoBtn').style.display = 'block';
+
+                        // Convert image URL to blob and store as photo file
+                        fetch(data.data.image_url)
+                            .then(res => res.blob())
+                            .then(blob => {
+                                const fileName = 'scraped-image.jpg';
+                                photoFile = new File([blob], fileName, { type: blob.type });
+                            })
+                            .catch(err => console.log('Could not convert image to file:', err));
+                    }
+
+                    if (data.partial) {
+                        document.getElementById('scrapeGoalPartialMessage').textContent = data.message;
+                        scrapePartialSuccess.style.display = 'block';
+                    }
+
+                    // Trigger allocation display update in case price changed
+                    updateAllocationDisplay();
+                } else {
+                    scrapeError.textContent = data.message || 'Failed to auto-fill from URL';
+                    scrapeError.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Scrape error:', error);
+                scrapeError.textContent = 'Failed to auto-fill. Please enter details manually.';
+                scrapeError.style.display = 'block';
+            })
+            .finally(() => {
+                isScrapingGoal = false;
+                scrapeBtn.disabled = false;
+                scrapeBtn.innerHTML = '<i class="fas fa-magic"></i> Auto-fill';
+            });
+        }
+
         function submitParentGoalForm(event) {
             event.preventDefault();
 
@@ -1289,6 +1397,9 @@
         border-radius: 12px;
         padding: 24px;
         transition: all 0.3s;
+        min-height: 420px;
+        display: flex;
+        flex-direction: column;
     }
 
     .goal-card.ready-to-redeem {
@@ -1848,6 +1959,58 @@
     .form-input:focus {
         outline: none;
         border-color: {{ $kid->color }};
+    }
+
+    /* URL Scraping Styles */
+    .input-with-button {
+        display: flex;
+        gap: 8px;
+    }
+
+    .input-with-button .form-input {
+        flex: 1;
+    }
+
+    .btn-scrape {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.2s;
+    }
+
+    .btn-scrape:hover {
+        background: #2563eb;
+    }
+
+    .btn-scrape:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .input-hint {
+        font-size: 13px;
+        color: #6b7280;
+        margin-top: 6px;
+        margin-bottom: 0;
+    }
+
+    .input-error {
+        font-size: 13px;
+        color: #ef4444;
+        margin-top: 6px;
+        background: #fee2e2;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #fca5a5;
     }
 
     /* Auto-Allocation Styles */
