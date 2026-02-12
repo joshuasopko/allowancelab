@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
 
     // Parent goal management routes (legacy - keep for now)
     Route::post('/kids/{kid}/goals', [GoalController::class, 'parentStore'])->name('parent.goals.store');
+    Route::post('/kids/{kid}/goals/scrape-url', [GoalController::class, 'scrapeUrl'])->name('parent.goals.scrape-url');
     Route::get('/goals/{goal}', [GoalController::class, 'show'])->name('parent.goals.show');
     Route::get('/goals/{goal}/edit', [GoalController::class, 'edit'])->name('parent.goals.edit');
     Route::put('/goals/{goal}', [GoalController::class, 'update'])->name('parent.goals.update');

@@ -6,6 +6,7 @@ use App\Models\Goal;
 use App\Models\GoalTransaction;
 use App\Models\Kid;
 use App\Models\Transaction;
+use App\Services\UrlScraperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,12 @@ use Carbon\Carbon;
 
 class GoalController extends Controller
 {
+    protected $urlScraper;
+
+    public function __construct(UrlScraperService $urlScraper)
+    {
+        $this->urlScraper = $urlScraper;
+    }
     /**
      * Display a listing of the kid's goals (kid view)
      */
@@ -882,5 +889,29 @@ class GoalController extends Controller
         ]);
 
         return redirect()->route('parent.goals.index', $kid)->with('success', 'Redemption denied. Goal remains active for ' . $kid->name . '.');
+    }
+
+    /**
+     * Scrape URL for goal details (parent only)
+     */
+    public function scrapeUrl(Request $request, Kid $kid)
+    {
+        // Verify parent has access to this kid
+        $familyIds = Auth::user()->families()->pluck('families.id');
+        if (!$familyIds->contains($kid->family_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to this kid.'
+            ], 403);
+        }
+
+        // Increase timeout for slow sites like Target
+        set_time_limit(90);
+
+        $request->validate(['url' => 'required|url']);
+
+        $result = $this->urlScraper->scrapeUrl($request->url);
+
+        return response()->json($result);
     }
 }
