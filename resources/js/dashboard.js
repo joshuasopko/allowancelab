@@ -148,11 +148,17 @@ function filterLedger(kidId, type) {
 // ============================================
 
 function openAddKidModal() {
-    document.getElementById('addKidModal').classList.add('active');
+    const modal = document.getElementById('addKidModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
 }
 
 function closeAddKidModal() {
-    document.getElementById('addKidModal').classList.remove('active');
+    const modal = document.getElementById('addKidModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function selectAvatar(avatar) {
