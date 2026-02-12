@@ -1686,7 +1686,6 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Expose wishes functions globally
-window.toggleWishes = toggleWishes;
 window.openDeclineWishModal = openDeclineWishModal;
 window.closeDeclineWishModal = closeDeclineWishModal;
 

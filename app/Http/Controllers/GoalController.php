@@ -230,11 +230,11 @@ class GoalController extends Controller
                 'success' => true,
                 'message' => 'Goal created successfully!',
                 'goal' => $goal,
-                'redirect' => route('parent.goals.index', $kid)
+                'redirect' => route('kids.goals', $kid)
             ]);
         }
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Goal created successfully!');
+        return redirect()->route('kids.goals', $kid)->with('success', 'Goal created successfully!');
     }
 
     /**
@@ -401,7 +401,7 @@ class GoalController extends Controller
         if (Auth::guard('kid')->check()) {
             return redirect()->route('kid.goals.index')->with('success', 'Goal updated successfully!');
         } else {
-            return redirect()->route('parent.goals.index', $goal->kid)->with('success', 'Goal updated successfully!');
+            return redirect()->route('kids.goals', $goal->kid)->with('success', 'Goal updated successfully!');
         }
     }
 
@@ -499,7 +499,7 @@ class GoalController extends Controller
         if (Auth::guard('kid')->check()) {
             return redirect()->route('kid.goals.index')->with('success', 'Goal deleted successfully! Funds have been returned to your account.');
         } else {
-            return redirect()->route('parent.goals.index', $kidId)->with('success', 'Goal deleted successfully! Funds have been returned to the account.');
+            return redirect()->route('kids.goals', $kidId)->with('success', 'Goal deleted successfully! Funds have been returned to the account.');
         }
     }
 
@@ -812,7 +812,7 @@ class GoalController extends Controller
             $goal->save();
         });
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Goal redeemed successfully! ' . $kid->name . ' can now enjoy their purchase.');
+        return redirect()->route('kids.goals', $kid)->with('success', 'Goal redeemed successfully! ' . $kid->name . ' can now enjoy their purchase.');
     }
 
     /**
@@ -852,7 +852,7 @@ class GoalController extends Controller
             $goal->save();
         });
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Redemption approved! ' . $kid->name . ' can now enjoy their purchase.');
+        return redirect()->route('kids.goals', $kid)->with('success', 'Redemption approved! ' . $kid->name . ' can now enjoy their purchase.');
     }
 
     /**
@@ -888,7 +888,7 @@ class GoalController extends Controller
             'created_at' => now(),
         ]);
 
-        return redirect()->route('parent.goals.index', $kid)->with('success', 'Redemption denied. Goal remains active for ' . $kid->name . '.');
+        return redirect()->route('kids.goals', $kid)->with('success', 'Redemption denied. Goal remains active for ' . $kid->name . '.');
     }
 
     /**
