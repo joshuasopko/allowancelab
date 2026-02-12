@@ -5,7 +5,7 @@
 @section('content')
 <div class="page-header">
     <h1>{{ $kid->name }}'s Wish</h1>
-    <a href="{{ route('parent.wishes.index', $kid) }}" class="btn-back">
+    <a href="{{ route('kids.wishes', $kid) }}" class="btn-back">
         <i class="fas fa-arrow-left"></i> Back to Wish List
     </a>
 </div>
@@ -121,6 +121,15 @@
                     <!-- Redeem (deducts from balance) -->
                     <button type="button" class="btn-action btn-redeem" onclick="openRedeemModal()">
                         <i class="fas fa-gift"></i> Redeem Wish
+                    </button>
+                    <!-- Delete saved wish -->
+                    <button type="button" onclick="openDeleteModal()" class="btn-action btn-delete">
+                        <i class="fas fa-trash"></i> Delete Wish
+                    </button>
+                @elseif($wish->isDeclined())
+                    <!-- Delete declined wish -->
+                    <button type="button" onclick="openDeleteModal()" class="btn-action btn-delete">
+                        <i class="fas fa-trash"></i> Delete Wish
                     </button>
                 @endif
             </div>
@@ -404,6 +413,15 @@
     background: #d1d5db;
 }
 
+.btn-delete {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -571,6 +589,14 @@ function closeDeclineModal() {
     document.getElementById('declineModal').style.display = 'none';
 }
 
+function openDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
 function openRedeemModal() {
     document.getElementById('redeemModal').style.display = 'flex';
     updateRedeemTotal(); // Initialize on open
@@ -637,11 +663,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === deleteModal) {
+                closeDeleteModal();
+            }
+        });
+    }
 });
 </script>
 @endsection
 
 @section('modals')
+<!-- Delete Confirmation Modal -->
+@if($wish->isDeclined() || $wish->isSaved())
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); text-align: center;">
+        <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px;">
+            <i class="fas fa-trash"></i>
+        </div>
+        <h3 style="font-size: 24px; font-weight: 700; color: #1f2937; margin: 0 0 8px 0;">Delete This Wish?</h3>
+        <p style="color: #6b7280; font-size: 16px; margin-bottom: 24px;">This action cannot be undone. The wish will be permanently removed.</p>
+
+        <form action="{{ route('parent.wishes.destroy', $wish) }}" method="POST">
+            @csrf
+            @method('DELETE')
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" onclick="closeDeleteModal()" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; background: #e5e7eb; color: #4b5563; transition: background 0.2s;">Cancel</button>
+                <button type="submit" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; background: #ef4444; color: white; transition: background 0.2s;">Delete Wish</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
 <!-- Decline Modal -->
 @if($wish->isPendingApproval())
 <div id="declineModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center;">

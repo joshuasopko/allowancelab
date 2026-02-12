@@ -442,12 +442,17 @@ class WishController extends Controller
 
             DB::commit();
 
-            return redirect()->route('parent.wishes.index', $kid)
+            return redirect()->route('kids.wishes', $kid)
                 ->with('success', 'Wish created for ' . $kid->name . '!');
 
         } catch (\Exception $e) {
             DB::rollBack();
             report($e);
+            \Log::error('Failed to create wish: ' . $e->getMessage(), [
+                'exception' => $e,
+                'kid_id' => $kid->id,
+                'request' => $request->all()
+            ]);
             return back()->withErrors(['error' => 'Failed to create wish.'])->withInput();
         }
     }
@@ -640,5 +645,26 @@ class WishController extends Controller
         $result = $this->urlScraper->scrapeUrl($request->url);
 
         return response()->json($result);
+    }
+
+    /**
+     * Parent deletes a wish (typically for declined wishes)
+     */
+    public function parentDestroy(Wish $wish)
+    {
+        // Authorization check
+        $familyIds = Auth::user()->families()->pluck('families.id');
+        if (!$familyIds->contains($wish->family_id)) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Store kid for redirect
+        $kid = $wish->kid;
+
+        // Delete the wish
+        $wish->delete();
+
+        return redirect()->route('kids.wishes', $kid)
+            ->with('success', 'Wish deleted successfully.');
     }
 }
