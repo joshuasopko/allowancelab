@@ -196,7 +196,7 @@
                         @endif
 
                         <div class="goal-title-section">
-                            <h3 class="goal-title">{{ $goal->title }}</h3>
+                            <h3 class="goal-title">{{ strlen($goal->title) > 60 ? substr($goal->title, 0, 60) . '...' : $goal->title }}</h3>
                             @if($goal->product_url)
                                 <a href="{{ $goal->product_url }}" target="_blank" class="goal-link">
                                     <i class="fas fa-external-link-alt"></i> View on {{ parse_url($goal->product_url, PHP_URL_HOST) }}
