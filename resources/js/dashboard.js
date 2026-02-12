@@ -456,12 +456,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize currency listeners
     addCurrencyListeners();
 
-    // Initialize AJAX forms
-    document.querySelectorAll('form[action*="deposit"]').forEach(form => {
+    // Initialize AJAX forms (exclude kid-focused modal forms)
+    document.querySelectorAll('form[action*="deposit"]:not(.kid-focused-modal-form)').forEach(form => {
         handleFormSubmit(form, '✓ Recorded!');
     });
 
-    document.querySelectorAll('form[action*="spend"]').forEach(form => {
+    document.querySelectorAll('form[action*="spend"]:not(.kid-focused-modal-form)').forEach(form => {
         handleFormSubmit(form, '✓ Recorded!');
     });
 
@@ -1581,20 +1581,36 @@ function toggleMoreActions(kidId) {
     }
 }
 
-// Toggle Goals Section
-function toggleGoals(kidId) {
-    const goalsContainer = document.getElementById(`goalsContainer${kidId}`);
-    const chevron = document.getElementById(`goalsChevron${kidId}`);
+// Toggle Category Content (Goals, Wishes, Chores, etc.)
+function toggleCategory(kidId, category) {
+    const goalsContent = document.getElementById(`goalsContent${kidId}`);
+    const wishesContent = document.getElementById(`wishesContent${kidId}`);
+    const targetContent = document.getElementById(`${category}Content${kidId}`);
 
-    // Check computed style, not inline style, to handle CSS-set display values
-    const isHidden = window.getComputedStyle(goalsContainer).display === 'none';
+    // Get all pills for this kid
+    const kidCard = document.querySelector(`[data-kid-id="${kidId}"]`);
+    const pills = kidCard.querySelectorAll('.category-pill');
 
-    if (isHidden) {
-        goalsContainer.style.display = 'block';
-        chevron.classList.add('rotated');
-    } else {
-        goalsContainer.style.display = 'none';
-        chevron.classList.remove('rotated');
+    // Check if target is currently open
+    const isCurrentlyOpen = targetContent.style.display === 'block';
+
+    // Close all contents
+    if (goalsContent) goalsContent.style.display = 'none';
+    if (wishesContent) wishesContent.style.display = 'none';
+
+    // Remove active class from all pills
+    pills.forEach(pill => pill.classList.remove('active'));
+
+    // If target wasn't open, open it and activate its pill
+    if (!isCurrentlyOpen) {
+        targetContent.style.display = 'block';
+        // Find and activate the clicked pill
+        pills.forEach(pill => {
+            const pillText = pill.textContent.toLowerCase();
+            if (pillText.includes(category)) {
+                pill.classList.add('active');
+            }
+        });
     }
 }
 
@@ -1603,25 +1619,7 @@ window.openGoalFundModal = openGoalFundModal;
 window.closeGoalFundModal = closeGoalFundModal;
 window.toggleKidDropdown = toggleKidDropdown;
 window.toggleMoreActions = toggleMoreActions;
-window.toggleGoals = toggleGoals;
-// Toggle Wishes Section
-function toggleWishes(kidId) {
-    const wishesContainer = document.getElementById(`wishesContainer${kidId}`);
-    const chevron = document.getElementById(`wishesChevron${kidId}`);
-
-    // Check computed style, not inline style, to handle CSS-set display values
-    const isHidden = window.getComputedStyle(wishesContainer).display === 'none';
-
-    if (isHidden) {
-        wishesContainer.style.display = 'block';
-        wishesContainer.classList.add('active');
-        chevron.classList.add('rotated');
-    } else {
-        wishesContainer.style.display = 'none';
-        wishesContainer.classList.remove('active');
-        chevron.classList.remove('rotated');
-    }
-}
+window.toggleCategory = toggleCategory;
 
 // Decline Wish Modal
 let currentDeclineWishId = null;
@@ -1691,3 +1689,30 @@ document.addEventListener('keydown', function(e) {
 window.toggleWishes = toggleWishes;
 window.openDeclineWishModal = openDeclineWishModal;
 window.closeDeclineWishModal = closeDeclineWishModal;
+
+// Kids menu toggle
+function toggleKidsMenu(event) {
+    event.preventDefault();
+    const dropdown = document.getElementById('kidsDropdown');
+    const icon = event.currentTarget.querySelector('.dropdown-icon');
+
+    dropdown.classList.toggle('show');
+    icon.classList.toggle('rotated');
+}
+
+// Kid submenu toggle
+function toggleKidSubmenu(event, kidId) {
+    // Don't prevent default - we want the link to work
+    // Just toggle the submenu
+    const submenu = document.getElementById('kidSubmenu' + kidId);
+    const parentItem = event.currentTarget.closest('.kid-menu-item');
+
+    if (submenu) {
+        submenu.classList.toggle('show');
+        parentItem.classList.toggle('active-kid');
+    }
+}
+
+// Expose kids menu functions globally
+window.toggleKidsMenu = toggleKidsMenu;
+window.toggleKidSubmenu = toggleKidSubmenu;
