@@ -1166,7 +1166,7 @@
             if (editGoalId) {
                 openEditGoalModal(parseInt(editGoalId));
                 // Clean up URL without reload
-                window.history.replaceState({}, '', '{{ route('parent.goals.index', $kid) }}');
+                window.history.replaceState({}, '', '{{ route('kids.goals', $kid) }}');
             }
 
             // Add drag and drop handlers

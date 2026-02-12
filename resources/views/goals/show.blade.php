@@ -336,7 +336,7 @@
                         <i class="fas fa-edit"></i> Edit Goal
                     </button>
                 @endif
-                <a href="{{ $isParent ? route('parent.goals.index', $kid) : route('kid.goals.index') }}" class="btn-back">
+                <a href="{{ $isParent ? route('kids.goals', $kid) : route('kid.goals.index') }}" class="btn-back">
                     ← Back to Goals
                 </a>
             </div>
@@ -468,7 +468,7 @@
             function openEditGoalModal(goalId) {
                 // Redirect to parent goals index with edit intent
                 // We'll use a session flag or URL parameter to open the modal
-                window.location.href = '{{ route('parent.goals.index', $kid) }}?edit=' + goalId;
+                window.location.href = '{{ route('kids.goals', $kid) }}?edit=' + goalId;
             }
         </script>
     @endif
