@@ -596,7 +596,7 @@
                                         </div>
                                     @endif
                                     <div class="goal-card-title-section">
-                                        <h3 class="goal-card-title">{{ $goal->title }}</h3>
+                                        <h3 class="goal-card-title">{{ strlen($goal->title) > 60 ? substr($goal->title, 0, 60) . '...' : $goal->title }}</h3>
                                         @if($goal->description)
                                             <p class="goal-card-description">{{ $goal->description }}</p>
                                         @endif
@@ -1327,6 +1327,9 @@
         border-radius: 12px;
         padding: 24px;
         transition: all 0.3s;
+        min-height: 420px;
+        display: flex;
+        flex-direction: column;
     }
 
     .goal-card.ready-to-redeem {
