@@ -634,16 +634,6 @@
                 <input type="hidden" id="goalFormId" value="">
 
                 <div class="form-group">
-                    <label for="goalTitle">Goal Title *</label>
-                    <input type="text" id="goalTitle" name="title" required maxlength="255" class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="goalDescription">Description</label>
-                    <textarea id="goalDescription" name="description" maxlength="1000" rows="3" class="form-input"></textarea>
-                </div>
-
-                <div class="form-group">
                     <label for="goalProductUrl">Product Link (optional)</label>
                     <div class="input-with-button">
                         <input type="url" id="goalProductUrl" name="product_url" maxlength="500" class="form-input" placeholder="https://www.amazon.com/...">
@@ -656,6 +646,16 @@
                     <div id="scrapeGoalPartialSuccess" class="input-hint" style="display: none; color: #f59e0b; margin-top: 8px;">
                         <i class="fas fa-info-circle"></i> <span id="scrapeGoalPartialMessage"></span>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="goalTitle">Goal Title *</label>
+                    <input type="text" id="goalTitle" name="title" required maxlength="255" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="goalDescription">Description</label>
+                    <textarea id="goalDescription" name="description" maxlength="1000" rows="3" class="form-input"></textarea>
                 </div>
 
                 <div class="form-group">
