@@ -30,6 +30,7 @@
     <div class="manage-tabs">
         <button class="manage-tab active" onclick="switchTab('profile')">Profile</button>
         <a href="{{ route('kids.goals', $kid) }}" class="manage-tab">Goals</a>
+        <a href="{{ route('kids.wishes', $kid) }}" class="manage-tab">Wishes</a>
         <button class="manage-tab" onclick="switchTab('chores')" disabled>Chores</button>
         <button class="manage-tab" onclick="switchTab('loans')" disabled>Loans</button>
     </div>
