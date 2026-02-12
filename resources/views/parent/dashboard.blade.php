@@ -488,11 +488,13 @@
                             </div>
                         @endforeach
 
-                        <div style="text-align: center;">
-                            <a href="{{ route('kids.wishes', $kid) }}" class="view-all-btn">
-                                View All Wishes <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
+                        @if($recentWishes->count() > 4)
+                            <div style="text-align: center;">
+                                <a href="{{ route('kids.wishes', $kid) }}" class="view-all-btn">
+                                    View All Wishes <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        @endif
                     @else
                         <!-- No Wishes - Empty State -->
                         <div class="category-empty-state">
