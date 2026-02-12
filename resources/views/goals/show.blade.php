@@ -358,11 +358,6 @@
                     @if($goal->description)
                         <p class="goal-detail-description">{{ $goal->description }}</p>
                     @endif
-                    @if($goal->product_url)
-                        <a href="{{ $goal->product_url }}" target="_blank" class="goal-detail-link">
-                            <i class="fas fa-external-link-alt"></i> View on {{ parse_url($goal->product_url, PHP_URL_HOST) }}
-                        </a>
-                    @endif
 
                     @if($goal->status === 'ready_to_redeem' || $isComplete)
                         <div class="goal-detail-status complete">
@@ -376,6 +371,12 @@
                         <div class="goal-detail-status active">
                             <i class="fas fa-bullseye"></i> Active Goal
                         </div>
+                    @endif
+
+                    @if($goal->product_url)
+                        <a href="{{ $goal->product_url }}" target="_blank" class="goal-detail-link">
+                            <i class="fas fa-external-link-alt"></i> View on {{ parse_url($goal->product_url, PHP_URL_HOST) }}
+                        </a>
                     @endif
                 </div>
             </div>
