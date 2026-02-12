@@ -3,7 +3,9 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\KidAuthController;
 use App\Http\Controllers\KidController;
+use App\Http\Controllers\KidFocusedController;
 use App\Http\Controllers\GoalController;
+use App\Http\Controllers\WishController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\KidDashboardController;
@@ -87,8 +89,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/kids/{kid}/change-username', [KidController::class, 'changeUsername'])->name('kids.change-username');
     Route::post('/kids/{kid}/reset-password', [KidController::class, 'resetPassword'])->name('kids.reset-password');
 
-    // Parent goal management routes
-    Route::get('/kids/{kid}/goals', [GoalController::class, 'parentIndex'])->name('parent.goals.index');
+    // Kid-focused pages (new tabbed interface)
+    Route::get('/kids/{kid}', [KidFocusedController::class, 'overview'])->name('kids.overview');
+    Route::get('/kids/{kid}/allowance', [KidFocusedController::class, 'allowance'])->name('kids.allowance');
+    Route::get('/kids/{kid}/goals', [KidFocusedController::class, 'goals'])->name('kids.goals');
+    Route::get('/kids/{kid}/wishes', [KidFocusedController::class, 'wishes'])->name('kids.wishes');
+
+    // Parent goal management routes (legacy - keep for now)
     Route::post('/kids/{kid}/goals', [GoalController::class, 'parentStore'])->name('parent.goals.store');
     Route::get('/goals/{goal}', [GoalController::class, 'show'])->name('parent.goals.show');
     Route::get('/goals/{goal}/edit', [GoalController::class, 'edit'])->name('parent.goals.edit');
@@ -100,6 +107,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/goals/{goal}/redeem', [GoalController::class, 'redeem'])->name('parent.goals.redeem');
     Route::post('/goals/{goal}/approve-redemption', [GoalController::class, 'approveRedemption'])->name('parent.goals.approve-redemption');
     Route::post('/goals/{goal}/deny-redemption', [GoalController::class, 'denyRedemption'])->name('parent.goals.deny-redemption');
+
+    // Parent wish management routes (legacy - keep for now)
+    Route::get('/kids/{kid}/wishes/create', [WishController::class, 'parentCreate'])->name('parent.wishes.create');
+    Route::post('/kids/{kid}/wishes', [WishController::class, 'parentStore'])->name('parent.wishes.store');
+    Route::post('/kids/{kid}/wishes/scrape-url', [WishController::class, 'scrapeUrl'])->name('parent.wishes.scrape-url');
+    Route::get('/wishes/{wish}', [WishController::class, 'parentShow'])->name('parent.wishes.show');
+    Route::post('/wishes/{wish}/redeem', [WishController::class, 'redeemWish'])->name('parent.wishes.redeem');
+    Route::post('/wishes/{wish}/approve', [WishController::class, 'approvePurchase'])->name('parent.wishes.approve');
+    Route::post('/wishes/{wish}/decline', [WishController::class, 'declinePurchase'])->name('parent.wishes.decline');
+    Route::delete('/wishes/{wish}', [WishController::class, 'parentDestroy'])->name('parent.wishes.destroy');
 });
 
 // Kid authentication routes
@@ -129,6 +146,16 @@ Route::prefix('kid')->name('kid.')->group(function () {
         Route::post('/goals/{goal}/add-funds', [GoalController::class, 'addFunds'])->name('goals.add-funds');
         Route::post('/goals/{goal}/remove-funds', [GoalController::class, 'removeFunds'])->name('goals.remove-funds');
         Route::post('/goals/{goal}/request-redemption', [GoalController::class, 'requestRedemption'])->name('goals.request-redemption');
+
+        // Kid wish routes
+        Route::get('/wishes', [WishController::class, 'index'])->name('wishes.index');
+        Route::post('/wishes', [WishController::class, 'store'])->name('wishes.store');
+        Route::post('/wishes/scrape-url', [WishController::class, 'scrapeUrl'])->name('wishes.scrape-url');
+        Route::get('/wishes/{wish}', [WishController::class, 'show'])->name('wishes.show');
+        Route::put('/wishes/{wish}', [WishController::class, 'update'])->name('wishes.update');
+        Route::delete('/wishes/{wish}', [WishController::class, 'destroy'])->name('wishes.destroy');
+        Route::post('/wishes/{wish}/request-purchase', [WishController::class, 'requestPurchase'])->name('wishes.request-purchase');
+        Route::post('/wishes/{wish}/remind', [WishController::class, 'remindParent'])->name('wishes.remind');
     });
 });
 

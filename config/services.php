@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'web_scraping_api' => [
+        'key' => env('WEB_SCRAPING_API_KEY'),
+    ],
+
 ];
