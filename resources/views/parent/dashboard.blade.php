@@ -430,9 +430,11 @@
                         @endforeach
 
                         @if($activeGoals->count() > 4)
-                            <a href="{{ route('kids.goals', $kid) }}" class="view-all-btn">
-                                View All Goals <i class="fas fa-arrow-right"></i>
-                            </a>
+                            <div style="text-align: center;">
+                                <a href="{{ route('kids.goals', $kid) }}" class="view-all-btn">
+                                    View All Goals <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
                         @endif
                     @else
                         <!-- No Goals - Empty State -->
@@ -486,9 +488,11 @@
                             </div>
                         @endforeach
 
-                        <a href="{{ route('kids.wishes', $kid) }}" class="view-all-btn">
-                            View All Wishes <i class="fas fa-arrow-right"></i>
-                        </a>
+                        <div style="text-align: center;">
+                            <a href="{{ route('kids.wishes', $kid) }}" class="view-all-btn">
+                                View All Wishes <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
                     @else
                         <!-- No Wishes - Empty State -->
                         <div class="category-empty-state">
