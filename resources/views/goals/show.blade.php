@@ -137,6 +137,7 @@
             text-decoration: none;
             font-size: 14px;
             font-weight: 600;
+            margin-top: 12px;
         }
 
         .goal-detail-link:hover {
@@ -147,6 +148,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            margin-top: 12px;
             padding: 8px 16px;
             border-radius: 8px;
             font-weight: 600;
@@ -359,24 +361,28 @@
                         <p class="goal-detail-description">{{ $goal->description }}</p>
                     @endif
 
-                    @if($goal->status === 'ready_to_redeem' || $isComplete)
-                        <div class="goal-detail-status complete">
-                            <i class="fas fa-check-circle"></i> Goal Complete!
-                        </div>
-                    @elseif($goal->status === 'pending_redemption')
-                        <div class="goal-detail-status pending">
-                            <i class="fas fa-clock"></i> Pending Redemption
-                        </div>
-                    @else
-                        <div class="goal-detail-status active">
-                            <i class="fas fa-bullseye"></i> Active Goal
-                        </div>
-                    @endif
+                    <div>
+                        @if($goal->status === 'ready_to_redeem' || $isComplete)
+                            <div class="goal-detail-status complete">
+                                <i class="fas fa-check-circle"></i> Goal Complete!
+                            </div>
+                        @elseif($goal->status === 'pending_redemption')
+                            <div class="goal-detail-status pending">
+                                <i class="fas fa-clock"></i> Pending Redemption
+                            </div>
+                        @else
+                            <div class="goal-detail-status active">
+                                <i class="fas fa-bullseye"></i> Active Goal
+                            </div>
+                        @endif
+                    </div>
 
                     @if($goal->product_url)
-                        <a href="{{ $goal->product_url }}" target="_blank" class="goal-detail-link">
-                            <i class="fas fa-external-link-alt"></i> View on {{ parse_url($goal->product_url, PHP_URL_HOST) }}
-                        </a>
+                        <div>
+                            <a href="{{ $goal->product_url }}" target="_blank" class="goal-detail-link">
+                                <i class="fas fa-external-link-alt"></i> View on {{ parse_url($goal->product_url, PHP_URL_HOST) }}
+                            </a>
+                        </div>
                     @endif
                 </div>
             </div>
