@@ -37,6 +37,13 @@
             max-width: 1200px !important;
         }
 
+        /* Hide desktop New Goal button on mobile */
+        @media (max-width: 768px) {
+            .desktop-only-new-goal {
+                display: none !important;
+            }
+        }
+
         .goal-card {
             box-shadow: 0 4px 16px rgba({{ $r }}, {{ $g }}, {{ $b }}, 0.50) !important;
         }
@@ -154,7 +161,7 @@
                 </button>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px;" class="desktop-only-new-goal">
                 <button class="btn-add-goal" onclick="openCreateGoalModal()" x-show="activeTab === 'active'">+ New Goal</button>
             </div>
         </div>

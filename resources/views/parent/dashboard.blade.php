@@ -42,6 +42,27 @@
     @if($kids->count() > 0)
         @foreach($kids as $kid)
             <div class="kid-card-compact" data-kid-id="{{ $kid->id }}">
+                <!-- 3-dot menu (positioned in upper right on mobile) -->
+                <div class="kid-card-dropdown">
+                    <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown('{{ $kid->id }}-footer')">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                    <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
+                        <a href="{{ route('kids.overview', $kid) }}" class="kid-card-dropdown-item">
+                            <i class="fas fa-chart-pie"></i> Overview
+                        </a>
+                        <a href="{{ route('kids.goals', $kid) }}" class="kid-card-dropdown-item">
+                            <i class="fas fa-bullseye"></i> View Goals
+                        </a>
+                        <a href="{{ route('kids.wishes', $kid) }}" class="kid-card-dropdown-item">
+                            <i class="fas fa-heart"></i> View Wishes
+                        </a>
+                        <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
+                            <i class="fas fa-cog"></i> Manage Kid
+                        </a>
+                    </div>
+                </div>
+
                 @php
                     $invite = $kid->invite;
                     $showPendingBadge = $invite && $invite->status === 'pending' && !$invite->isExpired();
@@ -337,24 +358,6 @@
                         <i class="fas fa-tasks"></i> Chores
                         <span class="pill-badge coming-soon">Soon</span>
                     </button>
-
-                    <!-- 3-dot menu -->
-                    <div class="kid-card-dropdown" style="margin-left: auto;">
-                        <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown('{{ $kid->id }}-footer')">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                        <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
-                            <a href="{{ route('kids.goals', $kid) }}" class="kid-card-dropdown-item">
-                                <i class="fas fa-bullseye"></i> View Goals
-                            </a>
-                            <a href="{{ route('kids.wishes', $kid) }}" class="kid-card-dropdown-item">
-                                <i class="fas fa-heart"></i> View Wishes
-                            </a>
-                            <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
-                                <i class="fas fa-cog"></i> Manage Kid
-                            </a>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Goals Content (Collapsible) -->

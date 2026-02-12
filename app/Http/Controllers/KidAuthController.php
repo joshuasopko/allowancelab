@@ -98,9 +98,25 @@ class KidAuthController extends Controller
             ->sortByDesc('timestamp') // CHANGE THIS
             ->values();
 
+        // Get active goals (limit to 3 for dashboard)
+        $activeGoals = $kid->goals()
+            ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
+            ->orderBy('created_at', 'desc')
+            ->limit(3)
+            ->get();
+
+        // Get active wishes (limit to 5 for dashboard)
+        $activeWishes = $kid->wishes()
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
         return view('kid.dashboard', [
             'kid' => $kid,
-            'transactions' => $allTransactions
+            'transactions' => $allTransactions,
+            'activeGoals' => $activeGoals,
+            'activeWishes' => $activeWishes
         ]);
     }
 

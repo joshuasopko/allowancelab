@@ -4920,8 +4920,48 @@ Manage Family Styles
    ============================================ */
 @media (max-width: 768px) {
     /* Reduce card padding on mobile */
-    .kid-card {
+    .kid-card,
+    .kid-card-compact {
         padding: 20px;
+        position: relative; /* For absolute positioning of 3-dot menu */
+    }
+
+    /* Move 3-dot dropdown menu to upper right corner */
+    .kid-card-dropdown {
+        position: absolute !important;
+        top: 2px !important;
+        right: 16px !important;
+        margin: 0 !important;
+        order: unset !important;
+        width: auto !important;
+        z-index: 20 !important;
+    }
+
+    /* Clean up dropdown trigger on mobile */
+    .kid-card-dropdown-trigger {
+        background: none !important;
+        padding: 6px !important;
+        color: #9ca3af !important;
+        font-size: 18px !important;
+        border-radius: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .kid-card-dropdown-trigger:hover {
+        color: #6b7280 !important;
+        background: rgba(0, 0, 0, 0.04) !important;
+    }
+
+    /* Hide any chevron icons that might be in the button */
+    .kid-card-dropdown-trigger .fa-chevron-down {
+        display: none !important;
+    }
+
+    /* Make sure pills row doesn't clip the dropdown */
+    .category-pills-row {
+        overflow: visible !important;
     }
 
     /* Hide desktop layout */
@@ -4974,6 +5014,7 @@ Manage Family Styles
         white-space: nowrap;
         flex-shrink: 0;
         margin-left: auto;
+        margin-right: 0px;
     }
 
     /* Row 2: Points Badge | Next Allowance */
@@ -5006,11 +5047,12 @@ Manage Family Styles
         gap: 6px;
     }
 
+    /* Keep the More button visible for accessing Points/Ledger */
     .btn-compact.btn-more {
         background: #e5e7eb;
         color: #6b7280;
         flex: 0 0 auto;
-        min-width: 25px;
+        min-width: 44px;
         padding: 10px;
     }
 
@@ -5021,6 +5063,12 @@ Manage Family Styles
 
     .btn-compact.btn-more i {
         font-size: 12px;
+    }
+
+    /* Expand Deposit/Spend buttons to fill space */
+    .kid-card-row-3 .btn-compact.btn-deposit,
+    .kid-card-row-3 .btn-compact.btn-spend {
+        flex: 1;
     }
 
     /* More Actions (collapsed) */
@@ -5670,6 +5718,31 @@ Manage Family Styles
     .goal-progress-cell {
         flex-basis: 100%;
         min-width: 100%;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .goal-progress-bar {
+        flex: 1 !important;
+        height: 8px !important;
+        background: #e5e7eb !important;
+        border-radius: 4px !important;
+        overflow: hidden !important;
+        min-width: 60px !important;
+    }
+
+    .goal-progress-fill {
+        height: 100% !important;
+        border-radius: 4px !important;
+    }
+
+    .goal-progress-text {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #6b7280 !important;
+        white-space: nowrap !important;
     }
 
     .item-amount-cell {
@@ -5679,5 +5752,55 @@ Manage Family Styles
     .btn-category-action {
         font-size: 11px;
         padding: 6px 10px;
+    }
+}
+
+/* Mobile Responsive - Under 900px (Kid Cards & Pills) */
+@media (max-width: 900px) {
+    /* Reduce kid card padding on mobile and set positioning context */
+    .kid-card {
+        padding: 16px;
+        position: relative;
+    }
+
+    /* Remove pill row padding to align with buttons above */
+    .category-pills-row {
+        padding: 12px 0 0 0;
+        gap: 6px;
+    }
+
+    /* Make pills smaller to fit 3 on one line */
+    .category-pill {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .category-pill i {
+        font-size: 11px;
+    }
+
+    .pill-badge {
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        font-size: 10px;
+        margin-left: 2px;
+    }
+
+    /* Adjust row 3 layout */
+    .kid-card-row-3 {
+        gap: 8px;
+    }
+
+    /* Make deposit/spend buttons take most space */
+    .kid-card-row-3 .btn-compact.btn-deposit,
+    .kid-card-row-3 .btn-compact.btn-spend {
+        flex: 1;
+    }
+
+    /* Keep More button compact */
+    .kid-card-row-3 .btn-compact.btn-more {
+        flex: 0 0 auto;
     }
 }

@@ -22,6 +22,9 @@
 
                 <!-- Kid Header -->
                 <div class="kid-focused-header">
+                    <a href="{{ route('dashboard') }}" class="back-link-mobile">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
                     <div class="kid-info">
                         <h1>{{ $kid->name }}</h1>
                         <div class="kid-balance" style="color: {{ $kid->color }};">
@@ -29,9 +32,11 @@
                             ${{ number_format($kid->balance, 2) }} available
                         </div>
                     </div>
-                    <a href="{{ route('kids.manage', $kid) }}" class="btn-manage">
-                        <i class="fas fa-cog"></i> Manage
-                    </a>
+                    @if(request()->routeIs('kids.goals'))
+                        <button type="button" onclick="openCreateGoalModal()" class="btn-new-goal" style="--kid-color: {{ $kid->color }};">
+                            <i class="fas fa-plus"></i> New Goal
+                        </button>
+                    @endif
                 </div>
 
                 <!-- Desktop Tabs -->
@@ -118,6 +123,11 @@
         border-bottom: 2px solid #e5e7eb;
     }
 
+    /* Hide mobile back link on desktop */
+    .back-link-mobile {
+        display: none;
+    }
+
     .kid-info h1 {
         font-size: 28px;
         font-weight: 700;
@@ -142,6 +152,13 @@
         font-size: 12px;
     }
 
+    /* Header Actions Wrapper */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
     .btn-manage {
         background: #6b7280;
         color: white;
@@ -158,6 +175,26 @@
 
     .btn-manage:hover {
         background: #4b5563;
+    }
+
+    .btn-new-goal {
+        background: #10b981;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: background 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-new-goal:hover {
+        background: #059669;
     }
 
     /* Back to Dashboard Link */
@@ -233,8 +270,65 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 12px;
+            padding-bottom: 12px;
+            margin-bottom: 0;
+            border-bottom: none;
         }
 
+        /* Show mobile back link */
+        .back-link-mobile {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 0;
+            width: 100%;
+        }
+
+        .back-link-mobile:hover {
+            color: #3b82f6;
+        }
+
+        .back-link-mobile i {
+            font-size: 12px;
+        }
+
+        /* Header actions on mobile - full width row */
+        .header-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .btn-manage,
+        .btn-new-goal {
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* Make Manage button lighter on mobile */
+        .btn-manage {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .btn-manage:hover {
+            background: #d1d5db;
+            color: #4b5563;
+        }
+
+        /* Use kid color for New Goal button on mobile */
+        .btn-new-goal {
+            background: var(--kid-color, #10b981);
+        }
+
+        .btn-new-goal:hover {
+            opacity: 0.85;
+        }
+
+        /* Hide desktop back to dashboard */
         .back-to-dashboard {
             display: none;
         }

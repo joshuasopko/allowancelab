@@ -146,6 +146,15 @@
     </div>
 </div>
 
+<!-- Manage Kid Settings Button -->
+<div class="manage-settings-section">
+    <a href="{{ route('kids.manage', $kid) }}" class="btn-manage-settings">
+        <i class="fas fa-cog"></i>
+        <span>Manage Kid Settings</span>
+        <i class="fas fa-chevron-right"></i>
+    </a>
+</div>
+
 <style>
 .overview-grid {
     display: grid;
@@ -413,6 +422,52 @@
 
     .allowance-amount {
         font-size: 28px;
+    }
+}
+
+/* Manage Settings Section */
+.manage-settings-section {
+    margin-top: 48px;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.btn-manage-settings {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 32px;
+    background: #f3f4f6;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-manage-settings:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #4b5563;
+    transform: translateY(-1px);
+}
+
+.btn-manage-settings i:first-child {
+    font-size: 16px;
+}
+
+.btn-manage-settings i:last-child {
+    font-size: 12px;
+    margin-left: auto;
+}
+
+@media (max-width: 768px) {
+    .btn-manage-settings {
+        width: 100%;
+        justify-content: space-between;
+        padding: 14px 20px;
     }
 }
 </style>
