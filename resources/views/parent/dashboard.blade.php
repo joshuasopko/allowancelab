@@ -385,24 +385,24 @@
 
                                 @if(in_array($goal->status, ['ready_to_redeem', 'pending_redemption']))
                                     <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                                        <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action btn-view">
-                                            View Goal
-                                        </a>
                                         <form id="redeem-form-{{ $goal->id }}" action="{{ route('parent.goals.redeem', $goal) }}" method="POST" style="margin: 0;">
                                             @csrf
                                             <button type="button" onclick="showRedeemConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ addslashes($goal->title) }}', '{{ number_format($goal->current_amount, 2) }}')" class="btn-category-action" style="background: {{ $kid->color }};">
                                                 <i class="fas fa-gift"></i> Redeem
                                             </button>
                                         </form>
+                                        <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action" style="background: #78909c;">
+                                            View Goal
+                                        </a>
                                     </div>
                                 @else
                                     <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                                        <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action btn-view">
-                                            View Goal
-                                        </a>
                                         <button class="btn-category-action" onclick="toggleForm('goal-{{ $goal->id }}')" style="background: {{ $kid->color }};">
                                             Add Funds
                                         </button>
+                                        <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action" style="background: #78909c;">
+                                            View Goal
+                                        </a>
                                     </div>
                                 @endif
                             </div>
