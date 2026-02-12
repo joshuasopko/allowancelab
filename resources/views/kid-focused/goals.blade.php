@@ -2,6 +2,12 @@
 
 @section('title', $kid->name . '\'s Goals - AllowanceLab')
 
+@section('header-right')
+    <a href="{{ route('dashboard') }}" class="add-kid-btn" style="text-decoration: none;">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+@endsection
+
 @section('content')
     <!-- Alpine.js for tab switching and collapse plugin -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
