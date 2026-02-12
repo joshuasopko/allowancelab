@@ -364,10 +364,11 @@
                             @php
                                 $progressPercent = $goal->target_amount > 0 ? ($goal->current_amount / $goal->target_amount) * 100 : 0;
                                 $progressPercent = min($progressPercent, 100);
+                                $truncatedGoalTitle = strlen($goal->title) > 45 ? substr($goal->title, 0, 45) . '...' : $goal->title;
                             @endphp
                             <div class="category-item-row {{ $goal->status === 'pending_redemption' ? 'pending-attention' : '' }}" style="--kid-color: {{ $kid->color }};">
                                 <div class="item-name-cell">
-                                    {{ $goal->title }}
+                                    {{ $truncatedGoalTitle }}
                                     @if($goal->status === 'pending_redemption')
                                         <span class="item-pending-badge" style="background: {{ $kid->color }};">
                                             NEEDS REDEMPTION
@@ -380,21 +381,29 @@
                                     </div>
                                     <span class="goal-progress-text">{{ number_format($progressPercent, 0) }}%</span>
                                 </div>
-                                <div class="item-amount-cell">${{ number_format($goal->current_amount, 2) }} of ${{ number_format($goal->target_amount, 2) }}</div>
+                                <div class="item-amount-cell" style="font-size: 13px; color: #6b7280;">${{ number_format($goal->current_amount, 2) }} of ${{ number_format($goal->target_amount, 2) }}</div>
 
                                 @if(in_array($goal->status, ['ready_to_redeem', 'pending_redemption']))
                                     <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                        <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action btn-view">
+                                            View Goal
+                                        </a>
                                         <form id="redeem-form-{{ $goal->id }}" action="{{ route('parent.goals.redeem', $goal) }}" method="POST" style="margin: 0;">
                                             @csrf
-                                            <button type="button" onclick="showRedeemConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ $goal->title }}', '{{ number_format($goal->current_amount, 2) }}')" class="btn-category-action" style="background: {{ $kid->color }};">
+                                            <button type="button" onclick="showRedeemConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ addslashes($goal->title) }}', '{{ number_format($goal->current_amount, 2) }}')" class="btn-category-action" style="background: {{ $kid->color }};">
                                                 <i class="fas fa-gift"></i> Redeem
                                             </button>
                                         </form>
                                     </div>
                                 @else
-                                    <button class="btn-category-action" onclick="toggleForm('goal-{{ $goal->id }}')" style="background: {{ $kid->color }};">
-                                        Add Funds
-                                    </button>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                        <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action btn-view">
+                                            View Goal
+                                        </a>
+                                        <button class="btn-category-action" onclick="toggleForm('goal-{{ $goal->id }}')" style="background: {{ $kid->color }};">
+                                            Add Funds
+                                        </button>
+                                    </div>
                                 @endif
                             </div>
 
