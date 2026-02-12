@@ -5,7 +5,7 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Create Wish for {{ $kid->name }}</h1>
-    <a href="{{ route('parent.wishes.index', $kid) }}" class="btn-back">
+    <a href="{{ route('kids.wishes', $kid) }}" class="btn-back">
         <i class="fas fa-arrow-left"></i> Back to Wish List
     </a>
 </div>
@@ -128,7 +128,7 @@
 
         <!-- Submit Buttons -->
         <div class="form-actions">
-            <a href="{{ route('parent.wishes.index', $kid) }}" class="btn-cancel">Cancel</a>
+            <a href="{{ route('kids.wishes', $kid) }}" class="btn-cancel">Cancel</a>
             <button type="submit" class="btn-submit">
                 <i class="fas fa-gift"></i> Create Wish
             </button>
