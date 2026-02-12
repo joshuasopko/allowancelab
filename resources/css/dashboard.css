@@ -5588,17 +5588,17 @@ Manage Family Styles
     display: block;
     text-align: center;
     padding: 12px;
-    color: #3b82f6;
+    color: #6b7280;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
-    border-top: 1px solid #e5e7eb;
+    background: none;
+    border: none;
     transition: all 0.2s ease;
 }
 
 .view-all-btn:hover {
-    background: #eff6ff;
-    color: #2563eb;
+    color: #4b5563;
 }
 
 .view-all-btn i {
