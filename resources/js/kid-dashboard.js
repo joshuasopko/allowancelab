@@ -133,6 +133,18 @@ document.addEventListener('DOMContentLoaded', function () {
     kidCheckMobile();
     kidUpdatePointsDisplay();
     kidRenderLedger();
+
+    // Auto-switch to tab specified in URL param (e.g. after goal create/edit)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    const editGoalParam = urlParams.get('edit_goal');
+    if (tabParam && ['goals', 'wishes', 'activity'].includes(tabParam)) {
+        // Clean URL before switching so params don't persist
+        history.replaceState({}, '', window.location.pathname);
+        setTimeout(() => {
+            kidSwitchTab(tabParam, { editGoalId: editGoalParam ? parseInt(editGoalParam) : null });
+        }, 0);
+    }
 });
 
 // ============================================
@@ -165,6 +177,8 @@ function kidUpdateBalance(amount) {
     if (!balanceEl) return;
 
     balanceEl.textContent = '$' + kidBalance.toFixed(2);
+    const badgeEl = document.getElementById('kidBalanceBadge');
+    if (badgeEl) badgeEl.textContent = '$' + kidBalance.toFixed(2);
 
     // Add/remove negative class
     if (kidBalance < 0) {
@@ -175,29 +189,96 @@ function kidUpdateBalance(amount) {
 }
 
 // ============================================
+// TAB SWITCHING
+// ============================================
+
+const kidLoadedTabs = new Set(['overview']);
+
+function kidSwitchTab(tabName, options = {}) {
+    // Update tab buttons
+    document.querySelectorAll('.kid-dashboard-tab').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.kid-dashboard-tab').forEach(btn => {
+        if (btn.getAttribute('onclick') === `kidSwitchTab('${tabName}')`) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Show/hide panels
+    document.querySelectorAll('.kid-tab-panel').forEach(panel => {
+        panel.style.display = 'none';
+    });
+    const targetPanel = document.getElementById(`kid-tab-${tabName}`);
+    if (!targetPanel) return;
+    targetPanel.style.display = '';
+
+    // If already loaded, just show it
+    if (kidLoadedTabs.has(tabName)) {
+        if (tabName === 'activity') kidRenderActivityTab();
+        return;
+    }
+
+    // Show loading state
+    targetPanel.innerHTML = '<div class="kid-tab-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+    // Lazy-fetch the tab content
+    const urls = {
+        goals: '/kid/tab/goals',
+        wishes: '/kid/tab/wishes',
+        activity: '/kid/tab/activity',
+    };
+
+    fetch(urls[tabName], {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(r => r.text())
+        .then(html => {
+            targetPanel.innerHTML = html;
+            kidLoadedTabs.add(tabName);
+            // Re-init Alpine on injected content
+            if (window.Alpine) Alpine.initTree(targetPanel);
+            if (tabName === 'activity') kidRenderActivityTab();
+            // Handle post-load actions for goals tab
+            if (tabName === 'goals') {
+                // Priority 1: open edit modal (passed via options or URL param before URL was cleaned)
+                const editGoalId = options.editGoalId;
+                // Priority 2: prefill create modal
+                const urlParams = new URLSearchParams(window.location.search);
+                const prefillTitle = urlParams.get('prefill_title');
+                const prefillAmount = urlParams.get('prefill_amount');
+                if (editGoalId) {
+                    setTimeout(() => window.kidOpenEditGoalModal(editGoalId), 100);
+                } else if (prefillTitle || prefillAmount) {
+                    setTimeout(() => {
+                        window.kidOpenCreateGoalModal({ title: prefillTitle || '', amount: prefillAmount || '' });
+                    }, 100);
+                    history.replaceState({}, '', window.location.pathname);
+                }
+            }
+        })
+        .catch(() => {
+            targetPanel.innerHTML = '<div class="kid-empty-state"><p>Failed to load. Please try again.</p></div>';
+        });
+}
+
+// ============================================
 // LEDGER FUNCTIONS
 // ============================================
 
 function kidToggleLedger() {
-    const ledgerSection = document.getElementById('kidLedgerSection');
-    const ledgerBtn = document.getElementById('kidLedgerBtn');
-    if (!ledgerSection || !ledgerBtn) return;
+    const ledgerModal = document.getElementById('kidLedgerSection');
+    if (!ledgerModal) return;
 
-    if (kidLedgerOpen) {
-        ledgerSection.classList.add('closing');
-        setTimeout(() => {
-            ledgerSection.classList.remove('open');
-            ledgerSection.classList.remove('closing');
-        }, 300);
-        ledgerBtn.textContent = 'View Ledger';
+    if (ledgerModal.classList.contains('active')) {
+        ledgerModal.classList.remove('active');
         kidLedgerOpen = false;
     } else {
         // Close any open forms first
-        if (kidActiveForm) {
-            kidCloseForm(kidActiveForm === 'deposit' ? 'kidDepositForm' : 'kidSpendForm');
+        if (kidActiveForm === 'deposit') {
+            kidCloseDepositForm();
+        } else if (kidActiveForm === 'spend') {
+            kidCloseSpendForm();
         }
-        ledgerSection.classList.add('open');
-        ledgerBtn.textContent = 'Close Ledger';
+        ledgerModal.classList.add('active');
         kidLedgerOpen = true;
         kidRenderLedger();
     }
@@ -286,83 +367,37 @@ function kidFilterLedger(filter) {
 // FORM TOGGLE FUNCTIONS
 // ============================================
 
-function kidOpenDepositForm() {
-    // Close ledger if open
-    if (kidLedgerOpen) {
-        kidToggleLedger();
-    }
+function kidToggleInlineForm(type) {
+    const depositInline = document.getElementById('kidDepositInline');
+    const spendInline = document.getElementById('kidSpendInline');
 
-    // Toggle: if deposit form is already open, close it
-    if (kidActiveForm === 'deposit') {
-        kidCloseForm('kidDepositForm');
-        return;
-    }
-
-    // Close spend form if open
-    if (kidActiveForm === 'spend') {
-        kidCloseForm('kidSpendForm');
-        setTimeout(() => {
-            document.getElementById('kidDepositForm').classList.add('open');
-            kidActiveForm = 'deposit';
-            // Focus the amount input after form opens
-            setTimeout(() => {
-                document.getElementById('kidDepositAmount').focus();
-            }, 50);
-        }, 400);
+    if (type === 'deposit') {
+        const isOpen = depositInline && depositInline.style.display !== 'none';
+        if (spendInline) spendInline.style.display = 'none';
+        if (depositInline) {
+            depositInline.style.display = isOpen ? 'none' : 'block';
+            if (!isOpen) setTimeout(() => { const el = document.getElementById('kidDepositNote'); if (el) el.focus(); }, 50);
+        }
+        kidActiveForm = isOpen ? null : 'deposit';
+    } else if (type === 'spend') {
+        const isOpen = spendInline && spendInline.style.display !== 'none';
+        if (depositInline) depositInline.style.display = 'none';
+        if (spendInline) {
+            spendInline.style.display = isOpen ? 'none' : 'block';
+            if (!isOpen) setTimeout(() => { const el = document.getElementById('kidSpendNote'); if (el) el.focus(); }, 50);
+        }
+        kidActiveForm = isOpen ? null : 'spend';
     } else {
-        document.getElementById('kidDepositForm').classList.add('open');
-        kidActiveForm = 'deposit';
-        // Focus the amount input after form opens
-        setTimeout(() => {
-            document.getElementById('kidDepositAmount').focus();
-        }, 50);
-    }
-}
-
-function kidOpenSpendForm() {
-    // Close ledger if open
-    if (kidLedgerOpen) {
-        kidToggleLedger();
-    }
-
-    // Toggle: if spend form is already open, close it
-    if (kidActiveForm === 'spend') {
-        kidCloseForm('kidSpendForm');
-        return;
-    }
-
-    // Close deposit form if open
-    if (kidActiveForm === 'deposit') {
-        kidCloseForm('kidDepositForm');
-        setTimeout(() => {
-            document.getElementById('kidSpendForm').classList.add('open');
-            kidActiveForm = 'spend';
-            // Focus the amount input after form opens
-            setTimeout(() => {
-                document.getElementById('kidSpendAmount').focus();
-            }, 50);
-        }, 400);
-    } else {
-        document.getElementById('kidSpendForm').classList.add('open');
-        kidActiveForm = 'spend';
-        // Focus the amount input after form opens
-        setTimeout(() => {
-            document.getElementById('kidSpendAmount').focus();
-        }, 50);
-    }
-}
-
-function kidCloseForm(formId) {
-    const form = document.getElementById(formId);
-    if (!form) return;
-
-    form.classList.add('closing');
-    setTimeout(() => {
-        form.classList.remove('open');
-        form.classList.remove('closing');
+        if (depositInline) depositInline.style.display = 'none';
+        if (spendInline) spendInline.style.display = 'none';
         kidActiveForm = null;
-    }, 300);
+    }
 }
+
+function kidOpenDepositForm() { kidToggleInlineForm('deposit'); }
+function kidCloseDepositForm() { kidToggleInlineForm(null); }
+function kidOpenSpendForm() { kidToggleInlineForm('spend'); }
+function kidCloseSpendForm() { kidToggleInlineForm(null); }
 
 // ============================================
 // FORM SUBMISSION FUNCTIONS
@@ -377,7 +412,7 @@ function kidSubmitDeposit(event) {
     const amountError = document.getElementById('kidDepositAmountError');
     const noteInput = document.getElementById('kidDepositNote');
     const noteError = document.getElementById('kidDepositNoteError');
-    const btn = document.querySelector('.kid-submit-deposit');
+    const btn = event.submitter || event.target.querySelector('[type=submit]');
 
     if (!amount || amount === '$0.00' || parseFloat(amount.replace(/[$,]/g, '')) < 0.01) {
         amountInput.classList.add('error');
@@ -406,70 +441,56 @@ function kidSubmitDeposit(event) {
     btn.innerHTML = '<span class="kid-spinner"></span>';
     btn.classList.add('loading');
     btn.disabled = true;
+    const depositStart = Date.now();
 
-    // Make AJAX call to Laravel backend
     fetch('/kid/deposit', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         },
-        body: JSON.stringify({
-            amount: numAmount,
-            note: note
-        })
+        body: JSON.stringify({ amount: numAmount, note: note })
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 kidUpdateBalance(numAmount);
-
                 kidLedgerData.unshift({
-                    type: 'deposit',
-                    amount: numAmount,
-                    note: note,
+                    type: 'deposit', amount: numAmount, note: note,
                     timestamp: Math.floor(Date.now() / 1000),
                     date: new Date().toISOString().split('T')[0],
-                    parentInitiated: false,
-                    initiated_by: 'kid'
+                    parentInitiated: false, initiated_by: 'kid'
                 });
+                if (kidLedgerOpen) kidRenderLedger();
 
-                if (kidLedgerOpen) {
-                    kidRenderLedger();
-                }
-
-                btn.classList.remove('loading');
-                btn.textContent = '✓ Recorded!';
-                btn.classList.add('success');
-
+                // Ensure spinner shows for at least 1400ms
+                const remaining = Math.max(0, 1400 - (Date.now() - depositStart));
                 setTimeout(() => {
-                    const form = document.getElementById('kidDepositForm');
-                    form.classList.add('closing');
+                    btn.classList.remove('loading');
+                    btn.innerHTML = '<i class="fas fa-check"></i> Added!';
+                    btn.classList.add('success');
 
+                    // Show success for 1100ms then fade out
                     setTimeout(() => {
-                        form.classList.remove('open');
-                        form.classList.remove('closing');
-                        kidActiveForm = null;
-
-                        document.getElementById('kidDepositAmount').value = '';
-                        document.getElementById('kidDepositNote').value = '';
-                        amountError.classList.remove('show');
-                        noteError.classList.remove('show');
-                        btn.textContent = 'Record Deposit';
-                        btn.classList.remove('success');
-                        btn.disabled = false;
-                    }, 400);
-                }, 1500);
+                        const container = document.getElementById('kidDepositInline');
+                        if (container) container.classList.add('fading-out');
+                        setTimeout(() => {
+                            kidCloseDepositForm();
+                            if (container) container.classList.remove('fading-out');
+                            btn.innerHTML = '+ Record';
+                            btn.classList.remove('success');
+                            btn.disabled = false;
+                        }, 400);
+                    }, 1100);
+                }, remaining);
             }
         })
         .catch(error => {
             console.error('Error:', error);
             btn.classList.remove('loading');
-            btn.textContent = 'Error - Try Again';
+            btn.innerHTML = 'Try Again';
             btn.disabled = false;
-            setTimeout(() => {
-                btn.textContent = 'Record Deposit';
-            }, 2000);
+            setTimeout(() => { btn.innerHTML = '+ Record'; }, 2000);
         });
 }
 
@@ -482,7 +503,7 @@ function kidSubmitSpend(event) {
     const amountError = document.getElementById('kidSpendAmountError');
     const noteInput = document.getElementById('kidSpendNote');
     const noteError = document.getElementById('kidSpendNoteError');
-    const btn = document.querySelector('.kid-submit-spend');
+    const btn = event.submitter || event.target.querySelector('[type=submit]');
 
     if (!amount || amount === '$0.00' || parseFloat(amount.replace(/[$,]/g, '')) < 0.01) {
         amountInput.classList.add('error');
@@ -511,71 +532,216 @@ function kidSubmitSpend(event) {
     btn.innerHTML = '<span class="kid-spinner"></span>';
     btn.classList.add('loading');
     btn.disabled = true;
+    const spendStart = Date.now();
 
-    // Make AJAX call to Laravel backend
     fetch('/kid/spend', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         },
-        body: JSON.stringify({
-            amount: numAmount,
-            note: note
-        })
+        body: JSON.stringify({ amount: numAmount, note: note })
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 kidUpdateBalance(-numAmount);
-
                 kidLedgerData.unshift({
-                    type: 'spend',
-                    amount: -numAmount,
-                    note: note,
+                    type: 'spend', amount: -numAmount, note: note,
                     timestamp: Math.floor(Date.now() / 1000),
                     date: new Date().toISOString().split('T')[0],
-                    parentInitiated: false,
-                    initiated_by: 'kid'
+                    parentInitiated: false, initiated_by: 'kid'
                 });
+                if (kidLedgerOpen) kidRenderLedger();
 
-                if (kidLedgerOpen) {
-                    kidRenderLedger();
-                }
-
-                btn.classList.remove('loading');
-                btn.textContent = '✓ Recorded!';
-                btn.classList.add('success');
-
+                // Ensure spinner shows for at least 1400ms
+                const remaining = Math.max(0, 1400 - (Date.now() - spendStart));
                 setTimeout(() => {
-                    const form = document.getElementById('kidSpendForm');
-                    form.classList.add('closing');
+                    btn.classList.remove('loading');
+                    btn.innerHTML = '<i class="fas fa-check"></i> Recorded!';
+                    btn.classList.add('success');
 
+                    // Show success for 1100ms then fade out
                     setTimeout(() => {
-                        form.classList.remove('open');
-                        form.classList.remove('closing');
-                        kidActiveForm = null;
-
-                        document.getElementById('kidSpendAmount').value = '';
-                        document.getElementById('kidSpendNote').value = '';
-                        amountError.classList.remove('show');
-                        noteError.classList.remove('show');
-                        btn.textContent = 'Record Spend';
-                        btn.classList.remove('success');
-                        btn.disabled = false;
-                    }, 400);
-                }, 1500);
+                        const container = document.getElementById('kidSpendInline');
+                        if (container) container.classList.add('fading-out');
+                        setTimeout(() => {
+                            kidCloseSpendForm();
+                            if (container) container.classList.remove('fading-out');
+                            btn.innerHTML = '− Record';
+                            btn.classList.remove('success');
+                            btn.disabled = false;
+                        }, 400);
+                    }, 1100);
+                }, remaining);
             }
         })
         .catch(error => {
             console.error('Error:', error);
             btn.classList.remove('loading');
-            btn.textContent = 'Error - Try Again';
+            btn.innerHTML = 'Try Again';
             btn.disabled = false;
-            setTimeout(() => {
-                btn.textContent = 'Record Spend';
-            }, 2000);
+            setTimeout(() => { btn.innerHTML = '− Record'; }, 2000);
         });
+}
+
+// ============================================
+// ACTIVITY TAB RENDERING
+// ============================================
+
+let activityTabFilter = 'all';
+let activityTabTimeRange = 'all';
+let activityTabPage = 1;
+const ACTIVITY_PAGE_SIZE = 20;
+
+function kidFriendlyTime(timestamp) {
+    const now = new Date();
+    const dateObj = new Date(timestamp * 1000);
+    const todayStr = now.toDateString();
+    const dateStr = dateObj.toDateString();
+    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (dateStr === todayStr) return 'Today at ' + timeStr;
+    if (dateStr === yesterday.toDateString()) return 'Yesterday at ' + timeStr;
+    return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' + timeStr;
+}
+
+function kidActivityTypeBadge(entry) {
+    const isDenied = entry.note === 'Allowance not earned - insufficient points';
+    if (isDenied) return '<span class="kid-activity-type-badge denied">Denied</span>';
+    const isAllowance = entry.note && entry.note.toLowerCase().includes('allowance');
+    if (isAllowance && entry.type === 'deposit') return '<span class="kid-activity-type-badge allowance">Allowance</span>';
+    if (entry.type === 'deposit') return '<span class="kid-activity-type-badge deposit">Deposit</span>';
+    if (entry.type === 'spend' || entry.type === 'withdrawal') return '<span class="kid-activity-type-badge withdrawal">Spend</span>';
+    if (entry.type === 'points') return '<span class="kid-activity-type-badge points">Points</span>';
+    return '';
+}
+
+function kidActivityIcon(entry) {
+    const isDenied = entry.note === 'Allowance not earned - insufficient points';
+    if (isDenied) return '<i class="fas fa-times"></i>';
+    if (entry.type === 'points') return '<i class="fas fa-star"></i>';
+    if (entry.type === 'deposit') return '<i class="fas fa-arrow-down"></i>';
+    return '<i class="fas fa-arrow-up"></i>';
+}
+
+function kidRenderActivityTab() {
+    const container = document.getElementById('kidActivityTabList');
+    if (!container) return;
+
+    let filtered = kidLedgerData;
+
+    if (activityTabFilter !== 'all') {
+        filtered = filtered.filter(e => e.type === activityTabFilter);
+    }
+
+    const now = new Date();
+    if (activityTabTimeRange !== 'all') {
+        filtered = filtered.filter(entry => {
+            const entryDate = new Date(entry.timestamp * 1000);
+            if (activityTabTimeRange === 'week') return entryDate >= new Date(now - 7 * 86400000);
+            if (activityTabTimeRange === 'month') return entryDate >= new Date(now.getFullYear(), now.getMonth(), 1);
+            if (activityTabTimeRange === 'year') return entryDate >= new Date(now.getFullYear(), 0, 1);
+            return true;
+        });
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="kid-empty-state"><p>No transactions found for this filter.</p></div>';
+        const pag = document.getElementById('kidActivityPagination');
+        if (pag) pag.innerHTML = '';
+        const countBar = document.getElementById('kidActivityCountBar');
+        if (countBar) countBar.textContent = '';
+        return;
+    }
+
+    const totalPages = Math.ceil(filtered.length / ACTIVITY_PAGE_SIZE);
+    if (activityTabPage > totalPages) activityTabPage = totalPages;
+
+    const start = (activityTabPage - 1) * ACTIVITY_PAGE_SIZE;
+    const pageItems = filtered.slice(start, start + ACTIVITY_PAGE_SIZE);
+
+    // Update count bar
+    const countBar = document.getElementById('kidActivityCountBar');
+    if (countBar) {
+        const showStart = start + 1;
+        const showEnd = Math.min(start + ACTIVITY_PAGE_SIZE, filtered.length);
+        const label = filtered.length === 1 ? 'transaction' : 'transactions';
+        countBar.textContent = `Showing ${showStart}–${showEnd} of ${filtered.length} ${label}`;
+    }
+
+    container.innerHTML = pageItems.map(entry => {
+        const isParentInitiated = entry.parentInitiated || entry.initiated_by === 'parent';
+        const isDenied = entry.note === 'Allowance not earned - insufficient points';
+        const friendlyDate = kidFriendlyTime(entry.timestamp);
+        const badge = kidActivityTypeBadge(entry);
+        const icon = kidActivityIcon(entry);
+
+        let amountStr = '';
+        const amountClass = entry.type === 'deposit' ? 'deposit' : entry.type === 'spend' || entry.type === 'withdrawal' ? 'withdrawal' : 'points';
+        if (entry.type === 'points') {
+            amountStr = (entry.amount >= 0 ? '+' : '') + entry.amount + ' pts';
+        } else {
+            amountStr = (entry.amount >= 0 ? '+$' : '-$') + Math.abs(entry.amount).toFixed(2);
+        }
+
+        return `<div class="kid-activity-item${isParentInitiated ? ' parent-initiated' : ''}${isDenied ? ' denied-allowance' : ''}">
+            <div class="kid-activity-icon ${amountClass}">${icon}</div>
+            <div class="kid-activity-details">
+                <div class="kid-activity-note">${entry.note}${isParentInitiated ? ' <span class="kid-parent-badge">P</span>' : ''}</div>
+                <div class="kid-activity-meta">
+                    <span class="kid-activity-date">${friendlyDate}</span>
+                    ${badge}
+                </div>
+            </div>
+            <div class="kid-activity-amount ${amountClass}">${amountStr}</div>
+        </div>`;
+    }).join('');
+
+    // Render pagination
+    const pag = document.getElementById('kidActivityPagination');
+    if (pag) {
+        if (totalPages <= 1) {
+            pag.innerHTML = '';
+        } else {
+            pag.innerHTML = `
+                <div class="kid-activity-pagination">
+                    <button class="kid-activity-page-btn" onclick="kidActivityPagePrev()" ${activityTabPage <= 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i> Prev
+                    </button>
+                    <span class="kid-activity-page-info">${activityTabPage} of ${totalPages}</span>
+                    <button class="kid-activity-page-btn" onclick="kidActivityPageNext(${totalPages})" ${activityTabPage >= totalPages ? 'disabled' : ''}>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>`;
+        }
+    }
+}
+
+function kidActivityPagePrev() {
+    if (activityTabPage > 1) { activityTabPage--; kidRenderActivityTab(); }
+}
+
+function kidActivityPageNext(totalPages) {
+    if (activityTabPage < totalPages) { activityTabPage++; kidRenderActivityTab(); }
+}
+
+function kidActivityTabFilter(filter) {
+    activityTabFilter = filter;
+    activityTabPage = 1;
+    document.querySelectorAll('.kid-activity-filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    kidRenderActivityTab();
+}
+
+function kidActivityTabTimeFilter() {
+    const select = document.getElementById('kidActivityTimeFilter');
+    activityTabTimeRange = select.value;
+    activityTabPage = 1;
+    kidRenderActivityTab();
 }
 
 // ============================================
@@ -703,8 +869,11 @@ window.kidShowToast = kidShowToast;
 window.kidUpdatePointsDisplay = kidUpdatePointsDisplay;
 window.kidToggleLedger = kidToggleLedger;
 window.kidFilterLedger = kidFilterLedger;
+window.kidToggleInlineForm = kidToggleInlineForm;
 window.kidOpenDepositForm = kidOpenDepositForm;
+window.kidCloseDepositForm = kidCloseDepositForm;
 window.kidOpenSpendForm = kidOpenSpendForm;
+window.kidCloseSpendForm = kidCloseSpendForm;
 window.kidSubmitDeposit = kidSubmitDeposit;
 window.kidSubmitSpend = kidSubmitSpend;
 window.kidFormatCurrency = kidFormatCurrency;
@@ -714,3 +883,563 @@ window.kidOpenTransactionModal = kidOpenTransactionModal;
 window.kidCloseTransactionModal = kidCloseTransactionModal;
 window.kidModalFilter = kidModalFilter;
 window.kidModalTimeFilter = kidModalTimeFilter;
+window.kidUpdateBalance = kidUpdateBalance;
+window.kidSwitchTab = kidSwitchTab;
+window.kidReloadTab = function(tabName) { kidLoadedTabs.delete(tabName); kidSwitchTab(tabName); };
+window.kidRenderActivityTab = kidRenderActivityTab;
+window.kidActivityTabFilter = kidActivityTabFilter;
+window.kidActivityTabTimeFilter = kidActivityTabTimeFilter;
+window.kidActivityPagePrev = kidActivityPagePrev;
+window.kidActivityPageNext = kidActivityPageNext;
+
+// Wish card interaction functions
+let kidRequestActiveWishId = null;
+
+window.kidWishAskToBuy = function(wishId, wishName, wishPrice) {
+    kidRequestActiveWishId = wishId;
+
+    // Populate modal
+    const balance = kidBalance || 0;
+    const afterBalance = balance - wishPrice;
+
+    const nameEl = document.getElementById('kidRequestWishName');
+    const priceEl = document.getElementById('kidRequestWishPrice');
+    const balEl = document.getElementById('kidRequestCurrentBalance');
+    const afterEl = document.getElementById('kidRequestAfterBalance');
+
+    if (nameEl) nameEl.textContent = wishName;
+    if (priceEl) priceEl.textContent = '$' + parseFloat(wishPrice).toFixed(2);
+    if (balEl) balEl.textContent = '$' + parseFloat(balance).toFixed(2);
+    if (afterEl) {
+        afterEl.textContent = '$' + afterBalance.toFixed(2);
+        afterEl.style.color = afterBalance >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    const modal = document.getElementById('kidRequestPurchaseModal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.kidCloseRequestModal = function() {
+    const modal = document.getElementById('kidRequestPurchaseModal');
+    if (modal) modal.style.display = 'none';
+    kidRequestActiveWishId = null;
+};
+
+window.kidWishConfirmRequest = async function() {
+    const wishId = kidRequestActiveWishId;
+    if (!wishId) return;
+
+    const confirmBtn = document.getElementById('kidRequestConfirmBtn');
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...'; }
+
+    try {
+        const response = await fetch('/kid/wishes/' + wishId + '/request-purchase', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        const result = await response.json();
+        if (result.success) {
+            window.kidCloseRequestModal();
+            kidLoadedTabs.delete('wishes');
+            kidSwitchTab('wishes');
+        } else {
+            alert(result.message || 'Could not send request.');
+            if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Yes, Ask Parent!'; }
+        }
+    } catch (e) {
+        alert('An error occurred.');
+        if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Yes, Ask Parent!'; }
+    }
+};
+
+window.kidWishRemind = async function(wishId) {
+    const btn = document.getElementById('kidRemindBtn' + wishId);
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
+
+    try {
+        const response = await fetch('/kid/wishes/' + wishId + '/remind', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        const result = await response.json();
+        if (result.success) {
+            if (btn) { btn.innerHTML = '<i class="fas fa-check"></i> Sent!'; }
+            setTimeout(() => {
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-clock"></i> Pending'; }
+            }, 2000);
+        } else {
+            alert(result.message || 'Could not send reminder.');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-bell"></i> Remind Parent'; }
+        }
+    } catch (e) {
+        alert('An error occurred.');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-bell"></i> Remind Parent'; }
+    }
+};
+
+window.kidOpenCreateWishModal = function() {
+    const modal = document.getElementById('kidCreateWishModal');
+    if (modal) modal.classList.add('active');
+};
+
+window.kidCloseInlineWishModal = function() {
+    const modal = document.getElementById('kidCreateWishModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    const form = document.getElementById('kidInlineWishForm');
+    if (form) form.reset();
+    const errDiv = document.getElementById('kidScrapeError');
+    const partDiv = document.getElementById('kidScrapePartial');
+    const imgGroup = document.getElementById('kidWishImagePreviewGroup');
+    const imgPreview = document.getElementById('kidWishImagePreview');
+    const imgUrl = document.getElementById('kidWishScrapedImageUrl');
+    const fileName = document.getElementById('kidWishImageFileName');
+    if (errDiv) errDiv.style.display = 'none';
+    if (partDiv) partDiv.style.display = 'none';
+    if (imgGroup) imgGroup.style.display = 'none';
+    if (imgPreview) imgPreview.src = '';
+    if (imgUrl) imgUrl.value = '';
+    if (fileName) fileName.textContent = 'Choose a photo...';
+};
+
+window.kidWishPreviewFile = function(input) {
+    const imgGroup = document.getElementById('kidWishImagePreviewGroup');
+    const imgPreview = document.getElementById('kidWishImagePreview');
+    const imgUrl = document.getElementById('kidWishScrapedImageUrl');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (imgPreview) imgPreview.src = e.target.result;
+            if (imgGroup) imgGroup.style.display = 'block';
+            // Clear any previously scraped URL since we're uploading a file
+            if (imgUrl) imgUrl.value = '';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+window.kidScrapeWishUrl = async function() {
+    const urlInput = document.getElementById('kidWishUrl');
+    let url = urlInput ? urlInput.value.trim() : '';
+    if (!url) { alert('Please enter a URL first'); return; }
+    // Auto-prepend https:// if no scheme present
+    if (!/^https?:\/\//i.test(url)) { url = 'https://' + url; }
+
+    const modal = document.getElementById('kidCreateWishModal');
+    const scrapeUrl = modal ? modal.dataset.scrapeUrl : '/kid/wishes/scrape-url';
+    const btn = document.getElementById('kidScrapeBtn');
+    const errorDiv = document.getElementById('kidScrapeError');
+    const partialDiv = document.getElementById('kidScrapePartial');
+
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...'; }
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (partialDiv) partialDiv.style.display = 'none';
+
+    try {
+        const response = await fetch(scrapeUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ url })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            let found = [], missing = [];
+            const nameEl = document.getElementById('kidWishItemName');
+            const priceEl = document.getElementById('kidWishPrice');
+            const imgPreview = document.getElementById('kidWishImagePreview');
+            const imgGroup = document.getElementById('kidWishImagePreviewGroup');
+            const imgUrl = document.getElementById('kidWishScrapedImageUrl');
+            if (result.data.title && nameEl) { nameEl.value = result.data.title; found.push('name'); } else { missing.push('name'); }
+            if (result.data.price && priceEl) { priceEl.value = result.data.price; found.push('price'); } else { missing.push('price'); }
+            if (result.data.image_url && imgUrl) {
+                imgUrl.value = result.data.image_url;
+                if (imgPreview) imgPreview.src = result.data.image_url;
+                if (imgGroup) imgGroup.style.display = 'block';
+                found.push('image');
+            } else { missing.push('image'); }
+            if (missing.length > 0 && found.length > 0 && partialDiv) {
+                partialDiv.textContent = 'Found ' + found.join(', ') + '. Please fill in the remaining details.';
+                partialDiv.style.display = 'block';
+            }
+        } else {
+            if (errorDiv) { errorDiv.textContent = result.error || 'Could not auto-fill. Please enter details manually.'; errorDiv.style.display = 'block'; }
+        }
+    } catch (e) {
+        console.error('Scrape error:', e);
+        if (errorDiv) { errorDiv.textContent = 'Could not auto-fill. Please enter details manually.'; errorDiv.style.display = 'block'; }
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic"></i> Auto-fill'; }
+    }
+};
+// ============================================
+// GOAL MODAL FUNCTIONS
+// ============================================
+
+window.kidOpenCreateGoalModal = function(prefill = {}) {
+    window.dispatchEvent(new CustomEvent('kid-open-goal-modal', { detail: { mode: 'create', prefill } }));
+};
+
+window.kidOpenEditGoalModal = function(goalId) {
+    window.dispatchEvent(new CustomEvent('kid-open-goal-modal', { detail: { mode: 'edit', goalId } }));
+};
+
+// Expose as a global function so Alpine can find it via x-data="kidGoalModal()"
+// Scripts in AJAX-injected HTML don't execute, so this must be pre-registered here
+window.kidGoalModal = kidGoalModalComponent;
+
+function kidGoalModalComponent() {
+    return {
+        showModal: false,
+        isEditMode: false,
+        editGoalId: null,
+        currentGoalAmount: 0,
+        currentGoalAllocation: 0,
+        balance: 0,
+        totalAllocated: 0,
+        weeklyAllowanceAmount: 0,
+        submitting: false,
+        photoPreview: null,
+        photoFile: null,
+        showModalAddFunds: false,
+        showModalRemoveFunds: false,
+        modalAddAmount: '',
+        modalRemoveAmount: '',
+        modalAddLoading: false,
+        modalAddSuccess: false,
+        modalAddError: '',
+        modalRemoveLoading: false,
+        modalRemoveSuccess: false,
+        modalRemoveError: '',
+        scrapeError: '',
+        scrapePartial: '',
+        scrapeLoading: false,
+        formData: {
+            title: '',
+            description: '',
+            product_url: '',
+            target_amount: '',
+            auto_allocation_percentage: 0,
+        },
+
+        get weeklyAllowance() { return this.weeklyAllowanceAmount; },
+
+        get remainingAllocation() {
+            if (this.isEditMode) {
+                const other = this.totalAllocated - this.currentGoalAllocation;
+                return 100 - other - (parseFloat(this.formData.auto_allocation_percentage) || 0);
+            }
+            return 100 - this.totalAllocated - (parseFloat(this.formData.auto_allocation_percentage) || 0);
+        },
+
+        get allocationExceedsLimit() { return this.remainingAllocation < 0; },
+
+        get maxAllowedAllocation() {
+            if (this.isEditMode) {
+                return 100 - (this.totalAllocated - this.currentGoalAllocation);
+            }
+            return 100 - this.totalAllocated;
+        },
+
+        get autoAllocationAmount() {
+            if (!this.formData.auto_allocation_percentage || this.formData.auto_allocation_percentage <= 0) return 0;
+            return (this.weeklyAllowance * parseFloat(this.formData.auto_allocation_percentage)) / 100;
+        },
+
+        get weeksToComplete() {
+            if (!this.formData.target_amount || !this.autoAllocationAmount || this.autoAllocationAmount <= 0) return 0;
+            const target = parseFloat(this.formData.target_amount) || 0;
+            const current = this.isEditMode ? this.currentGoalAmount : 0;
+            const remaining = target - current;
+            if (remaining <= 0) return 0;
+            return Math.ceil(remaining / this.autoAllocationAmount);
+        },
+
+        get timeToCompleteText() {
+            if (!this.weeksToComplete) return '';
+            if (this.weeksToComplete > 51) {
+                const months = Math.round(this.weeksToComplete / 4.33);
+                return months + ' month' + (months !== 1 ? 's' : '');
+            }
+            return this.weeksToComplete + ' week' + (this.weeksToComplete !== 1 ? 's' : '');
+        },
+
+        get modalHasSufficientFunds() {
+            if (!this.modalAddAmount) return false;
+            return this.balance >= parseInt(this.modalAddAmount) / 100;
+        },
+
+        get modalHasSufficientGoalFunds() {
+            if (!this.modalRemoveAmount) return false;
+            return this.currentGoalAmount >= parseInt(this.modalRemoveAmount) / 100;
+        },
+
+        init() {
+            // Read data values from DOM attributes (set in Blade template)
+            const el = this.$el;
+            this.balance = parseFloat(el.dataset.kidBalance || 0);
+            this.totalAllocated = parseFloat(el.dataset.totalAllocated || 0);
+            this.weeklyAllowanceAmount = parseFloat(el.dataset.allowance || 0);
+
+            window.addEventListener('kid-open-goal-modal', (event) => {
+                if (event.detail.mode === 'create') {
+                    this.openCreate(event.detail.prefill || {});
+                } else if (event.detail.mode === 'edit') {
+                    this.openEdit(event.detail.goalId);
+                }
+            });
+        },
+
+        openCreate(prefill = {}) {
+            this.isEditMode = false;
+            this.editGoalId = null;
+            this.resetForm();
+            if (prefill.title) this.formData.title = prefill.title;
+            if (prefill.amount) this.formData.target_amount = prefill.amount;
+            this.showModal = true;
+        },
+
+        openEdit(goalId) {
+            this.isEditMode = true;
+            this.editGoalId = goalId;
+            this.loadGoalData(goalId);
+            this.showModal = true;
+        },
+
+        loadGoalData(goalId) {
+            fetch(`/kid/goals/${goalId}/edit-data`, {
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
+            })
+            .then(r => r.json())
+            .then(data => {
+                this.formData.title = data.title || '';
+                this.formData.description = data.description || '';
+                this.formData.product_url = data.product_url || '';
+                this.formData.target_amount = data.target_amount || '';
+                this.formData.auto_allocation_percentage = data.auto_allocation_percentage || '';
+                this.currentGoalAmount = parseFloat(data.current_amount) || 0;
+                this.currentGoalAllocation = parseFloat(data.auto_allocation_percentage) || 0;
+                if (data.photo_path) this.photoPreview = `/storage/${data.photo_path}`;
+            })
+            .catch(() => alert('Error loading goal data'));
+        },
+
+        closeModal() {
+            this.showModal = false;
+            this.resetForm();
+        },
+
+        handleModalCurrencyInput(event, type) {
+            let input = event.target.value.replace(/[^0-9]/g, '');
+            if (type === 'add') this.modalAddAmount = input;
+            else this.modalRemoveAmount = input;
+            if (input === '') { event.target.value = ''; }
+            else { event.target.value = '$' + (parseInt(input) / 100).toFixed(2); }
+        },
+
+        submitModalAddFunds() {
+            const cents = parseInt(this.modalAddAmount);
+            if (isNaN(cents) || cents <= 0) { alert('Please enter a valid amount'); return; }
+            const amount = cents / 100;
+            this.modalAddLoading = true;
+            fetch(`/kid/goals/${this.editGoalId}/add-funds`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                body: JSON.stringify({ amount })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    this.balance -= amount;
+                    this.currentGoalAmount += amount;
+                    this.modalAddLoading = false;
+                    this.modalAddSuccess = true;
+                    setTimeout(() => { this.modalAddSuccess = false; this.showModalAddFunds = false; this.modalAddAmount = ''; location.reload(); }, 1500);
+                } else { alert(data.message || 'Failed to add funds'); this.modalAddLoading = false; }
+            })
+            .catch(() => { alert('An error occurred'); this.modalAddLoading = false; });
+        },
+
+        submitModalRemoveFunds() {
+            const cents = parseInt(this.modalRemoveAmount);
+            if (isNaN(cents) || cents <= 0) { alert('Please enter a valid amount'); return; }
+            const amount = cents / 100;
+            this.modalRemoveLoading = true;
+            fetch(`/kid/goals/${this.editGoalId}/remove-funds`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                body: JSON.stringify({ amount })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    this.balance += amount;
+                    this.currentGoalAmount -= amount;
+                    this.modalRemoveLoading = false;
+                    this.modalRemoveSuccess = true;
+                    setTimeout(() => { this.modalRemoveSuccess = false; this.showModalRemoveFunds = false; this.modalRemoveAmount = ''; location.reload(); }, 1500);
+                } else { alert(data.message || 'Failed to remove funds'); this.modalRemoveLoading = false; }
+            })
+            .catch(() => { alert('An error occurred'); this.modalRemoveLoading = false; });
+        },
+
+        resetForm() {
+            this.formData = { title: '', description: '', product_url: '', target_amount: '', auto_allocation_percentage: 0 };
+            this.currentGoalAllocation = 0;
+            this.photoPreview = null;
+            this.photoFile = null;
+            this.showModalAddFunds = false;
+            this.showModalRemoveFunds = false;
+            this.modalAddAmount = '';
+            this.modalRemoveAmount = '';
+            this.scrapeError = '';
+            this.scrapePartial = '';
+            this.scrapeLoading = false;
+            this._scrapedImageUrl = null;
+        },
+
+        async scrapeGoalUrl() {
+            let url = (this.formData.product_url || '').trim();
+            if (!url) { this.scrapeError = 'Please enter a URL first'; return; }
+            if (!/^https?:\/\//i.test(url)) { url = 'https://' + url; this.formData.product_url = url; }
+
+            const form = this.$el.closest('form[data-scrape-url]') || document.querySelector('form[data-scrape-url]');
+            const scrapeUrl = form ? form.dataset.scrapeUrl : '/kid/goals/scrape-url';
+            const btn = document.getElementById('kidGoalScrapeBtn');
+
+            this.scrapeError = '';
+            this.scrapePartial = '';
+            this.scrapeLoading = true;
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...'; }
+
+            try {
+                const response = await fetch(scrapeUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ url })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    let found = [], missing = [];
+                    if (result.data.title) { this.formData.title = result.data.title; found.push('name'); } else { missing.push('name'); }
+                    if (result.data.price) { this.formData.target_amount = result.data.price; found.push('price'); } else { missing.push('price'); }
+                    if (result.data.image_url) {
+                        this.photoPreview = result.data.image_url;
+                        this.photoFile = null; // will be handled via URL on submit
+                        this._scrapedImageUrl = result.data.image_url;
+                        found.push('image');
+                    } else { missing.push('image'); }
+                    if (missing.length > 0 && found.length > 0) {
+                        this.scrapePartial = 'Found ' + found.join(', ') + '. Please fill in the remaining details.';
+                    }
+                } else {
+                    this.scrapeError = result.error || 'Could not auto-fill. Please enter details manually.';
+                }
+            } catch (e) {
+                this.scrapeError = 'Could not auto-fill. Please enter details manually.';
+            } finally {
+                this.scrapeLoading = false;
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic"></i> Auto-fill'; }
+            }
+        },
+
+        handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) this.processFile(file);
+        },
+
+        handleFileDrop(event) {
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) this.processFile(file);
+        },
+
+        processFile(file) {
+            this.photoFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => { this.photoPreview = e.target.result; };
+            reader.readAsDataURL(file);
+        },
+
+        removePhoto() {
+            this.photoPreview = null;
+            this.photoFile = null;
+            const el = document.getElementById('kidGoalPhoto');
+            if (el) el.value = '';
+        },
+
+        submitForm() {
+            if (this.submitting) return;
+            this.submitting = true;
+            const formData = new FormData();
+            formData.append('_token', document.querySelector('meta[name=csrf-token]').content);
+            formData.append('title', this.formData.title);
+            formData.append('description', this.formData.description || '');
+            formData.append('product_url', this.formData.product_url || '');
+            formData.append('target_amount', (this.formData.target_amount || '').replace(/[^0-9.]/g, ''));
+            formData.append('auto_allocation_percentage', this.formData.auto_allocation_percentage || '0');
+            if (this.photoFile) formData.append('photo', this.photoFile);
+            else if (this._scrapedImageUrl) formData.append('scraped_image_url', this._scrapedImageUrl);
+            const url = this.isEditMode ? `/kid/goals/${this.editGoalId}` : '/kid/goals';
+            if (this.isEditMode) formData.append('_method', 'PUT');
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.text().then(t => {
+                        let msg = 'Server error: ' + r.status;
+                        try { msg = JSON.parse(t).message || msg; } catch(e) {}
+                        throw new Error(msg);
+                    });
+                }
+                // Navigate to dashboard goals tab regardless of response body
+                window.location.href = '/kid/dashboard?tab=goals';
+            })
+            .catch(error => { alert(error.message); this.submitting = false; });
+        },
+
+        deleteGoal() {
+            window.dispatchEvent(new CustomEvent('kid-open-delete-goal-modal', { detail: { callback: () => this.performDelete() } }));
+        },
+
+        performDelete() {
+            fetch(`/kid/goals/${this.editGoalId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                body: JSON.stringify({ _method: 'DELETE' })
+            })
+            .then(r => {
+                if (!r.ok) return r.json().then(d => { throw new Error(d.error || d.message || 'Error'); });
+                window.location.href = '/kid/dashboard?tab=goals';
+            })
+            .catch(error => { alert(error.message || 'An error occurred. Please try again.'); });
+        },
+
+        formatCurrency(value) {
+            let numValue = value.replace(/[^0-9]/g, '');
+            if (numValue === '') return '';
+            return '$' + (parseInt(numValue) / 100).toFixed(2);
+        }
+    };
+}

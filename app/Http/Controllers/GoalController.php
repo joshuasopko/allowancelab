@@ -24,27 +24,15 @@ class GoalController extends Controller
     /**
      * Display a listing of the kid's goals (kid view)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $kid = Auth::guard('kid')->user();
-
-        $activeGoals = $kid->goals()
-            ->with('goalTransactions')
-            ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $completedGoals = $kid->goals()
-            ->with('goalTransactions')
-            ->where('status', 'redeemed')
-            ->orderBy('redeemed_at', 'desc')
-            ->get();
-
-        // Calculate total allocated percentage for active goals
-        $totalAllocated = $activeGoals->sum('auto_allocation_percentage');
-        $remainingAllocation = 100 - $totalAllocated;
-
-        return view('goals.index', compact('kid', 'activeGoals', 'completedGoals', 'totalAllocated', 'remainingAllocation'));
+        // Redirect to dashboard goals tab — goals are now managed inline on the dashboard
+        $params = array_filter([
+            'tab' => 'goals',
+            'prefill_title' => $request->get('prefill_title'),
+            'prefill_amount' => $request->get('prefill_amount'),
+        ]);
+        return redirect(route('kid.dashboard') . '?' . http_build_query($params));
     }
 
     /**
@@ -97,6 +85,7 @@ class GoalController extends Controller
             'description' => 'nullable|string|max:1000',
             'product_url' => 'nullable|url|max:500',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'scraped_image_url' => 'nullable|url',
             'target_amount' => 'required|numeric|min:0.01|max:999999.99',
             'auto_allocation_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
@@ -123,6 +112,8 @@ class GoalController extends Controller
         $photoPath = null;
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('goal-photos', 'public');
+        } elseif ($request->filled('scraped_image_url')) {
+            $photoPath = $this->urlScraper->downloadImage($request->scraped_image_url);
         }
 
         $expectedCompletionDate = null;
@@ -332,6 +323,7 @@ class GoalController extends Controller
             'description' => 'nullable|string|max:1000',
             'product_url' => 'nullable|url|max:500',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'scraped_image_url' => 'nullable|url',
             'target_amount' => 'required|numeric|min:0.01|max:999999.99',
             'auto_allocation_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
@@ -362,6 +354,11 @@ class GoalController extends Controller
                 Storage::disk('public')->delete($goal->photo_path);
             }
             $goal->photo_path = $request->file('photo')->store('goal-photos', 'public');
+        } elseif ($request->filled('scraped_image_url')) {
+            if ($goal->photo_path) {
+                Storage::disk('public')->delete($goal->photo_path);
+            }
+            $goal->photo_path = $this->urlScraper->downloadImage($request->scraped_image_url);
         }
 
         $goal->title = $request->title;

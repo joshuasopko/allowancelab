@@ -373,8 +373,8 @@
                                 <div class="item-name-cell">
                                     {{ $truncatedGoalTitle }}
                                     @if($goal->status === 'pending_redemption')
-                                        <span class="item-pending-badge" style="background: {{ $kid->color }};">
-                                            NEEDS REDEMPTION
+                                        <span class="item-pending-badge" style="background: #f59e0b;">
+                                            <i class="fas fa-clock"></i> Requested
                                         </span>
                                     @endif
                                 </div>
@@ -386,7 +386,22 @@
                                 </div>
                                 <div class="item-amount-cell" style="font-size: 13px; color: #6b7280;">${{ number_format($goal->current_amount, 2) }} of ${{ number_format($goal->target_amount, 2) }}</div>
 
-                                @if(in_array($goal->status, ['ready_to_redeem', 'pending_redemption']))
+                                @if($goal->status === 'pending_redemption')
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+                                        <form id="approve-form-{{ $goal->id }}" action="{{ route('parent.goals.approve-redemption', $goal) }}" method="POST" style="margin: 0;">
+                                            @csrf
+                                            <button type="button" onclick="showApproveConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ addslashes($goal->title) }}', '{{ number_format($goal->current_amount, 2) }}')" class="btn-category-action" style="background: #10b981;">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('parent.goals.deny-redemption', $goal) }}" method="POST" style="margin: 0;">
+                                            @csrf
+                                            <button type="submit" class="btn-category-action" style="background: #ef4444;" onclick="return confirm('Deny redemption? Goal will remain active for {{ $kid->name }}.');">
+                                                <i class="fas fa-times"></i> Deny
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($goal->status === 'ready_to_redeem')
                                     <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
                                         <form id="redeem-form-{{ $goal->id }}" action="{{ route('parent.goals.redeem', $goal) }}" method="POST" style="margin: 0;">
                                             @csrf
@@ -395,7 +410,7 @@
                                             </button>
                                         </form>
                                         <a href="{{ route('parent.goals.show', $goal) }}" class="btn-category-action" style="background: #78909c;">
-                                            View Goal
+                                            View
                                         </a>
                                     </div>
                                 @else
@@ -600,6 +615,14 @@
             document.getElementById('redeemGoalTitle').textContent = goalTitle;
             document.getElementById('redeemConfirmMessage').textContent =
                 `This confirms that ${kidName} has received their item. The funds ($${amount}) will remain locked in the goal as a permanent record of the purchase.`;
+            document.getElementById('redeemConfirmModal').style.display = 'flex';
+        }
+
+        function showApproveConfirmation(goalId, kidName, goalTitle, amount) {
+            currentRedeemFormId = 'approve-form-' + goalId;
+            document.getElementById('redeemGoalTitle').textContent = goalTitle;
+            document.getElementById('redeemConfirmMessage').textContent =
+                `${kidName} requested this goal! Approving confirms they have received their item. The funds ($${amount}) will remain locked in the goal as a permanent record.`;
             document.getElementById('redeemConfirmModal').style.display = 'flex';
         }
 

@@ -109,6 +109,64 @@
             border-radius: 12px;
             transition: background-color 0.2s ease;
         }
+
+        /* Card Grid — mirrors kid dashboard */
+        .parent-goals-card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            align-items: stretch;
+        }
+        @media (max-width: 1100px) {
+            .parent-goals-card-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 800px) {
+            .parent-goals-card-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 540px) {
+            .parent-goals-card-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Reuse kid card styles */
+        .kid-goal-card { background: white; border-radius: 16px; border: 1.5px solid #e5e7eb; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: box-shadow 0.2s, transform 0.2s; display: flex; flex-direction: column; }
+        .kid-goal-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .kid-goal-card-ready { border-color: #10b981; box-shadow: 0 2px 8px rgba(16,185,129,0.15); }
+        .kid-goal-card-image { position: relative; height: 140px; overflow: hidden; flex-shrink: 0; }
+        .kid-goal-card-image img { width: 100%; height: 100%; object-fit: cover; }
+        .kid-goal-card-icon-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+        .kid-goal-card-edit-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.9); border: none; border-radius: 8px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; color: #6b7280; box-shadow: 0 1px 4px rgba(0,0,0,0.15); transition: background 0.15s; }
+        .kid-goal-card-edit-btn:hover { background: white; color: #374151; }
+        .kid-goal-card-status-badge { position: absolute; top: 8px; left: 8px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .kid-goal-card-status-ready { background: #10b981; color: white; }
+        .kid-goal-card-status-pending { background: #f59e0b; color: white; }
+        .kid-goal-card-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .kid-goal-card-title { font-size: 15px; font-weight: 700; color: #1f2937; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
+        .kid-goal-card-progress-section { margin-top: 4px; }
+        .kid-goal-card-amounts { display: flex; align-items: baseline; gap: 2px; margin-bottom: 10px; }
+        .kid-goal-card-saved { font-size: 22px; font-weight: 800; }
+        .kid-goal-card-target { font-size: 14px; color: #9ca3af; }
+        .kid-goal-card-pct { margin-left: auto; font-size: 14px; font-weight: 700; color: #9ca3af; }
+        .kid-goal-card-bar { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }
+        .kid-goal-card-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+        .kid-goal-card-auto { font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
+        .kid-goal-card-actions { margin-top: auto; padding-top: 8px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+        .kid-goal-card-add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; color: white; cursor: pointer; width: 100%; justify-content: center; transition: opacity 0.15s; }
+        .kid-goal-card-add-btn:hover { opacity: 0.88; }
+        .kid-goal-card-redeem-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; color: white; cursor: pointer; width: 100%; justify-content: center; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 2px 8px rgba(16,185,129,0.35); transition: opacity 0.15s, transform 0.1s; }
+        .kid-goal-card-redeem-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .kid-goal-card-view-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #374151; background: #f3f4f6; text-decoration: none; box-sizing: border-box; transition: background 0.15s; }
+        .kid-goal-card-view-btn:hover { background: #e5e7eb; }
+        .kid-goal-card-add-form { display: flex; flex-direction: column; gap: 4px; overflow: hidden; max-height: 0; padding-top: 0; opacity: 0; transition: max-height 0.35s ease, opacity 0.3s ease, padding-top 0.35s ease; pointer-events: none; }
+        .kid-goal-add-open { max-height: 80px; padding-top: 8px; opacity: 1; pointer-events: auto; }
+        .kid-goal-add-row { display: flex; gap: 6px; align-items: center; }
+        .kid-goal-card-add-input { flex: 1; padding: 7px 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-family: inherit; min-width: 0; }
+        .kid-goal-card-add-input:focus { outline: none; }
+        .kid-goal-card-add-input.input-error { border-color: #ef4444; }
+        .kid-goal-card-add-submit { padding: 7px 14px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .kid-goal-card-add-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .kid-goal-card-add-cancel { padding: 7px 9px; border-radius: 8px; border: none; background: #e5e7eb; color: #6b7280; cursor: pointer; font-size: 13px; flex-shrink: 0; line-height: 1; }
+
+        [x-cloak] { display: none !important; }
     </style>
 
     <!-- Simple Header -->
@@ -158,7 +216,7 @@
         <!-- Active Tab Content -->
         <div x-show="activeTab === 'active'" x-cloak>
             <!-- Header with Add Button -->
-            <div class="goals-header">
+            <div class="goals-header" style="margin-bottom: 20px;">
                 <div class="goals-header-left">
                     <div class="goals-header-funds" style="color: {{ $kid->color }};">
                         <i class="fas fa-wallet"></i> ${{ number_format($kid->balance, 2) }} available
@@ -167,415 +225,217 @@
                 <button class="btn-add-goal" onclick="openCreateGoalModal()">+ New Goal</button>
             </div>
 
-            <!-- Active Goals Grid -->
-    @if($activeGoals->count() > 0)
-        <div class="goals-grid">
-            @foreach($activeGoals as $goal)
-                @php
-                    $progress = $goal->target_amount > 0 ? ($goal->current_amount / $goal->target_amount) * 100 : 0;
-                    $progress = min($progress, 100);
-                    $isComplete = $progress >= 100;
-                    $circumference = 2 * pi() * 54;
-                    $offset = $circumference - ($progress / 100) * $circumference;
-                @endphp
+            @if($activeGoals->count() > 0)
+                <div class="parent-goals-card-grid">
+                    @foreach($activeGoals as $goal)
+                        @php
+                            $progress = $goal->target_amount > 0 ? min(100, ($goal->current_amount / $goal->target_amount) * 100) : 0;
+                            $isPending = $goal->status === 'pending_redemption';
+                            $isReady = $goal->status === 'ready_to_redeem' || ($progress >= 100 && !$isPending);
+                            $accentColor = ($isReady || $isPending) ? '#10b981' : $kid->color;
+                        @endphp
+                        <div class="kid-goal-card {{ $isReady ? 'kid-goal-card-ready' : '' }} {{ $isPending ? 'kid-goal-card-ready' : '' }}"
+                             x-data="{
+                                 showAdd: false, addAmount: '', adding: false, addSuccess: false,
+                                 showRemove: false, removeAmount: '', removing: false, removeSuccess: false,
+                                 addError: '', removeError: '',
+                                 goalCurrent: {{ $goal->current_amount }},
+                                 goalTarget: {{ $goal->target_amount }},
+                                 get addCents() { const v = this.addAmount.replace(/[^0-9]/g,''); return v===''?0:parseInt(v); },
+                                 get addDollars() { return this.addCents/100; },
+                                 get removeCents() { const v = this.removeAmount.replace(/[^0-9]/g,''); return v===''?0:parseInt(v); },
+                                 get removeDollars() { return this.removeCents/100; },
+                                 get remaining() { return Math.max(0, this.goalTarget - this.goalCurrent); },
+                                 get isOverLimit() { return this.addDollars > this.remaining && this.addDollars > 0; },
+                             }"
+                             data-goal-id="{{ $goal->id }}">
 
-                <div class="goal-card {{ $isComplete ? 'ready-to-redeem' : '' }}"
-                     x-data="{
-                         showAddFunds: false,
-                         addFundsAmount: '',
-                         addFundsError: '',
-                         addFundsLoading: false,
-                         addFundsSuccess: false,
-                         showRemoveFunds: false,
-                         removeFundsAmount: '',
-                         removeFundsError: '',
-                         removeFundsLoading: false,
-                         removeFundsSuccess: false,
-                         balance: {{ $kid->balance }},
-                         currentAmount: {{ $goal->current_amount }},
-                         targetAmount: {{ $goal->target_amount }}
-                     }"
-                     data-goal-id="{{ $goal->id }}">
-                    <!-- Card Header: Icon, Title, Actions -->
-                    <div class="goal-card-header">
-                        @if($goal->photo_path)
-                            <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
-                        @else
-                            <div class="goal-icon goal-icon-placeholder">
-                                <i class="fas fa-bullseye"></i>
+                            {{-- Card Image / Banner --}}
+                            <div class="kid-goal-card-image" style="background: {{ $accentColor }}18;">
+                                @if($goal->photo_path)
+                                    <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}">
+                                @else
+                                    <div class="kid-goal-card-icon-placeholder">
+                                        <i class="fas fa-bullseye" style="color: {{ $accentColor }};"></i>
+                                    </div>
+                                @endif
+                                {{-- Edit button --}}
+                                <button onclick="openEditGoalModal({{ $goal->id }})" class="kid-goal-card-edit-btn" title="Edit Goal">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                {{-- Status badge --}}
+                                @if($isPending)
+                                    <div class="kid-goal-card-status-badge kid-goal-card-status-pending">
+                                        <i class="fas fa-clock"></i> Requested
+                                    </div>
+                                @elseif($isReady)
+                                    <div class="kid-goal-card-status-badge kid-goal-card-status-ready">
+                                        <i class="fas fa-check-circle"></i> Ready!
+                                    </div>
+                                @endif
                             </div>
-                        @endif
 
-                        <div class="goal-title-section">
-                            <h3 class="goal-title">{{ $goal->title }}</h3>
-                            @if($goal->product_url)
-                                <a href="{{ $goal->product_url }}" target="_blank" class="goal-link">
-                                    <i class="fas fa-external-link-alt"></i> View on {{ parse_url($goal->product_url, PHP_URL_HOST) }}
-                                </a>
-                            @endif
-                        </div>
+                            {{-- Card Body --}}
+                            <div class="kid-goal-card-body">
+                                <div class="kid-goal-card-title">{{ $goal->title }}</div>
+                                @if($goal->product_url)
+                                    <a href="{{ $goal->product_url }}" target="_blank" style="font-size:11px; color:#9ca3af; text-decoration:none; display:flex; align-items:center; gap:3px; margin-top:-4px;">
+                                        <i class="fas fa-external-link-alt"></i> {{ parse_url($goal->product_url, PHP_URL_HOST) }}
+                                    </a>
+                                @endif
 
-                        <!-- Goal Complete Overlay for Parent -->
-                        @if($isComplete)
-                            <div class="goal-complete-overlay">
-                                <div class="goal-complete-badge">
-                                    <i class="fas fa-check-circle"></i> GOAL COMPLETE!
+                                {{-- Progress --}}
+                                <div class="kid-goal-card-progress-section">
+                                    <div class="kid-goal-card-amounts">
+                                        <span class="kid-goal-card-saved" style="color: {{ $accentColor }};">${{ number_format($goal->current_amount, 2) }}</span>
+                                        <span class="kid-goal-card-target"> of ${{ number_format($goal->target_amount, 2) }}</span>
+                                        <span class="kid-goal-card-pct">{{ round($progress) }}%</span>
+                                    </div>
+                                    <div class="kid-goal-card-bar">
+                                        <div class="kid-goal-card-bar-fill" style="width: {{ $progress }}%; background: {{ $accentColor }};"></div>
+                                    </div>
                                 </div>
-                                <form id="redeem-form-{{ $goal->id }}" action="{{ route('parent.goals.redeem', $goal) }}" method="POST">
-                                    @csrf
-                                    <button type="button" onclick="showRedeemConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ $goal->title }}', '{{ number_format($goal->current_amount, 2) }}')" class="btn-ask-redeem-subtle">
-                                        <i class="fas fa-gift"></i> Redeem Goal
-                                    </button>
+
+                                @if($goal->auto_allocation_percentage > 0)
+                                    <div class="kid-goal-card-auto">
+                                        <i class="fas fa-sync-alt"></i> {{ $goal->auto_allocation_percentage }}% auto-saved from allowance
+                                    </div>
+                                @endif
+
+                                {{-- Actions --}}
+                                <div class="kid-goal-card-actions">
+                                    @if($isPending)
+                                        {{-- Pending: Approve / Deny --}}
+                                        <div style="display: flex; gap: 8px;">
+                                            <form id="approve-form-{{ $goal->id }}" action="{{ route('parent.goals.approve-redemption', $goal) }}" method="POST" style="flex:1; margin:0;">
+                                                @csrf
+                                                <button type="button"
+                                                    onclick="showApproveConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ addslashes($goal->title) }}', '{{ number_format($goal->current_amount, 2) }}')"
+                                                    style="width:100%; padding:10px; background:#10b981; color:white; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('parent.goals.deny-redemption', $goal) }}" method="POST" style="flex:1; margin:0;">
+                                                @csrf
+                                                <button type="submit"
+                                                    onclick="return confirm('Deny redemption? Goal will remain active for {{ $kid->name }}.');"
+                                                    style="width:100%; padding:10px; background:#ef4444; color:white; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">
+                                                    <i class="fas fa-times"></i> Deny
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <div style="font-size:12px; color:#f59e0b; font-weight:600; text-align:center; padding: 2px 0;">
+                                            <i class="fas fa-clock"></i> {{ $kid->name }} requested fulfillment
+                                        </div>
+                                    @elseif($isReady)
+                                        {{-- Ready but not yet requested: parent can redeem directly --}}
+                                        <form id="redeem-form-{{ $goal->id }}" action="{{ route('parent.goals.redeem', $goal) }}" method="POST" style="margin:0;">
+                                            @csrf
+                                            <button type="button"
+                                                onclick="showRedeemConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ addslashes($goal->title) }}', '{{ number_format($goal->current_amount, 2) }}')"
+                                                class="kid-goal-card-redeem-btn">
+                                                <i class="fas fa-gift"></i> Redeem Goal
+                                            </button>
+                                        </form>
+                                    @else
+                                        {{-- Active: Add / Remove Funds --}}
+                                        <button @click="showAdd = !showAdd; showRemove = false;" class="kid-goal-card-add-btn" style="background: {{ $kid->color }};">
+                                            <i class="fas fa-plus"></i> Add Funds
+                                        </button>
+                                        <button @click="showRemove = !showRemove; showAdd = false;"
+                                            style="background:none; border:none; font-size:12px; color:#9ca3af; font-weight:600; cursor:pointer; padding:2px 0; text-align:center;">
+                                            Remove Funds
+                                        </button>
+                                    @endif
+
+                                    <a href="{{ route('parent.goals.show', $goal) }}" class="kid-goal-card-view-btn">
+                                        <i class="fas fa-eye"></i> View Goal
+                                    </a>
+                                </div>
+
+                                {{-- Add Funds inline form --}}
+                                @if($goal->status === 'active')
+                                <form x-ref="addForm{{ $goal->id }}"
+                                      :class="showAdd ? 'kid-goal-card-add-form kid-goal-add-open' : 'kid-goal-card-add-form'"
+                                      @submit.prevent="
+                                        if (!addAmount || isOverLimit) return;
+                                        adding = true; addError = '';
+                                        const amt = addDollars;
+                                        fetch('{{ route('parent.goals.add-funds', $goal) }}', {
+                                            method:'POST',
+                                            headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+                                            body:JSON.stringify({amount: amt})
+                                        }).then(r=>r.json()).then(d=>{
+                                            if(d.success){ addSuccess=true; setTimeout(()=>window.location.reload(), 1200); }
+                                            else { adding=false; addError=d.message||'Error'; }
+                                        }).catch(()=>{ adding=false; addError='An error occurred.'; });
+                                      ">
+                                    <div class="kid-goal-add-row">
+                                        <input type="text" x-model="addAmount"
+                                               @input="let v=addAmount.replace(/[^0-9]/g,''); addAmount=v===''?'':'$'+(parseInt(v)/100).toFixed(2);"
+                                               placeholder="$0.00" class="kid-goal-card-add-input" :class="isOverLimit ? 'input-error' : ''">
+                                        <button type="submit" class="kid-goal-card-add-submit"
+                                            :style="addSuccess ? 'background:#10b981' : (isOverLimit ? 'background:#ef4444' : 'background:{{ $kid->color }}')"
+                                            :disabled="adding || addSuccess || isOverLimit || !addDollars">
+                                            <span x-show="!adding && !addSuccess">Add</span>
+                                            <span x-show="adding && !addSuccess" x-cloak><i class="fas fa-spinner fa-spin" style="font-size:11px;"></i></span>
+                                            <span x-show="addSuccess" x-cloak><i class="fas fa-check"></i></span>
+                                        </button>
+                                        <button type="button" @click="showAdd=false;addAmount='';addError='';" class="kid-goal-card-add-cancel"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div x-show="addError" x-cloak style="font-size:11px; color:#dc2626; font-weight:600; padding:0 2px;" x-text="addError"></div>
+                                    <div x-show="isOverLimit && !addError" x-cloak style="font-size:11px; color:#dc2626; font-weight:600; padding:0 2px;">
+                                        Max $<span x-text="remaining.toFixed(2)"></span> to complete
+                                    </div>
                                 </form>
+
+                                {{-- Remove Funds inline form --}}
+                                <form :class="showRemove ? 'kid-goal-card-add-form kid-goal-add-open' : 'kid-goal-card-add-form'"
+                                      @submit.prevent="
+                                        if (!removeAmount) return;
+                                        removing = true; removeError = '';
+                                        const amt = removeDollars;
+                                        fetch('{{ route('parent.goals.remove-funds', $goal) }}', {
+                                            method:'POST',
+                                            headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+                                            body:JSON.stringify({amount: amt})
+                                        }).then(r=>r.json()).then(d=>{
+                                            if(d.success){ removeSuccess=true; setTimeout(()=>window.location.reload(), 1200); }
+                                            else { removing=false; removeError=d.message||'Error'; }
+                                        }).catch(()=>{ removing=false; removeError='An error occurred.'; });
+                                      ">
+                                    <div class="kid-goal-add-row">
+                                        <input type="text" x-model="removeAmount"
+                                               @input="let v=removeAmount.replace(/[^0-9]/g,''); removeAmount=v===''?'':'$'+(parseInt(v)/100).toFixed(2);"
+                                               placeholder="$0.00" class="kid-goal-card-add-input">
+                                        <button type="submit" class="kid-goal-card-add-submit"
+                                            :style="removeSuccess ? 'background:#10b981' : 'background:#ef4444'"
+                                            :disabled="removing || removeSuccess || !removeDollars">
+                                            <span x-show="!removing && !removeSuccess">Remove</span>
+                                            <span x-show="removing && !removeSuccess" x-cloak><i class="fas fa-spinner fa-spin" style="font-size:11px;"></i></span>
+                                            <span x-show="removeSuccess" x-cloak><i class="fas fa-check"></i></span>
+                                        </button>
+                                        <button type="button" @click="showRemove=false;removeAmount='';removeError='';" class="kid-goal-card-add-cancel"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div x-show="removeError" x-cloak style="font-size:11px; color:#dc2626; font-weight:600; padding:0 2px;" x-text="removeError"></div>
+                                </form>
+                                @endif
                             </div>
-                        @endif
-
-                        <div class="goal-actions" @if($isComplete) style="display: none;" @endif>
-                            @if($goal->status === 'pending_redemption')
-                                <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
-                                    <div class="btn-pending-redemption" style="text-align: center; padding: 8px; background: #fff3cd; color: #856404; border-radius: 8px; font-size: 12px; font-weight: 600;">
-                                        <i class="fas fa-clock"></i> {{ $kid->name }} Requested Redemption
-                                    </div>
-                                    <div style="display: flex; gap: 8px;">
-                                        <form id="approve-form-{{ $goal->id }}" action="{{ route('parent.goals.approve-redemption', $goal) }}" method="POST" style="flex: 1;">
-                                            @csrf
-                                            <button type="button" onclick="showApproveConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ $goal->title }}', '{{ number_format($goal->current_amount, 2) }}')" class="goal-btn-approve" style="width: 100%; padding: 8px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
-                                                <i class="fas fa-check"></i> Approve
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('parent.goals.deny-redemption', $goal) }}" method="POST" style="flex: 1;">
-                                            @csrf
-                                            <button type="submit" class="goal-btn-deny" onclick="return confirm('Deny redemption? Goal will remain active for {{ $kid->name }}.');" style="width: 100%; padding: 8px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
-                                                <i class="fas fa-times"></i> Deny
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            @else
-                                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
-                                    <button @click="showAddFunds = !showAddFunds; showRemoveFunds = false; $nextTick(() => { if(showAddFunds) $refs.addFundsInput.focus(); })"
-                                            class="btn-add-funds"
-                                            style="background-color: {{ $kid->color }};">
-                                        + Add Funds
-                                    </button>
-                                    <button @click="showRemoveFunds = !showRemoveFunds; showAddFunds = false; $nextTick(() => { if(showRemoveFunds) $refs.removeFundsInput.focus(); })"
-                                            class="btn-remove-funds-link">
-                                        Remove Funds
-                                    </button>
-                                </div>
-                            @endif
                         </div>
-                    </div>
-
-                    <!-- Inline Add Funds Form -->
-                    <div x-show="showAddFunds" x-collapse class="goal-inline-add-funds">
-                        <form @submit.prevent="submitAddFunds{{ $goal->id }}()" class="goal-inline-form">
-                            <input type="text"
-                                   @input="handleAddFundsInput($event)"
-                                   placeholder="$0.00"
-                                   class="goal-inline-input"
-                                   x-ref="addFundsInput"
-                                   x-model="addFundsAmount"
-                                   autocomplete="off"
-                                   inputmode="decimal">
-
-                            <button type="submit"
-                                    class="goal-inline-btn-submit"
-                                    style="background-color: {{ $kid->color }};"
-                                    :disabled="addFundsLoading || addFundsSuccess">
-                                <span x-show="!addFundsLoading && !addFundsSuccess">+ Add</span>
-                                <span x-show="addFundsLoading && !addFundsSuccess">
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                </span>
-                                <span x-show="addFundsSuccess">
-                                    <i class="fas fa-check"></i>
-                                </span>
-                            </button>
-                        </form>
-
-                        <div x-show="addFundsError" class="goal-inline-error" x-text="addFundsError"></div>
-                    </div>
-
-                    <!-- Inline Remove Funds Form -->
-                    <div x-show="showRemoveFunds" x-collapse class="goal-inline-add-funds">
-                        <form @submit.prevent="submitRemoveFunds{{ $goal->id }}()" class="goal-inline-form">
-                            <input type="text"
-                                   @input="handleRemoveFundsInput($event)"
-                                   placeholder="$0.00"
-                                   class="goal-inline-input"
-                                   x-ref="removeFundsInput"
-                                   x-model="removeFundsAmount"
-                                   autocomplete="off"
-                                   inputmode="decimal">
-
-                            <button type="submit"
-                                    class="goal-inline-btn-submit"
-                                    style="background-color: #ef4444;"
-                                    :disabled="removeFundsLoading || removeFundsSuccess">
-                                <span x-show="!removeFundsLoading && !removeFundsSuccess">Remove</span>
-                                <span x-show="removeFundsLoading && !removeFundsSuccess">
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                </span>
-                                <span x-show="removeFundsSuccess">
-                                    <i class="fas fa-check"></i>
-                                </span>
-                            </button>
-                        </form>
-
-                        <div x-show="removeFundsError" class="goal-inline-error" x-text="removeFundsError"></div>
-                    </div>
-
-                    <!-- Progress Section with Flask Beaker -->
-                    <div class="goal-progress-section" style="@if($isComplete) opacity: 0.3; @endif">
-                        <!-- Left Column: Completion Message -->
-                        <div class="goal-progress-message">
-                            <div>{{ $kid->name }} is</div>
-                            <div style="font-weight: 700; color: {{ $isComplete ? '#10b981' : $kid->color }};">{{ number_format($progress, 0) }}% completed</div>
-                            <div>to their goal!</div>
-                        </div>
-
-                        <!-- Center Column: Flask Circle -->
-                        <div class="goal-beaker-circle">
-                            <svg viewBox="0 0 100 100" class="beaker-svg">
-                                <!-- Background circle -->
-                                <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"/>
-                                <!-- Progress circle -->
-                                <circle
-                                    cx="50"
-                                    cy="50"
-                                    r="45"
-                                    fill="none"
-                                    stroke="{{ $isComplete ? '#10b981' : $kid->color }}"
-                                    stroke-width="8"
-                                    stroke-dasharray="{{ 2 * 3.14159 * 45 }}"
-                                    stroke-dashoffset="{{ 2 * 3.14159 * 45 * (1 - $progress / 100) }}"
-                                    transform="rotate(-90 50 50)"
-                                    class="beaker-progress"
-                                />
-                                <!-- Flask SVG in center (20% larger) -->
-                                <g transform="translate(50, 50) scale(1.2)">
-                                    <!-- Define clipping path for liquid -->
-                                    <defs>
-                                        <clipPath id="beaker-clip-{{ $goal->id }}">
-                                            <!-- Flask outline path for clipping -->
-                                            <path d="M -4,-15 L -4,-5 L -12,10 Q -12,13 -9,13 L 9,13 Q 12,13 12,10 L 4,-5 L 4,-15 Q 4,-16 0,-16 Q -4,-16 -4,-15 Z"/>
-                                        </clipPath>
-                                    </defs>
-
-                                    <!-- Liquid fill (clipped to flask shape) -->
-                                    <g clip-path="url(#beaker-clip-{{ $goal->id }})">
-                                        <rect
-                                            x="-12"
-                                            y="{{ 13 - (29 * $progress / 100) }}"
-                                            width="24"
-                                            height="29"
-                                            fill="{{ $isComplete ? '#10b981' : $kid->color }}"
-                                        />
-                                    </g>
-
-                                    <!-- Flask outline -->
-                                    <path
-                                        d="M -4,-15 L -4,-5 L -12,10 Q -12,13 -9,13 L 9,13 Q 12,13 12,10 L 4,-5 L 4,-15 Q 4,-16 0,-16 Q -4,-16 -4,-15 Z"
-                                        fill="none"
-                                        stroke="#DBD8D7"
-                                        stroke-width="2.5"
-                                    />
-
-                                    <!-- Measurement lines on flask -->
-                                    <line x1="-6.5" y1="2" x2="-4" y2="2" stroke="#DBD8D7" stroke-width="1.5"/>
-                                    <line x1="-8" y1="5" x2="-4.5" y2="5" stroke="#DBD8D7" stroke-width="1.5"/>
-                                    <line x1="-10" y1="8" x2="-6" y2="8" stroke="#DBD8D7" stroke-width="1.5"/>
-                                </g>
-                            </svg>
-                        </div>
-
-                        <!-- Right Column: Amount Display -->
-                        <div class="goal-progress-amount">
-                            <div class="goal-current-amount">${{ number_format($goal->current_amount, 2) }}</div>
-                            <div class="goal-target-amount">of ${{ number_format($goal->target_amount, 2) }}</div>
-                            @if(!$isComplete)
-                                <div class="goal-amount-remaining" style="color: {{ $kid->color }};">${{ number_format($goal->target_amount - $goal->current_amount, 2) }} to complete</div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- See Details Link -->
-                    <div class="goal-see-details-container">
-                        <button onclick="window.location='{{ route('parent.goals.show', $goal) }}'" class="goal-see-details" style="color: {{ $isComplete ? '#10b981' : $kid->color }};">
-                            See Details
-                        </button>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
-    @else
-        <div class="goals-empty-state">
-            <i class="fas fa-bullseye"></i>
-            @if($pastGoals->count() > 0)
-                <p>No active goals right now!</p>
-                <button class="btn-add-goal" onclick="openCreateGoalModal()">Create New Goal</button>
             @else
-                <p>{{ $kid->name }} hasn't created any goals yet!</p>
-                <button class="btn-add-goal" onclick="openCreateGoalModal()">Create First Goal</button>
+                <div class="goals-empty-state">
+                    <i class="fas fa-bullseye"></i>
+                    @if($pastGoals->count() > 0)
+                        <p>No active goals right now!</p>
+                        <button class="btn-add-goal" onclick="openCreateGoalModal()">Create New Goal</button>
+                    @else
+                        <p>{{ $kid->name }} hasn't created any goals yet!</p>
+                        <button class="btn-add-goal" onclick="openCreateGoalModal()">Create First Goal</button>
+                    @endif
+                </div>
             @endif
-        </div>
-    @endif
-
-    <script>
-        // Handle currency input formatting
-        function handleAddFundsInput(event) {
-            const input = event.target;
-            let value = input.value.replace(/[^0-9]/g, '');
-
-            if (value === '') {
-                input.value = '';
-                return;
-            }
-
-            const numValue = parseInt(value);
-            const dollars = Math.floor(numValue / 100);
-            const cents = numValue % 100;
-            input.value = `$${dollars}.${cents.toString().padStart(2, '0')}`;
-        }
-
-        @foreach($activeGoals as $goal)
-        function submitAddFunds{{ $goal->id }}() {
-            const card = document.querySelector('[data-goal-id="{{ $goal->id }}"]');
-            const alpineData = Alpine.$data(card);
-
-            const amountInCents = parseInt(alpineData.addFundsAmount.replace(/[^0-9]/g, ''));
-            if (isNaN(amountInCents) || amountInCents <= 0) {
-                alpineData.addFundsError = 'Please enter a valid amount';
-                return;
-            }
-
-            const amountInDollars = amountInCents / 100;
-
-            // Check if user has sufficient funds
-            if (amountInDollars > alpineData.balance) {
-                alpineData.addFundsError = 'Insufficient funds available';
-                return;
-            }
-
-            const amountNeeded = alpineData.targetAmount - alpineData.currentAmount;
-
-            // Check if amount exceeds what's needed to complete the goal
-            if (amountInDollars > (amountNeeded + 0.001)) {
-                alpineData.addFundsError = `You only need $${amountNeeded.toFixed(2)} to complete this goal!`;
-                return;
-            }
-
-            // Clear error and show spinner
-            alpineData.addFundsError = '';
-            alpineData.addFundsLoading = true;
-
-            fetch('{{ route('parent.goals.add-funds', $goal) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ amount: amountInDollars })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show spinner for 1.75 seconds
-                    setTimeout(() => {
-                        alpineData.addFundsLoading = false;
-                        alpineData.addFundsSuccess = true;
-
-                        // Show checkmark for 1.5 seconds, then reload
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
-                    }, 1750);
-                } else {
-                    alpineData.addFundsLoading = false;
-                    alpineData.addFundsError = data.message || 'Failed to add funds';
-                }
-            })
-            .catch(error => {
-                alpineData.addFundsLoading = false;
-                alpineData.addFundsError = 'An error occurred. Please try again.';
-                console.error('Error:', error);
-            });
-        }
-        @endforeach
-
-        // Handle remove funds input formatting
-        function handleRemoveFundsInput(event) {
-            const input = event.target;
-            let value = input.value.replace(/[^0-9]/g, '');
-
-            if (value === '') {
-                input.value = '';
-                return;
-            }
-
-            const numValue = parseInt(value);
-            const dollars = Math.floor(numValue / 100);
-            const cents = numValue % 100;
-            input.value = `$${dollars}.${cents.toString().padStart(2, '0')}`;
-        }
-
-        @foreach($activeGoals as $goal)
-        function submitRemoveFunds{{ $goal->id }}() {
-            const card = document.querySelector('[data-goal-id="{{ $goal->id }}"]');
-            const alpineData = Alpine.$data(card);
-
-            const amountInCents = parseInt(alpineData.removeFundsAmount.replace(/[^0-9]/g, ''));
-            if (isNaN(amountInCents) || amountInCents <= 0) {
-                alpineData.removeFundsError = 'Please enter a valid amount';
-                return;
-            }
-
-            const amountInDollars = amountInCents / 100;
-
-            // Check if goal has sufficient funds
-            if (amountInDollars > alpineData.currentAmount) {
-                alpineData.removeFundsError = `Only $${alpineData.currentAmount.toFixed(2)} available in this goal`;
-                return;
-            }
-
-            // Clear error and show spinner
-            alpineData.removeFundsError = '';
-            alpineData.removeFundsLoading = true;
-
-            fetch('{{ route('parent.goals.remove-funds', $goal) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ amount: amountInDollars })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show spinner for 1.75 seconds
-                    setTimeout(() => {
-                        alpineData.removeFundsLoading = false;
-                        alpineData.removeFundsSuccess = true;
-
-                        // Show checkmark for 1.5 seconds, then reload
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
-                    }, 1750);
-                } else {
-                    alpineData.removeFundsLoading = false;
-                    alpineData.removeFundsError = data.message || 'Failed to remove funds';
-                }
-            })
-            .catch(error => {
-                alpineData.removeFundsLoading = false;
-                alpineData.removeFundsError = 'An error occurred. Please try again.';
-                console.error('Error:', error);
-            });
-        }
-        @endforeach
-    </script>
 
         </div>
         <!-- End Active Tab Content -->
@@ -583,7 +443,7 @@
         <!-- Completed Tab Content -->
         <div x-show="activeTab === 'completed'" x-cloak>
             @if($pastGoals->count() > 0)
-                <div class="goals-grid" style="margin-top: 24px;">
+                <div class="parent-goals-card-grid" style="margin-top: 24px;">
                     @foreach($pastGoals as $goal)
                         <div class="goal-card goal-card-redeemed">
                             <div class="goal-card-header">

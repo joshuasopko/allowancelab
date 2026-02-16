@@ -1114,8 +1114,8 @@
         });
     }
 
-    function openCreateModal() {
-        window.dispatchEvent(new CustomEvent('open-goal-modal', { detail: { mode: 'create' } }));
+    function openCreateModal(prefill = {}) {
+        window.dispatchEvent(new CustomEvent('open-goal-modal', { detail: { mode: 'create', prefill } }));
     }
 
     function openEditModal(goalId) {
@@ -1278,17 +1278,31 @@
             init() {
                 window.addEventListener('open-goal-modal', (event) => {
                     if (event.detail.mode === 'create') {
-                        this.openCreate();
+                        this.openCreate(event.detail.prefill || {});
                     } else if (event.detail.mode === 'edit') {
                         this.openEdit(event.detail.goalId);
                     }
                 });
+
+                // Auto-open create modal if URL has prefill params (e.g. from wish "Save for This")
+                const urlParams = new URLSearchParams(window.location.search);
+                const prefillTitle = urlParams.get('prefill_title');
+                const prefillAmount = urlParams.get('prefill_amount');
+                if (prefillTitle || prefillAmount) {
+                    this.$nextTick(() => {
+                        this.openCreate({ title: prefillTitle || '', amount: prefillAmount || '' });
+                    });
+                    // Clean URL
+                    history.replaceState({}, '', window.location.pathname);
+                }
             },
 
-            openCreate() {
+            openCreate(prefill = {}) {
                 this.isEditMode = false;
                 this.editGoalId = null;
                 this.resetForm();
+                if (prefill.title) this.formData.title = prefill.title;
+                if (prefill.amount) this.formData.target_amount = prefill.amount;
                 this.showModal = true;
             },
 

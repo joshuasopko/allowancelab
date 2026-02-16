@@ -138,15 +138,24 @@ Route::prefix('kid')->name('kid.')->group(function () {
         Route::get('/profile', [KidAuthController::class, 'profile'])->name('profile');
         Route::patch('/update-color', [KidAuthController::class, 'updateColor'])->name('update-color');
 
+        // Dashboard tab lazy-load endpoints
+        Route::get('/tab/goals', [KidAuthController::class, 'tabGoals'])->name('tab.goals');
+        Route::get('/tab/wishes', [KidAuthController::class, 'tabWishes'])->name('tab.wishes');
+        Route::get('/tab/activity', [KidAuthController::class, 'tabActivity'])->name('tab.activity');
+
         // Kid goal routes (use kid prefix)
         Route::get('/goals', [GoalController::class, 'index'])->name('goals.index');
         Route::post('/goals', [GoalController::class, 'store'])->name('goals.store');
+        Route::get('/goals/{goal}', [GoalController::class, 'show'])->name('goals.show');
         Route::get('/goals/{goal}/edit-data', [GoalController::class, 'getEditData'])->name('goals.edit-data');
         Route::put('/goals/{goal}', [GoalController::class, 'update'])->name('goals.update');
         Route::delete('/goals/{goal}', [GoalController::class, 'destroy'])->name('goals.destroy');
         Route::post('/goals/{goal}/add-funds', [GoalController::class, 'addFunds'])->name('goals.add-funds');
         Route::post('/goals/{goal}/remove-funds', [GoalController::class, 'removeFunds'])->name('goals.remove-funds');
         Route::post('/goals/{goal}/request-redemption', [GoalController::class, 'requestRedemption'])->name('goals.request-redemption');
+
+        // Kid goal scrape route
+        Route::post('/goals/scrape-url', [WishController::class, 'scrapeUrl'])->name('goals.scrape-url');
 
         // Kid wish routes
         Route::get('/wishes', [WishController::class, 'index'])->name('wishes.index');

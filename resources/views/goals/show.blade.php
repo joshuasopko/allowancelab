@@ -69,6 +69,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            text-decoration: none;
         }
 
         .btn-edit:hover {
@@ -227,6 +228,34 @@
             font-weight: 600;
         }
 
+        .goal-redeem-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .goal-redeem-cta.btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(16,185,129,0.35);
+            transition: opacity 0.15s, transform 0.1s;
+            width: 100%;
+            justify-content: center;
+        }
+        .goal-redeem-cta.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .goal-redeem-cta.btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .goal-redeem-cta.pending {
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 14px;
+        }
+
         .goal-detail-meta {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -333,12 +362,18 @@
         <div class="goal-detail-header">
             <h1 class="goal-detail-title">Goal Details</h1>
             <div style="display: flex; gap: 12px;">
-                @if($isParent && !in_array($goal->status, ['pending_redemption', 'redeemed']))
-                    <button onclick="openEditGoalModal({{ $goal->id }})" class="btn-edit">
-                        <i class="fas fa-edit"></i> Edit Goal
-                    </button>
+                @if(!in_array($goal->status, ['pending_redemption', 'redeemed']))
+                    @if($isParent)
+                        <button onclick="openEditGoalModal({{ $goal->id }})" class="btn-edit">
+                            <i class="fas fa-edit"></i> Edit Goal
+                        </button>
+                    @else
+                        <a href="{{ route('kid.dashboard') }}?tab=goals&edit_goal={{ $goal->id }}" class="btn-edit">
+                            <i class="fas fa-edit"></i> Edit Goal
+                        </a>
+                    @endif
                 @endif
-                <a href="{{ $isParent ? route('kids.goals', $kid) : route('kid.goals.index') }}" class="btn-back">
+                <a href="{{ $isParent ? route('kids.goals', $kid) : route('kid.dashboard') . '?tab=goals' }}" class="btn-back">
                     ← Back to Goals
                 </a>
             </div>
@@ -362,13 +397,13 @@
                     @endif
 
                     <div>
-                        @if($goal->status === 'ready_to_redeem' || $isComplete)
+                        @if($goal->status === 'pending_redemption')
+                            <div class="goal-detail-status pending">
+                                <i class="fas fa-clock"></i> Pending Parent Approval
+                            </div>
+                        @elseif($goal->status === 'ready_to_redeem' || $isComplete)
                             <div class="goal-detail-status complete">
                                 <i class="fas fa-check-circle"></i> Goal Complete!
-                            </div>
-                        @elseif($goal->status === 'pending_redemption')
-                            <div class="goal-detail-status pending">
-                                <i class="fas fa-clock"></i> Pending Redemption
                             </div>
                         @else
                             <div class="goal-detail-status active">
@@ -410,6 +445,17 @@
                     <div class="goal-remaining" style="color: #10b981;">
                         <i class="fas fa-check-circle"></i> Goal completed!
                     </div>
+                    @if(!$isParent)
+                        @if($goal->status === 'pending_redemption')
+                            <div class="goal-redeem-cta pending">
+                                <i class="fas fa-clock"></i> Awaiting parent approval
+                            </div>
+                        @else
+                            <button class="goal-redeem-cta btn" id="goalRedeemBtn" onclick="requestRedemption()">
+                                <i class="fas fa-gift"></i> Ask Parent to Fulfill! 🎉
+                            </button>
+                        @endif
+                    @endif
                 @endif
             </div>
 
@@ -478,5 +524,34 @@
                 window.location.href = '{{ route('kids.goals', $kid) }}?edit=' + goalId;
             }
         </script>
+    @endif
+
+    @if(!$isParent && in_array($goal->status, ['ready_to_redeem', 'active']) && $isComplete)
+        <script>
+            function requestRedemption() {
+                const btn = document.getElementById('goalRedeemBtn');
+                if (!btn) return;
+                btn.disabled = true;
+                btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;margin-right:6px;"></span> Sending...';
+                fetch('/kid/goals/{{ $goal->id }}/request-redemption', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content}
+                }).then(r => r.json()).then(d => {
+                    if (d.success) {
+                        btn.outerHTML = '<div class="goal-redeem-cta pending"><i class="fas fa-clock"></i> Awaiting parent approval</div>';
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-gift"></i> Ask Parent to Fulfill! 🎉';
+                        alert(d.message || 'Error');
+                    }
+                }).catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-gift"></i> Ask Parent to Fulfill! 🎉';
+                });
+            }
+        </script>
+        <style>
+            @keyframes spin { to { transform: rotate(360deg); } }
+        </style>
     @endif
 @endsection

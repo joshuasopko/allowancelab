@@ -46,9 +46,9 @@
         </div>
 
         <!-- Goals Feature -->
-        <a href="{{ route('kid.goals.index') }}"
+        <a href="{{ route('kid.dashboard') }}?tab=goals"
             class="kid-menu-item {{ request()->routeIs('kid.goals.*') ? 'active' : '' }}"
-            onclick="localStorage.setItem('goalsLaunchToastDismissed', 'true');">
+            onclick="localStorage.setItem('goalsLaunchToastDismissed', 'true'); if(window.kidSwitchTab && document.getElementById('kid-tab-goals')){ event.preventDefault(); kidSwitchTab('goals'); if(window.innerWidth < 768 && window.kidToggleSidebar) kidToggleSidebar(); }">
             <span>My Goals</span>
             @if($kid->getActiveGoalsCount() > 0)
                 <span class="kid-goals-counter" style="background-color: {{ $kid->color }};">
@@ -128,8 +128,9 @@
         @endif
 
         <!-- Wishes Feature -->
-        <a href="{{ route('kid.wishes.index') }}"
-            class="kid-menu-item {{ request()->routeIs('kid.wishes.*') ? 'active' : '' }}">
+        <a href="{{ route('kid.dashboard') }}?tab=wishes"
+            class="kid-menu-item {{ request()->routeIs('kid.wishes.*') ? 'active' : '' }}"
+            onclick="if(window.kidSwitchTab && document.getElementById('kid-tab-wishes')){ event.preventDefault(); kidSwitchTab('wishes'); if(window.innerWidth < 768 && window.kidToggleSidebar) kidToggleSidebar(); }">
             <span>My Wishes</span>
             @if($kid->getPendingWishRequestsCount() > 0)
                 <span class="kid-goals-counter" style="background-color: {{ $kid->color }};">

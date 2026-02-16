@@ -97,10 +97,11 @@ class WishController extends Controller
 
             DB::commit();
 
-            return redirect()->route('kid.wishes.index')
+            return redirect()->route('kid.dashboard')
                 ->with('success', $request->input('action') === 'request'
                     ? 'Wish sent to your parent for approval!'
-                    : 'Wish added to your list!');
+                    : 'Wish added to your list!')
+                ->with('active_tab', 'wishes');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -222,8 +223,9 @@ class WishController extends Controller
 
             DB::commit();
 
-            return redirect()->route('kid.wishes.index')
-                ->with('success', 'Wish deleted successfully!');
+            return redirect()->route('kid.dashboard')
+                ->with('success', 'Wish deleted successfully!')
+                ->with('active_tab', 'wishes');
 
         } catch (\Exception $e) {
             DB::rollBack();

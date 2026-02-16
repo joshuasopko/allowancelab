@@ -98,16 +98,18 @@ class KidAuthController extends Controller
             ->sortByDesc('timestamp') // CHANGE THIS
             ->values();
 
-        // Get active goals (limit to 3 for dashboard)
-        $activeGoals = $kid->goals()
+        // Overview previews only (keep lightweight)
+        $allActiveGoalsCount = $kid->goals()
+            ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
+            ->count();
+        $previewGoals = $kid->goals()
             ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
             ->orderBy('created_at', 'desc')
-            ->limit(3)
+            ->limit(2)
             ->get();
 
-        // Get active wishes (limit to 5 for dashboard)
-        $activeWishes = $kid->wishes()
-            ->where('status', 'active')
+        $previewWishes = $kid->wishes()
+            ->whereIn('status', ['saved', 'pending_approval'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -115,9 +117,55 @@ class KidAuthController extends Controller
         return view('kid.dashboard', [
             'kid' => $kid,
             'transactions' => $allTransactions,
-            'activeGoals' => $activeGoals,
-            'activeWishes' => $activeWishes
+            'previewGoals' => $previewGoals,
+            'allActiveGoalsCount' => $allActiveGoalsCount,
+            'previewWishes' => $previewWishes,
         ]);
+    }
+
+    public function tabGoals()
+    {
+        $kid = Auth::guard('kid')->user();
+
+        $activeGoals = $kid->goals()
+            ->with('goalTransactions')
+            ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $completedGoals = $kid->goals()
+            ->with('goalTransactions')
+            ->where('status', 'redeemed')
+            ->orderBy('redeemed_at', 'desc')
+            ->get();
+
+        $totalAllocated = $activeGoals->sum('auto_allocation_percentage');
+        $remainingAllocation = 100 - $totalAllocated;
+
+        return view('kid.partials.goals-tab', compact('kid', 'activeGoals', 'completedGoals', 'totalAllocated', 'remainingAllocation'));
+    }
+
+    public function tabWishes()
+    {
+        $kid = Auth::guard('kid')->user();
+
+        $currentWishes = $kid->wishes()
+            ->whereIn('status', ['saved', 'pending_approval'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $redeemedWishes = $kid->wishes()
+            ->where('status', 'purchased')
+            ->orderBy('purchased_at', 'desc')
+            ->get();
+
+        return view('kid.partials.wishes-tab', compact('kid', 'currentWishes', 'redeemedWishes'));
+    }
+
+    public function tabActivity()
+    {
+        $kid = Auth::guard('kid')->user();
+        return view('kid.partials.activity-tab', compact('kid'));
     }
 
     public function profile()
