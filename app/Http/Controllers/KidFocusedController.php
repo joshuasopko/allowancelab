@@ -71,7 +71,7 @@ class KidFocusedController extends Controller
 
         // Get all goals for this kid
         $activeGoals = Goal::where('kid_id', $kid->id)
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
             ->orderBy('created_at', 'desc')
             ->get();
 
