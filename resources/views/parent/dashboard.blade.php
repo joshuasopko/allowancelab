@@ -74,7 +74,10 @@
                     $nextAllowance = $today->copy()->addDays($daysUntil);
                     $pointsPercent = $kid->max_points > 0 ? ($kid->points / $kid->max_points) * 100 : 0;
                     $pointsClass = $pointsPercent >= 80 ? 'points-high' : ($pointsPercent >= 50 ? 'points-medium' : 'points-low');
-                    $activeGoals = $kid->goals()->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])->get();
+                    $activeGoals = $kid->goals()->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
+                        ->orderByRaw("CASE status WHEN 'pending_redemption' THEN 0 WHEN 'ready_to_redeem' THEN 1 ELSE 2 END")
+                        ->orderBy('created_at', 'desc')
+                        ->get();
                 @endphp
 
                 <!-- Desktop Layout: Line 1 - Avatar | Name | Balance | Action Buttons -->
