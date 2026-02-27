@@ -291,6 +291,24 @@
             margin-left: 5px;
             line-height: 1;
         }
+        .kid-tab-ready-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 7px;
+            border-radius: 9px;
+            background: #10b981;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 5px;
+            line-height: 1;
+            animation: kid-tab-ready-pulse 2s ease-in-out infinite;
+        }
+        @keyframes kid-tab-ready-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
 
         .kid-tab-loading {
             display: flex;
@@ -324,7 +342,7 @@
         /* Overview Grid */
         .kid-overview-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
             gap: 24px;
             margin-bottom: 32px;
         }
@@ -618,6 +636,24 @@
             white-space: nowrap; transition: background 0.15s;
         }
         .kid-goal-item-view-btn:hover { background: #d1d5db; }
+        .kid-goal-item-complete {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+        .kid-goal-item-complete-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 5px 10px; border-radius: 6px;
+            font-size: 11px; font-weight: 700;
+            color: #059669; background: #d1fae5;
+            white-space: nowrap;
+        }
+        .kid-goal-item-denied-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 5px 10px; border-radius: 6px;
+            font-size: 11px; font-weight: 700;
+            color: #dc2626; background: #fee2e2;
+            white-space: nowrap;
+        }
 
         /* Wishes List */
         .kid-wishes-list {
@@ -686,6 +722,19 @@
             font-weight: 600;
             color: #d97706;
             background: #fef3c7;
+            border-radius: 6px;
+            padding: 2px 7px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+
+        .kid-wish-item-declined {
+            font-size: 11px;
+            font-weight: 600;
+            color: #991b1b;
+            background: #fee2e2;
             border-radius: 6px;
             padding: 2px 7px;
             display: inline-flex;
@@ -1020,24 +1069,37 @@
         }
 
         /* Mobile Responsive */
-        @media (max-width: 768px) {
+        /* Tablet/mobile range: sidebar is hidden (hamburger), full content width available */
+        @media (min-width: 601px) and (max-width: 820px) {
             .kid-overview-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
             }
 
             .kid-overview-header {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
                 gap: 12px;
             }
 
             .kid-header-stats {
-                width: 100%;
-                justify-content: flex-start;
+                justify-content: flex-end;
+                flex-shrink: 0;
             }
             .kid-header-stat-card {
-                flex: 1;
+                flex: 0 0 auto;
             }
 
+            .kid-balance-amount {
+                font-size: 40px;
+                margin: 14px 0;
+            }
+
+            .kid-allowance-amount {
+                font-size: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
             .kid-dashboard-tabs {
                 gap: 6px;
             }
@@ -1046,13 +1108,137 @@
                 padding: 7px 12px;
                 font-size: 13px;
             }
+        }
 
-            .kid-balance-amount {
-                font-size: 36px;
+        /* Phone - small screens */
+        @media (max-width: 480px) {
+            /* Grid & card sizing */
+            .kid-overview-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .kid-overview-card {
+                padding: 16px;
             }
 
+            /* Balance card */
+            .kid-balance-amount {
+                font-size: 40px;
+                margin: 12px 0;
+            }
+            .kid-balance-actions {
+                gap: 8px;
+            }
+            .kid-btn {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            /* Allowance card */
             .kid-allowance-amount {
-                font-size: 28px;
+                font-size: 32px;
+            }
+
+            /* Tabs - allow wrapping, smaller text */
+            .kid-dashboard-tabs {
+                gap: 5px;
+                flex-wrap: wrap;
+            }
+            .kid-dashboard-tab {
+                padding: 6px 10px;
+                font-size: 12px;
+                gap: 4px;
+            }
+            .kid-tab-ready-badge,
+            .kid-tab-pending-badge,
+            .kid-tab-count,
+            .kid-tab-badge {
+                font-size: 10px;
+            }
+
+            /* Header */
+            .kid-overview-header {
+                margin-bottom: 16px;
+            }
+            .kid-header-stats {
+                gap: 8px;
+            }
+            .kid-header-stat-card {
+                padding: 10px 12px;
+            }
+            .kid-header-stat-label {
+                font-size: 10px;
+            }
+            .kid-header-stat-value {
+                font-size: 18px;
+            }
+
+            /* Goal items in overview */
+            .kid-goal-item {
+                gap: 10px;
+                padding: 10px;
+            }
+            .kid-goal-item-thumb {
+                width: 44px;
+                height: 44px;
+                flex-shrink: 0;
+            }
+            .kid-goal-title {
+                font-size: 13px;
+            }
+            .kid-goal-item-actions {
+                gap: 6px;
+            }
+            .kid-goal-item-complete-badge,
+            .kid-goal-item-denied-badge {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            .kid-goal-item-view-btn,
+            .kid-goal-item-add-btn {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+
+            /* Wish items */
+            .kid-wish-item {
+                gap: 10px;
+                padding: 10px;
+            }
+            .kid-wish-thumb {
+                width: 44px;
+                height: 44px;
+                flex-shrink: 0;
+            }
+            .kid-wish-title {
+                font-size: 13px;
+            }
+
+            /* Activity items */
+            .kid-activity-item {
+                gap: 10px;
+                padding: 10px 0;
+            }
+            .kid-activity-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+                flex-shrink: 0;
+            }
+            .kid-activity-desc {
+                font-size: 13px;
+            }
+            .kid-activity-amount {
+                font-size: 13px;
+                white-space: nowrap;
+            }
+
+            /* Card headers */
+            .kid-card-header h3 {
+                font-size: 14px;
+            }
+            .kid-view-all {
+                font-size: 12px;
             }
         }
     </style>
@@ -1179,10 +1365,15 @@
         <button class="kid-dashboard-tab active" onclick="kidSwitchTab('overview')">
             <i class="fas fa-th-large"></i> Overview
         </button>
-        @php $pendingGoalsCount = $kid->getPendingRedemptionGoalsCount(); @endphp
+        @php
+            $pendingGoalsCount = $kid->getPendingRedemptionGoalsCount();
+            $readyGoalsCount = $kid->getReadyToRedeemGoalsCount();
+        @endphp
         <button class="kid-dashboard-tab" onclick="kidSwitchTab('goals')">
             <i class="fas fa-bullseye"></i> Goals
-            @if($pendingGoalsCount > 0)
+            @if($readyGoalsCount > 0)
+                <span class="kid-tab-ready-badge"><i class="fas fa-check-circle"></i> {{ $readyGoalsCount }}</span>
+            @elseif($pendingGoalsCount > 0)
                 <span class="kid-tab-pending-badge">{{ $pendingGoalsCount }}</span>
             @endif
         </button>
@@ -1282,15 +1473,19 @@
                     @if($previewGoals->count() > 0)
                         <div class="kid-goals-list">
                             @foreach($previewGoals as $goal)
-                                @php $progressPercent = $goal->target_amount > 0 ? min(100, ($goal->current_amount / $goal->target_amount) * 100) : 0; @endphp
-                                <div class="kid-goal-item">
+                                @php
+                                    $progressPercent = $goal->target_amount > 0 ? min(100, ($goal->current_amount / $goal->target_amount) * 100) : 0;
+                                    $isGoalComplete = $progressPercent >= 100 || $goal->status === 'ready_to_redeem' || $goal->status === 'pending_redemption';
+                                    $barColor = $isGoalComplete ? '#10b981' : $kid->color;
+                                @endphp
+                                <div class="kid-goal-item {{ $isGoalComplete ? 'kid-goal-item-complete' : '' }}">
                                     {{-- Thumbnail --}}
                                     <div class="kid-goal-item-thumb">
                                         @if($goal->photo_path)
                                             <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}">
                                         @else
                                             <div class="kid-goal-item-thumb-placeholder">
-                                                <i class="fas fa-bullseye"></i>
+                                                <i class="fas {{ $isGoalComplete ? 'fa-check-circle' : 'fa-bullseye' }}" style="color: {{ $barColor }};"></i>
                                             </div>
                                         @endif
                                     </div>
@@ -1299,12 +1494,20 @@
                                         <div class="kid-goal-title">{{ Str::limit($goal->title, 45) }}</div>
                                         <div class="kid-goal-progress">
                                             <div class="kid-progress-bar">
-                                                <div class="kid-progress-fill" style="width: {{ $progressPercent }}%; background: {{ $kid->color }};"></div>
+                                                <div class="kid-progress-fill" style="width: {{ $progressPercent }}%; background: {{ $barColor }};"></div>
                                             </div>
                                             <span class="kid-goal-amount">${{ number_format($goal->current_amount, 2) }} / ${{ number_format($goal->target_amount, 2) }}</span>
                                         </div>
                                         <div class="kid-goal-item-actions">
-                                            @if($goal->status !== 'pending_redemption')
+                                            @if($goal->denied_at && $goal->denial_reason)
+                                                <span class="kid-goal-item-denied-badge">
+                                                    <i class="fas fa-ban"></i> Denied
+                                                </span>
+                                            @elseif($isGoalComplete)
+                                                <span class="kid-goal-item-complete-badge">
+                                                    <i class="fas fa-check-circle"></i> Complete!
+                                                </span>
+                                            @else
                                                 <button onclick="kidSwitchTab('goals')" class="kid-goal-item-add-btn" style="background: {{ $kid->color }};">
                                                     <i class="fas fa-plus"></i> Add Funds
                                                 </button>
@@ -1353,6 +1556,8 @@
                                         <div class="kid-wish-price">${{ number_format($wish->price, 2) }}</div>
                                         @if($wish->isPendingApproval())
                                             <div class="kid-wish-item-pending"><i class="fas fa-clock"></i> Waiting for parent</div>
+                                        @elseif($wish->isDeclined())
+                                            <div class="kid-wish-item-declined"><i class="fas fa-times-circle"></i> Declined</div>
                                         @endif
                                         <div class="kid-wish-item-actions">
                                             @if($wish->isSaved() && $wish->canBeRequested())

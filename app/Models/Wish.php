@@ -25,6 +25,7 @@ class Wish extends Model
         'approved_at',
         'purchased_at',
         'purchased_by_user_id',
+        'declined_at',
     ];
 
     protected $casts = [
@@ -33,6 +34,7 @@ class Wish extends Model
         'last_reminded_at' => 'datetime',
         'approved_at' => 'datetime',
         'purchased_at' => 'datetime',
+        'declined_at' => 'datetime',
     ];
 
     // Relationships
@@ -96,6 +98,27 @@ class Wish extends Model
     public function canBeEdited()
     {
         return in_array($this->status, ['saved', 'pending_approval']);
+    }
+
+    /**
+     * Whether the kid can re-ask after a decline (24-hour cooldown).
+     */
+    public function canReAsk(): bool
+    {
+        if ($this->status !== 'declined' || !$this->declined_at) {
+            return false;
+        }
+        return now()->diffInHours($this->declined_at) >= 24;
+    }
+
+    /**
+     * Fractional hours remaining until the kid can re-ask (0 when ready).
+     */
+    public function hoursUntilReAsk(): float
+    {
+        if (!$this->declined_at) return 0;
+        $hoursElapsed = now()->floatDiffInHours($this->declined_at);
+        return max(0, 24 - $hoursElapsed);
     }
 
     public function canBeRequested()

@@ -105,12 +105,14 @@
             <div class="wish-detail-actions">
                 @if($wish->isPendingApproval())
                     <!-- Approve (deducts from balance) -->
-                    <form action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: inline;">
+                    <button type="button" class="btn-action btn-approve" onclick="openApproveModal()">
+                        <i class="fas fa-check"></i> Approve & Deduct
+                    </button>
+
+                    <!-- Hidden form submitted by modal -->
+                    <form id="approveWishForm" action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: none;">
                         @csrf
-                        <button type="submit" class="btn-action btn-approve"
-                                onclick="return confirm('Approve this purchase?\n\n${{ number_format($wish->price, 2) }} will be deducted from {{ $kid->name }}\'s balance.\n\nTheir balance will go from ${{ number_format($kid->balance, 2) }} to ${{ number_format($kid->balance - $wish->price, 2) }}.')">
-                            <i class="fas fa-check"></i> Approve & Deduct
-                        </button>
+                        <input type="hidden" name="adjusted_amount" id="approve_adjusted_amount" value="{{ $wish->price }}">
                     </form>
 
                     <!-- Decline -->
@@ -123,12 +125,12 @@
                         <i class="fas fa-gift"></i> Redeem Wish
                     </button>
                     <!-- Delete saved wish -->
-                    <button type="button" onclick="openDeleteModal()" class="btn-action btn-delete">
+                    <button type="button" onclick="openWishDeleteModal()" class="btn-action btn-delete">
                         <i class="fas fa-trash"></i> Delete Wish
                     </button>
                 @elseif($wish->isDeclined())
                     <!-- Delete declined wish -->
-                    <button type="button" onclick="openDeleteModal()" class="btn-action btn-delete">
+                    <button type="button" onclick="openWishDeleteModal()" class="btn-action btn-delete">
                         <i class="fas fa-trash"></i> Delete Wish
                     </button>
                 @endif
@@ -581,6 +583,49 @@
 const basePrice = {{ $wish->price }};
 const currentBalance = {{ $kid->balance }};
 
+function openApproveModal() {
+    document.getElementById('approveWishModal').style.display = 'flex';
+    updateApproveTotal();
+}
+
+function closeApproveModal() {
+    document.getElementById('approveWishModal').style.display = 'none';
+    const feesInput = document.getElementById('approve_fees');
+    if (feesInput) feesInput.value = '';
+    updateApproveTotal();
+}
+
+function confirmApproveWish() {
+    document.getElementById('approveWishForm').submit();
+}
+
+function updateApproveTotal() {
+    const input = document.getElementById('approve_fees');
+    if (!input) return;
+    let value = input.value.replace(/[^0-9]/g, '');
+
+    // Cash-register style: digits become cents
+    if (value === '') value = '0';
+    const cents = parseInt(value);
+    const dollars = (cents / 100).toFixed(2);
+    input.value = dollars;
+
+    const additionalFee = parseFloat(dollars);
+    const adjustedTotal = basePrice + additionalFee;
+
+    // Update Total Deducted (always red)
+    document.getElementById('approveTotalDeducted').textContent = '$' + adjustedTotal.toFixed(2);
+
+    // Update Balance After with colour
+    const afterBalance = currentBalance - adjustedTotal;
+    const afterEl = document.getElementById('approveBalanceAfter');
+    afterEl.textContent = '$' + afterBalance.toFixed(2);
+    afterEl.style.color = afterBalance >= 0 ? '#10b981' : '#ef4444';
+
+    // Update hidden input
+    document.getElementById('approve_adjusted_amount').value = adjustedTotal.toFixed(2);
+}
+
 function openDeclineModal() {
     document.getElementById('declineModal').style.display = 'flex';
 }
@@ -589,11 +634,11 @@ function closeDeclineModal() {
     document.getElementById('declineModal').style.display = 'none';
 }
 
-function openDeleteModal() {
+function openWishDeleteModal() {
     document.getElementById('deleteModal').style.display = 'flex';
 }
 
-function closeDeleteModal() {
+function closeWishDeleteModal() {
     document.getElementById('deleteModal').style.display = 'none';
 }
 
@@ -613,7 +658,7 @@ function updateRedeemTotal() {
     const input = document.getElementById('additional_fees');
     let value = input.value.replace(/[^0-9]/g, '');
 
-    // Convert cents to dollars and format
+    // Cash-register style: digits become cents
     if (value === '') {
         value = '0';
     }
@@ -625,20 +670,14 @@ function updateRedeemTotal() {
     const additionalFee = parseFloat(dollars);
     const adjustedTotal = basePrice + additionalFee;
 
-    // Update adjusted price
+    // Update Total Deducted (always red)
     document.getElementById('modalAdjustedPrice').textContent = '$' + adjustedTotal.toFixed(2);
 
-    // Update after balance
+    // Update Balance After with colour: green if positive, red if negative
     const afterBalance = currentBalance - adjustedTotal;
     const afterBalanceEl = document.getElementById('modalAfterBalance');
     afterBalanceEl.textContent = '$' + afterBalance.toFixed(2);
-
-    // Update color based on whether balance is positive or negative
-    if (afterBalance >= 0) {
-        afterBalanceEl.className = 'balance-amount after';
-    } else {
-        afterBalanceEl.className = 'balance-amount negative';
-    }
+    afterBalanceEl.style.color = afterBalance >= 0 ? '#10b981' : '#ef4444';
 
     // Update hidden input for form submission
     document.getElementById('adjusted_amount_input').value = adjustedTotal.toFixed(2);
@@ -651,6 +690,15 @@ document.addEventListener('DOMContentLoaded', function() {
         redeemModal.addEventListener('click', function(e) {
             if (e.target === redeemModal) {
                 closeRedeemModal();
+            }
+        });
+    }
+
+    const approveWishModal = document.getElementById('approveWishModal');
+    if (approveWishModal) {
+        approveWishModal.addEventListener('click', function(e) {
+            if (e.target === approveWishModal) {
+                closeApproveModal();
             }
         });
     }
@@ -668,7 +716,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (deleteModal) {
         deleteModal.addEventListener('click', function(e) {
             if (e.target === deleteModal) {
-                closeDeleteModal();
+                closeWishDeleteModal();
             }
         });
     }
@@ -677,6 +725,78 @@ document.addEventListener('DOMContentLoaded', function() {
 @endsection
 
 @section('modals')
+<!-- Approve Wish Modal -->
+@if($wish->isPendingApproval())
+<div id="approveWishModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
+        {{-- Header --}}
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-check" style="color: white; font-size: 22px;"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #111827;">Approve Purchase</h3>
+                <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280; line-height: 1.4;">{{ Str::limit($wish->item_name, 60) }}</p>
+            </div>
+        </div>
+
+        {{-- Item Price row --}}
+        <div style="background: #f9fafb; border-radius: 12px; padding: 18px; margin-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Item Price:</span>
+                <span style="font-size: 18px; font-weight: 700; color: #111827;">${{ number_format($wish->price, 2) }}</span>
+            </div>
+        </div>
+
+        {{-- Additional Fees Input --}}
+        <div style="margin-bottom: 4px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: #4b5563; margin: 12px 0 8px 0;">
+                Additional Fees <span style="font-weight: 400; color: #9ca3af;">(shipping, tax, etc.)</span>
+            </label>
+            <div style="position: relative;">
+                <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #6b7280; font-weight: 600; font-size: 15px;">$</span>
+                <input
+                    type="text"
+                    id="approve_fees"
+                    placeholder="0.00"
+                    inputmode="numeric"
+                    style="width: 100%; box-sizing: border-box; padding: 12px 12px 12px 28px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; font-weight: 600; color: #1f2937; outline: none;"
+                    oninput="updateApproveTotal()"
+                    onfocus="this.style.borderColor='#10b981'"
+                    onblur="this.style.borderColor='#e5e7eb'"
+                />
+            </div>
+        </div>
+
+        {{-- Balance breakdown --}}
+        <div style="background: #f9fafb; border-radius: 12px; padding: 18px; margin: 12px 0 24px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Total Deducted:</span>
+                <span id="approveTotalDeducted" style="font-size: 18px; font-weight: 700; color: #ef4444;">${{ number_format($wish->price, 2) }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">{{ $kid->name }}'s Balance:</span>
+                <span style="font-size: 18px; font-weight: 700; color: #3b82f6;">${{ number_format($kid->balance, 2) }}</span>
+            </div>
+            <div style="border-top: 1px solid #e5e7eb; margin: 8px 0;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Balance After:</span>
+                <span id="approveBalanceAfter" style="font-size: 18px; font-weight: 700; color: {{ $kid->balance >= $wish->price ? '#10b981' : '#ef4444' }};">${{ number_format($kid->balance - $wish->price, 2) }}</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeApproveModal()" style="flex: 1; padding: 13px 16px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                Cancel
+            </button>
+            <button onclick="confirmApproveWish()" style="flex: 1; padding: 13px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                <i class="fas fa-check"></i> Approve & Deduct
+            </button>
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Delete Confirmation Modal -->
 @if($wish->isDeclined() || $wish->isSaved())
 <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center;">
@@ -691,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function() {
             @csrf
             @method('DELETE')
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button type="button" onclick="closeDeleteModal()" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; background: #e5e7eb; color: #4b5563; transition: background 0.2s;">Cancel</button>
+                <button type="button" onclick="closeWishDeleteModal()" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; background: #e5e7eb; color: #4b5563; transition: background 0.2s;">Cancel</button>
                 <button type="submit" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; background: #ef4444; color: white; transition: background 0.2s;">Delete Wish</button>
             </div>
         </form>
@@ -720,63 +840,74 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Redeem Confirmation Modal -->
 @if($wish->isSaved())
 <div id="redeemModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); text-align: center;">
-        <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px;">
-            <i class="fas fa-gift"></i>
-        </div>
-        <h3 style="font-size: 24px; font-weight: 700; color: #1f2937; margin: 0 0 8px 0;">Redeem Wish?</h3>
-        <p style="color: #6b7280; font-size: 16px; margin-bottom: 16px; font-weight: 500;">{{ $wish->item_name }}</p>
+    <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
 
-        <!-- Item Price Display -->
-        <div style="background: #f9fafb; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-            <div style="display: flex; justify-content: center; align-items: center; gap: 12px;">
-                <span style="font-weight: 600; color: #4b5563; font-size: 15px;">Item Price:</span>
-                <span style="font-size: 18px; font-weight: 700; color: #1f2937;">${{ number_format($wish->price, 2) }}</span>
+        {{-- Header --}}
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-gift" style="color: white; font-size: 22px;"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #111827;">Redeem Wish</h3>
+                <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280; line-height: 1.4;">{{ Str::limit($wish->item_name, 60) }}</p>
             </div>
         </div>
 
-        <!-- Additional Fees Input -->
-        <div style="margin-bottom: 20px; text-align: left;">
-            <label style="display: block; font-weight: 600; color: #4b5563; font-size: 14px; margin-bottom: 8px;">
-                Additional Fees (shipping, tax, etc.)
+        {{-- Item Price row --}}
+        <div style="background: #f9fafb; border-radius: 12px; padding: 18px; margin-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Item Price:</span>
+                <span style="font-size: 18px; font-weight: 700; color: #111827;">${{ number_format($wish->price, 2) }}</span>
+            </div>
+        </div>
+
+        {{-- Additional Fees Input --}}
+        <div style="margin-bottom: 4px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: #4b5563; margin: 12px 0 8px 0;">
+                Additional Fees <span style="font-weight: 400; color: #9ca3af;">(shipping, tax, etc.)</span>
             </label>
             <div style="position: relative;">
-                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; font-weight: 600;">$</span>
+                <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #6b7280; font-weight: 600; font-size: 15px;">$</span>
                 <input
                     type="text"
                     id="additional_fees"
                     placeholder="0.00"
-                    style="width: 100%; padding: 10px 10px 10px 24px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; font-weight: 600; color: #1f2937;"
+                    inputmode="numeric"
+                    style="width: 100%; box-sizing: border-box; padding: 12px 12px 12px 28px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; font-weight: 600; color: #1f2937; outline: none;"
                     oninput="updateRedeemTotal()"
+                    onfocus="this.style.borderColor='#8b5cf6'"
+                    onblur="this.style.borderColor='#e5e7eb'"
                 />
             </div>
         </div>
 
-        <!-- Balance Preview -->
-        <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-                <span style="font-weight: 600; color: #4b5563; font-size: 15px;">Adjusted Price:</span>
-                <span id="modalAdjustedPrice" style="font-size: 20px; font-weight: 700; color: #10b981;">${{ number_format($wish->price, 2) }}</span>
+        {{-- Balance breakdown --}}
+        <div style="background: #f9fafb; border-radius: 12px; padding: 18px; margin: 12px 0 24px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Total Deducted:</span>
+                <span id="modalAdjustedPrice" style="font-size: 18px; font-weight: 700; color: #ef4444;">${{ number_format($wish->price, 2) }}</span>
             </div>
-            <div style="display: flex; justify-content: center; padding: 8px 0; color: #9ca3af; font-size: 18px;">
-                <i class="fas fa-arrow-down"></i>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">{{ $kid->name }}'s Balance:</span>
+                <span style="font-size: 18px; font-weight: 700; color: #3b82f6;">${{ number_format($kid->balance, 2) }}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-                <span style="font-weight: 600; color: #4b5563; font-size: 15px;">Current Balance:</span>
-                <span id="modalCurrentBalance" style="font-size: 20px; font-weight: 700; color: #3b82f6;">${{ number_format($kid->balance, 2) }}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-                <span style="font-weight: 600; color: #4b5563; font-size: 15px;">After Purchase:</span>
-                <span id="modalAfterBalance" style="font-size: 20px; font-weight: 700; color: #10b981;">${{ number_format($kid->balance - $wish->price, 2) }}</span>
+            <div style="border-top: 1px solid #e5e7eb; margin: 8px 0;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Balance After:</span>
+                <span id="modalAfterBalance" style="font-size: 18px; font-weight: 700; color: {{ $kid->balance >= $wish->price ? '#10b981' : '#ef4444' }};">${{ number_format($kid->balance - $wish->price, 2) }}</span>
             </div>
         </div>
 
         <form id="redeemForm" action="{{ route('parent.wishes.redeem', $wish) }}" method="POST">
             @csrf
             <input type="hidden" name="adjusted_amount" id="adjusted_amount_input" value="{{ $wish->price }}">
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <button type="button" onclick="closeRedeemModal()" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; background: #e5e7eb; color: #4b5563;">Cancel</button>
-                <button type="submit" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; background: #8b5cf6; color: white;">Confirm Purchase</button>
+            <div style="display: flex; gap: 12px;">
+                <button type="button" onclick="closeRedeemModal()" style="flex: 1; padding: 13px 16px; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; background: #f3f4f6; color: #374151;">
+                    Cancel
+                </button>
+                <button type="submit" style="flex: 1; padding: 13px 16px; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; background: #8b5cf6; color: white;">
+                    <i class="fas fa-gift"></i> Redeem Wish
+                </button>
             </div>
         </form>
     </div>

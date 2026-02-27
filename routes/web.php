@@ -153,6 +153,7 @@ Route::prefix('kid')->name('kid.')->group(function () {
         Route::post('/goals/{goal}/add-funds', [GoalController::class, 'addFunds'])->name('goals.add-funds');
         Route::post('/goals/{goal}/remove-funds', [GoalController::class, 'removeFunds'])->name('goals.remove-funds');
         Route::post('/goals/{goal}/request-redemption', [GoalController::class, 'requestRedemption'])->name('goals.request-redemption');
+        Route::post('/goals/{goal}/acknowledge-denial', [GoalController::class, 'acknowledgeDenial'])->name('goals.acknowledge-denial');
 
         // Kid goal scrape route
         Route::post('/goals/scrape-url', [WishController::class, 'scrapeUrl'])->name('goals.scrape-url');
@@ -166,6 +167,7 @@ Route::prefix('kid')->name('kid.')->group(function () {
         Route::delete('/wishes/{wish}', [WishController::class, 'destroy'])->name('wishes.destroy');
         Route::post('/wishes/{wish}/request-purchase', [WishController::class, 'requestPurchase'])->name('wishes.request-purchase');
         Route::post('/wishes/{wish}/remind', [WishController::class, 'remindParent'])->name('wishes.remind');
+        Route::post('/wishes/{wish}/re-ask', [WishController::class, 'reAskParent'])->name('wishes.re-ask');
     });
 });
 

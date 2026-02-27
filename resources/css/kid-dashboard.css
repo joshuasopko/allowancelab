@@ -2166,3 +2166,127 @@
         display: flex; /* Show on mobile */
     }
 }
+
+/* =============================================
+   Overview Tab - Tablet Fixes (601–820px)
+   Sidebar is hidden (hamburger), full content width available
+   ============================================= */
+@media (min-width: 601px) and (max-width: 820px) {
+    /* 2-column grid — comfortable at tablet widths */
+    .kid-overview-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px;
+    }
+
+    /* Ensure cards don't overflow */
+    .kid-overview-card {
+        box-sizing: border-box;
+        min-width: 0;
+    }
+}
+
+/* =============================================
+   Overview Tab - Mobile Fixes
+   ============================================= */
+@media (max-width: 600px) {
+    /* Reduce outer content padding so cards have more room */
+    .kid-main-content {
+        padding: 16px 10px;
+    }
+
+    /* Overview grid: force single column, no overflow */
+    .kid-overview-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+    }
+
+    /* Cards: reduce inner padding so content isn't clipped */
+    .kid-overview-card {
+        padding: 16px !important;
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Balance amount: scale down from 48px */
+    .kid-balance-amount {
+        font-size: 38px !important;
+        margin: 10px 0 !important;
+    }
+
+    /* Action buttons: keep side-by-side but tighter */
+    .kid-balance-actions {
+        gap: 8px;
+    }
+    .kid-btn {
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+    }
+
+    /* Allowance card amounts */
+    .kid-allowance-amount {
+        font-size: 30px !important;
+    }
+    .kid-allowance-schedule {
+        font-size: 14px;
+    }
+    .kid-next-allowance {
+        font-size: 13px;
+    }
+
+    /* Card headers */
+    .kid-card-header h3 {
+        font-size: 14px;
+    }
+    .kid-view-all {
+        font-size: 12px;
+    }
+
+    /* Goal / wish / activity preview items */
+    .kid-goal-item,
+    .kid-wish-item {
+        gap: 10px;
+        padding: 10px;
+    }
+    .kid-goal-item-thumb,
+    .kid-wish-thumb {
+        width: 44px !important;
+        height: 44px !important;
+        flex-shrink: 0;
+    }
+    .kid-goal-title,
+    .kid-wish-title {
+        font-size: 13px;
+    }
+    .kid-goal-item-actions {
+        gap: 6px;
+    }
+    .kid-goal-item-view-btn,
+    .kid-goal-item-add-btn {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+    .kid-goal-item-complete-badge,
+    .kid-goal-item-denied-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .kid-activity-item {
+        gap: 10px;
+        padding: 10px 0;
+    }
+    .kid-activity-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .kid-activity-desc {
+        font-size: 13px;
+    }
+    .kid-activity-amount {
+        font-size: 13px;
+        white-space: nowrap;
+    }
+}

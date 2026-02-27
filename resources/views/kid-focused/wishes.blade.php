@@ -82,12 +82,9 @@
                                     <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-view">
                                         <i class="fas fa-eye"></i> View
                                     </a>
-                                    <form action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: inline;" onsubmit="console.log('Form submitting...'); return true;">
-                                        @csrf
-                                        <button type="submit" class="btn-approve" onclick="console.log('Approve clicked'); return confirm('Approve this purchase? ${{ number_format($wish->price, 2) }} will be deducted from {{ $kid->name }}\'s balance.')">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
-                                    </form>
+                                    <button type="button" onclick="openApproveModal({{ $wish->id }})" class="btn-approve">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
                                     <button onclick="openDeclineModal({{ $wish->id }})" class="btn-decline">
                                         <i class="fas fa-times"></i> Decline
                                     </button>
@@ -129,6 +126,8 @@
                                     @endif
                                     @if($wish->isPendingApproval())
                                         <span class="badge-pending">Pending Response</span>
+                                    @elseif($wish->isDeclined())
+                                        <span class="badge-declined"><i class="fas fa-times-circle"></i> Declined</span>
                                     @endif
                                     <div class="wish-card-actions">
                                         @if($wish->isSaved())
@@ -217,18 +216,82 @@
     </div>
 </div>
 
+<!-- Approve Modal -->
+@foreach($pendingWishes as $wish)
+    <div id="approveModal{{ $wish->id }}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center;" onclick="if(event.target===this) closeApproveModal({{ $wish->id }})">
+        <div class="modal-content" style="text-align: center;">
+            <div style="width: 52px; height: 52px; margin: 0 auto 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px;">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 700; color: #1f2937;">Approve Wish?</h3>
+            <p style="color: #6b7280; margin: 0 0 16px 0; font-weight: 500;">{{ $wish->item_name }}</p>
+
+            <!-- Item Price -->
+            <div style="background: #f9fafb; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span style="font-weight: 600; color: #4b5563; font-size: 15px;">Item Price:</span>
+                    <span style="font-size: 18px; font-weight: 700; color: #1f2937;">${{ number_format($wish->price, 2) }}</span>
+                    <span id="approveAdjustedLabel{{ $wish->id }}" style="display: none; font-size: 18px; font-weight: 700; color: #10b981;"></span>
+                    <span id="approveAdjustedNote{{ $wish->id }}" style="display: none; font-size: 12px; color: #6b7280;">(adjusted)</span>
+                </div>
+            </div>
+
+            <!-- Additional Fees -->
+            <div style="margin-bottom: 16px; text-align: left;">
+                <label style="display: block; font-weight: 600; color: #4b5563; font-size: 14px; margin-bottom: 8px;">
+                    Additional Fees (shipping, tax, etc.)
+                </label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; font-weight: 600;">$</span>
+                    <input
+                        type="text"
+                        id="approveFees{{ $wish->id }}"
+                        placeholder="0.00"
+                        style="width: 100%; padding: 10px 10px 10px 24px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; font-weight: 600; color: #1f2937; box-sizing: border-box;"
+                        oninput="updateApproveTotal({{ $wish->id }}, {{ $wish->price }}, {{ $kid->balance }})"
+                    />
+                </div>
+            </div>
+
+            <!-- Balance Preview -->
+            <div style="background: #f9fafb; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                    <span style="font-weight: 600; color: #4b5563; font-size: 15px;">Current Balance:</span>
+                    <span style="font-size: 18px; font-weight: 700; color: #3b82f6;">${{ number_format($kid->balance, 2) }}</span>
+                </div>
+                <div style="display: flex; justify-content: center; padding: 6px 0; color: #9ca3af; font-size: 16px;">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                    <span style="font-weight: 600; color: #4b5563; font-size: 15px;">After Purchase:</span>
+                    <span id="approveAfterBalance{{ $wish->id }}" style="font-size: 18px; font-weight: 700; color: #10b981;">${{ number_format($kid->balance - $wish->price, 2) }}</span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" onclick="closeApproveModal({{ $wish->id }})" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; background: #e5e7eb; color: #4b5563;">Cancel</button>
+                <button type="button" onclick="confirmApprove({{ $wish->id }}, {{ $wish->price }}, {{ $kid->balance }})" class="btn-approve" style="padding: 12px 28px; font-size: 15px;"><i class="fas fa-check"></i> Approve Purchase</button>
+            </div>
+        </div>
+    </div>
+    <form id="approveForm{{ $wish->id }}" action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: none;">
+        @csrf
+        <input type="hidden" name="adjusted_amount" id="approveAdjustedAmount{{ $wish->id }}" value="">
+    </form>
+@endforeach
+
 <!-- Decline Modal -->
 @foreach($pendingWishes as $wish)
-    <div id="declineModal{{ $wish->id }}" class="modal" style="display: none;">
+    <div id="declineModal{{ $wish->id }}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center;" onclick="if(event.target===this) closeDeclineModal({{ $wish->id }})">
         <div class="modal-content">
-            <h3>Decline Wish Request</h3>
+            <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: #1f2937;">Decline Wish Request</h3>
             <form action="{{ route('parent.wishes.decline', $wish) }}" method="POST">
                 @csrf
-                <p>Why are you declining "{{ $wish->item_name }}"? (optional)</p>
-                <textarea name="reason" rows="3" placeholder="Let them know why..."></textarea>
-                <div class="modal-actions">
-                    <button type="button" onclick="closeDeclineModal({{ $wish->id }})">Cancel</button>
-                    <button type="submit" class="btn-decline">Decline Request</button>
+                <p style="color: #6b7280; margin: 0 0 12px 0;">Why are you declining "{{ $wish->item_name }}"? (optional)</p>
+                <textarea name="reason" rows="3" placeholder="Let them know why..." style="width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical; box-sizing: border-box; font-family: inherit;"></textarea>
+                <div class="modal-actions" style="margin-top: 16px;">
+                    <button type="button" onclick="closeDeclineModal({{ $wish->id }})" style="padding: 12px 28px; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; background: #e5e7eb; color: #4b5563;">Cancel</button>
+                    <button type="submit" class="btn-decline" style="padding: 12px 28px; font-size: 15px;">Decline Request</button>
                 </div>
             </form>
         </div>
@@ -492,12 +555,14 @@
     background: white;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 6px;
     color: #6b7280;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .btn-view:hover {
@@ -510,10 +575,12 @@
     border: none;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
 }
 
 .btn-approve {
@@ -578,10 +645,34 @@
 .badge-pending {
     background: #fef3c7;
     color: #92400e;
-    padding: 4px 12px;
-    border-radius: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    width: fit-content;
+    margin: 8px 0;
+    border: 1px solid #fde68a;
+}
+
+.badge-declined {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    width: fit-content;
+    margin: 8px 0;
+    border: 1px solid #fecaca;
+    letter-spacing: 0.01em;
 }
 
 .purchased-date {
@@ -660,15 +751,17 @@
 }
 
 .modal-content {
-    background: white !important;
+    background: white;
     border-radius: 16px;
     padding: 32px;
     max-width: 440px;
     width: 90%;
+    height: auto;
+    align-self: center;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
     animation: slideUp 0.3s ease;
-    position: relative !important;
-    z-index: 1000000 !important;
+    position: relative;
+    z-index: 10001;
 }
 
 @keyframes slideUp {
@@ -911,6 +1004,59 @@ function switchWishTab(tab, evt) {
 
     // Show the corresponding tab content
     document.getElementById(tab + 'Tab').classList.add('active');
+}
+
+function openApproveModal(wishId) {
+    // Reset fees input and after-balance display
+    const feesInput = document.getElementById('approveFees' + wishId);
+    if (feesInput) feesInput.value = '';
+    document.getElementById('approveAdjustedLabel' + wishId).style.display = 'none';
+    document.getElementById('approveAdjustedNote' + wishId).style.display = 'none';
+    document.getElementById('approveModal' + wishId).style.display = 'flex';
+}
+
+function closeApproveModal(wishId) {
+    document.getElementById('approveModal' + wishId).style.display = 'none';
+}
+
+function updateApproveTotal(wishId, basePrice, currentBalance) {
+    const input = document.getElementById('approveFees' + wishId);
+    let value = input.value.replace(/[^0-9]/g, '');
+
+    if (value === '') {
+        input.value = '';
+        document.getElementById('approveAdjustedLabel' + wishId).style.display = 'none';
+        document.getElementById('approveAdjustedNote' + wishId).style.display = 'none';
+        const afterBalance = currentBalance - basePrice;
+        const afterEl = document.getElementById('approveAfterBalance' + wishId);
+        afterEl.textContent = '$' + afterBalance.toFixed(2);
+        afterEl.style.color = afterBalance < 0 ? '#ef4444' : '#10b981';
+        return;
+    }
+
+    const cents = parseInt(value);
+    const dollars = (cents / 100).toFixed(2);
+    input.value = dollars;
+
+    const additionalFee = parseFloat(dollars);
+    const adjustedTotal = basePrice + additionalFee;
+
+    document.getElementById('approveAdjustedLabel' + wishId).textContent = '$' + adjustedTotal.toFixed(2);
+    document.getElementById('approveAdjustedLabel' + wishId).style.display = 'inline';
+    document.getElementById('approveAdjustedNote' + wishId).style.display = 'inline';
+
+    const afterBalance = currentBalance - adjustedTotal;
+    const afterEl = document.getElementById('approveAfterBalance' + wishId);
+    afterEl.textContent = '$' + afterBalance.toFixed(2);
+    afterEl.style.color = afterBalance < 0 ? '#ef4444' : '#10b981';
+}
+
+function confirmApprove(wishId, basePrice, currentBalance) {
+    const feesInput = document.getElementById('approveFees' + wishId);
+    const additionalFees = feesInput && feesInput.value ? parseFloat(feesInput.value) : 0;
+    const finalAmount = basePrice + additionalFees;
+    document.getElementById('approveAdjustedAmount' + wishId).value = finalAmount.toFixed(2);
+    document.getElementById('approveForm' + wishId).submit();
 }
 
 function openDeclineModal(wishId) {

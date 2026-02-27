@@ -39,7 +39,7 @@
         @else
             <div class="kid-wishes-grid">
                 @foreach($currentWishes as $wish)
-                    <div class="kid-wish-card" data-wish-id="{{ $wish->id }}" data-wish-name="{{ $wish->item_name }}" data-wish-price="{{ $wish->price }}">
+                    <div class="kid-wish-card {{ $wish->isDeclined() ? 'kid-wish-card-declined' : '' }}" data-wish-id="{{ $wish->id }}" data-wish-name="{{ $wish->item_name }}" data-wish-price="{{ $wish->price }}">
                         {{-- Image --}}
                         <div class="kid-wish-card-img">
                             @if($wish->image_path)
@@ -65,6 +65,25 @@
                                 <div class="kid-wish-status-badge pending">
                                     <i class="fas fa-clock"></i> Pending Response
                                 </div>
+                            @elseif($wish->isDeclined())
+                                @php
+                                    $hoursLeft = $wish->hoursUntilReAsk();
+                                    $canReAsk = $wish->canReAsk();
+                                    $declinedAtMs = $wish->declined_at ? $wish->declined_at->timestamp * 1000 : null;
+                                @endphp
+                                <div class="kid-wish-status-badge declined">
+                                    <i class="fas fa-times-circle"></i> Declined
+                                </div>
+                                @if(!$canReAsk && $declinedAtMs)
+                                    <div class="kid-wish-reask-countdown" data-ready-at="{{ $wish->declined_at->timestamp + 86400 }}">
+                                        <i class="fas fa-clock"></i>
+                                        <span class="kid-wish-countdown-text">Ask again in {{ ceil($hoursLeft) }}h</span>
+                                    </div>
+                                @elseif($canReAsk)
+                                    <div class="kid-wish-reask-ready">
+                                        <i class="fas fa-paper-plane"></i> Ready to re-ask!
+                                    </div>
+                                @endif
                             @endif
 
                             {{-- Actions --}}
@@ -187,10 +206,6 @@
             </div>
         </div>
 
-        <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #854d0e; line-height: 1.5;">
-            <i class="fas fa-info-circle"></i> <strong>Heads up:</strong> Your parent may add taxes or shipping fees, so the final amount deducted may differ from the price shown above.
-        </div>
-
         <div style="display: flex; gap: 12px;">
             <button onclick="kidCloseRequestModal()" style="flex: 1; padding: 12px; background: #e5e7eb; color: #374151; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
                 Cancel
@@ -265,6 +280,8 @@
 </div>
 
 <style>
+[x-cloak] { display: none !important; }
+
 /* Inner tabs */
 .kid-inner-tab {
     padding: 10px 16px;
@@ -323,6 +340,13 @@
     gap: 20px;
 }
 
+@media (max-width: 1100px) {
+    .kid-wishes-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+}
+
 /* Wish Card */
 .kid-wish-card {
     background: white;
@@ -338,6 +362,10 @@
 }
 .kid-wish-card-purchased {
     opacity: 0.85;
+}
+.kid-wish-card-declined {
+    opacity: 0.75;
+    border-color: #fca5a5;
 }
 
 /* Card Image */
@@ -410,6 +438,28 @@
     width: fit-content;
 }
 .kid-wish-status-badge.pending { background: #fef3c7; color: #d97706; }
+.kid-wish-status-badge.declined { background: #fee2e2; color: #991b1b; }
+.kid-wish-reask-countdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #b91c1c;
+    margin-top: 3px;
+}
+.kid-wish-reask-ready {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1d4ed8;
+    background: #dbeafe;
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-top: 3px;
+}
 .kid-wish-purchased-date {
     font-size: 12px;
     color: #6b7280;
@@ -422,13 +472,13 @@
 .kid-wish-card-actions {
     display: flex;
     gap: 6px;
-    flex-wrap: wrap;
     margin-top: auto;
     padding-top: 4px;
 }
 .kid-wish-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
     padding: 7px 12px;
     border-radius: 8px;
@@ -439,6 +489,7 @@
     cursor: pointer;
     text-decoration: none;
     white-space: nowrap;
+    flex: 1;
 }
 .kid-wish-btn-primary { color: white; }
 .kid-wish-btn-view { background: #f3f4f6; color: #374151; }
@@ -456,6 +507,9 @@
     flex-direction: column;
     gap: 6px;
     width: 100%;
+}
+.kid-wish-goal-nudge .kid-wish-btn {
+    flex: none;
 }
 
 .kid-wish-confirm-row {
@@ -490,4 +544,46 @@
         gap: 12px;
     }
 }
+
+@media (max-width: 500px) {
+    .kid-wishes-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
 </style>
+
+<script>
+// Live countdown for all declined wish cards
+(function() {
+    function formatCountdown(msLeft) {
+        if (msLeft <= 0) return null;
+        const totalSecs = Math.ceil(msLeft / 1000);
+        const h = Math.floor(totalSecs / 3600);
+        const m = Math.floor((totalSecs % 3600) / 60);
+        const s = totalSecs % 60;
+        if (h > 0) return `${h}h ${m}m`;
+        if (m > 0) return `${m}m ${s}s`;
+        return `${s}s`;
+    }
+
+    document.querySelectorAll('.kid-wish-reask-countdown').forEach(function(el) {
+        const readyAt = parseInt(el.dataset.readyAt, 10) * 1000;
+        const textEl = el.querySelector('.kid-wish-countdown-text');
+
+        function tick() {
+            const msLeft = readyAt - Date.now();
+            if (msLeft <= 0) {
+                // Swap countdown out for "ready" indicator, no full reload needed
+                el.outerHTML = '<div class="kid-wish-reask-ready"><i class="fas fa-paper-plane"></i> Ready to re-ask!</div>';
+                clearInterval(timer);
+                return;
+            }
+            if (textEl) textEl.textContent = 'Ask again in ' + formatCountdown(msLeft);
+        }
+
+        tick();
+        const timer = setInterval(tick, 1000);
+    });
+})();
+</script>

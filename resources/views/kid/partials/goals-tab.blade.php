@@ -35,13 +35,28 @@
                         $progress = $goal->target_amount > 0 ? min(100, ($goal->current_amount / $goal->target_amount) * 100) : 0;
                         $isReady = $goal->isReadyToRedeem();
                         $accentColor = $isReady ? '#10b981' : $kid->color;
+                        // Denial state
+                        $hasDenial = $goal->denied_at && $goal->denial_reason;
+                        $denialAcknowledged = (bool) $goal->denial_acknowledged_at;
+                        $showDenialBanner = $hasDenial && !$denialAcknowledged;
+                        // Cooldown: 24h from denied_at, only active after acknowledgement
+                        $hoursElapsedSinceDenial = $hasDenial && $denialAcknowledged ? $goal->denied_at->diffInHours(now()) : 0;
+                        $cooldownHoursLeft = max(0, 24 - $hoursElapsedSinceDenial);
+                        $cooldownActive = $hasDenial && $denialAcknowledged && $cooldownHoursLeft > 0;
                     @endphp
-                    <div class="kid-goal-card {{ $isReady ? 'kid-goal-card-ready' : '' }} {{ $goal->status === 'pending_redemption' ? 'kid-goal-card-pending' : '' }}"
+                    <div :class="'kid-goal-card' + (isNowReady ? ' kid-goal-card-ready' : '') + ({{ $goal->status === 'pending_redemption' ? 'true' : 'false' }} ? ' kid-goal-card-pending' : '')"
                          x-data="{
                                 showAdd: false, addAmount: '', adding: false, addSuccess: false,
                                 requesting: false, requested: {{ $goal->status === 'pending_redemption' ? 'true' : 'false' }},
                                 goalCurrent: {{ $goal->current_amount }},
                                 goalTarget: {{ $goal->target_amount }},
+                                wasReady: {{ $isReady ? 'true' : 'false' }},
+                                // Denial state — server-rendered, cleared reactively after acknowledge
+                                showDenialBanner: {{ $showDenialBanner ? 'true' : 'false' }},
+                                acknowledging: false,
+                                cooldownActive: {{ $cooldownActive ? 'true' : 'false' }},
+                                cooldownHoursLeft: {{ $cooldownHoursLeft }},
+                                get isNowReady() { return this.wasReady || (this.goalTarget > 0 && this.goalCurrent >= this.goalTarget); },
                                 get addCents() { const v = this.addAmount.replace(/[^0-9]/g,''); return v === '' ? 0 : parseInt(v); },
                                 get addDollars() { return this.addCents / 100; },
                                 get remaining() { return Math.max(0, this.goalTarget - this.goalCurrent); },
@@ -67,10 +82,6 @@
                                 if(d.success){
                                     kidUpdateBalance(-capturedAmount);
                                     goalCurrent = Math.min(goalTarget, goalCurrent + capturedAmount);
-                                    const newPctVal = goalTarget > 0 ? Math.min(100, Math.round((goalCurrent / goalTarget) * 100)) : 0;
-                                    if ($refs.savedAmt) $refs.savedAmt.textContent = '$' + goalCurrent.toFixed(2);
-                                    if ($refs.pctAmt) $refs.pctAmt.textContent = newPctVal + '%';
-                                    if ($refs.barFill) $refs.barFill.style.width = newPctVal + '%';
                                     const remaining = Math.max(0, 1400 - (Date.now() - addStart));
                                     setTimeout(() => {
                                         adding = false;
@@ -90,7 +101,8 @@
                          ">
 
                         {{-- Card Image / Banner --}}
-                        <div class="kid-goal-card-image" style="background: {{ $accentColor }}18;">
+                        <div class="kid-goal-card-image"
+                             :style="'background: ' + (isNowReady ? '#10b98118' : '{{ $accentColor }}18')">
                             @if($goal->photo_path)
                                 <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}">
                             @else
@@ -102,17 +114,23 @@
                             <button onclick="kidOpenEditGoalModal({{ $goal->id }})" class="kid-goal-card-edit-btn" title="Edit Goal">
                                 <i class="fas fa-pen"></i>
                             </button>
-                            {{-- Status badge top-left --}}
-                            @if($isReady)
-                                <div class="kid-goal-card-status-badge kid-goal-card-status-ready" x-show="!requested">
-                                    <i class="fas fa-check-circle"></i> Ready!
-                                </div>
-                                <div class="kid-goal-card-status-badge kid-goal-card-status-pending" x-show="requested" x-cloak>
-                                    <i class="fas fa-clock"></i> Pending
-                                </div>
-                            @elseif($goal->status === 'pending_redemption')
+                            {{-- Status badge top-left (reactive) --}}
+                            <div class="kid-goal-card-status-badge kid-goal-card-status-ready"
+                                 x-show="isNowReady && !requested" x-cloak>
+                                <i class="fas fa-check-circle"></i> Ready!
+                            </div>
+                            <div class="kid-goal-card-status-badge kid-goal-card-status-pending"
+                                 x-show="isNowReady && requested" x-cloak>
+                                <i class="fas fa-clock"></i> Pending
+                            </div>
+                            @if(!$isReady && $goal->status === 'pending_redemption')
                                 <div class="kid-goal-card-status-badge kid-goal-card-status-pending">
                                     <i class="fas fa-clock"></i> Pending
+                                </div>
+                            @endif
+                            @if($goal->denial_reason && $goal->denied_at)
+                                <div class="kid-goal-card-status-badge" style="background:#fef2f2; color:#dc2626; border:1px solid #fca5a5;">
+                                    <i class="fas fa-ban"></i> Denied
                                 </div>
                             @endif
                         </div>
@@ -121,15 +139,52 @@
                         <div class="kid-goal-card-body">
                             <div class="kid-goal-card-title">{{ $goal->title }}</div>
 
+                            {{-- Denial Notification Banner --}}
+                            @if($hasDenial)
+                            <div x-show="showDenialBanner" x-cloak
+                                 style="background:#fef2f2; border:1px solid #fca5a5; border-radius:10px; padding:12px 14px; margin-bottom:4px;">
+                                <div style="font-size:13px; font-weight:700; color:#dc2626; margin-bottom:4px;">
+                                    <i class="fas fa-ban"></i> Parent Denied Fulfillment
+                                </div>
+                                <div style="font-size:13px; color:#7f1d1d; margin-bottom:10px;">{{ $goal->denial_reason }}</div>
+                                <button
+                                    @click="
+                                        acknowledging = true;
+                                        fetch('/kid/goals/{{ $goal->id }}/acknowledge-denial', {
+                                            method: 'POST',
+                                            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content}
+                                        }).then(r=>r.json()).then(d=>{
+                                            acknowledging = false;
+                                            if(d.success){
+                                                showDenialBanner = false;
+                                                cooldownActive = d.cooldown_active;
+                                                cooldownHoursLeft = d.hours_left;
+                                            }
+                                        }).catch(()=>{ acknowledging=false; });
+                                    "
+                                    :disabled="acknowledging"
+                                    style="width:100%; padding:8px 12px; background:#dc2626; color:white; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">
+                                    <span x-show="!acknowledging"><i class="fas fa-check"></i> I Understand</span>
+                                    <span x-show="acknowledging" x-cloak><span class="kid-goal-add-spinner"></span></span>
+                                </button>
+                            </div>
+                            @endif
+
                             {{-- Progress --}}
                             <div class="kid-goal-card-progress-section">
                                 <div class="kid-goal-card-amounts">
-                                    <span x-ref="savedAmt" class="kid-goal-card-saved" style="color: {{ $accentColor }};">${{ number_format($goal->current_amount, 2) }}</span>
+                                    <span x-ref="savedAmt" class="kid-goal-card-saved"
+                                          :style="'color: ' + (isNowReady ? '#10b981' : '{{ $accentColor }}')"
+                                          x-text="'$' + goalCurrent.toFixed(2)"
+                                          style="color: {{ $accentColor }};">${{ number_format($goal->current_amount, 2) }}</span>
                                     <span class="kid-goal-card-target"> of ${{ number_format($goal->target_amount, 2) }}</span>
-                                    <span x-ref="pctAmt" class="kid-goal-card-pct">{{ round($progress) }}%</span>
+                                    <span x-ref="pctAmt" class="kid-goal-card-pct"
+                                          x-text="(goalTarget > 0 ? Math.min(100, Math.round((goalCurrent/goalTarget)*100)) : 0) + '%'">{{ round($progress) }}%</span>
                                 </div>
                                 <div class="kid-goal-card-bar">
-                                    <div x-ref="barFill" class="kid-goal-card-bar-fill" style="width: {{ $progress }}%; background: {{ $accentColor }};"></div>
+                                    <div x-ref="barFill" class="kid-goal-card-bar-fill"
+                                         :style="'width: ' + (goalTarget > 0 ? Math.min(100, Math.round((goalCurrent/goalTarget)*100)) : 0) + '%; background: ' + (isNowReady ? '#10b981' : '{{ $accentColor }}')"
+                                         style="width: {{ $progress }}%; background: {{ $accentColor }};"></div>
                                 </div>
                             </div>
 
@@ -139,40 +194,13 @@
                                 </div>
                             @endif
 
-                            {{-- Actions --}}
-                            <div class="kid-goal-card-actions">
-                                @if($isReady)
-                                    {{-- Ready to redeem: show Ask Parent button (reactive) --}}
-                                    <button x-show="!requested" @click="
-                                        requesting = true;
-                                        fetch('/kid/goals/{{ $goal->id }}/request-redemption', {
-                                            method: 'POST',
-                                            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content}
-                                        }).then(r=>r.json()).then(d=>{
-                                            requesting = false;
-                                            if(d.success){ requested = true; }
-                                            else { alert(d.message||'Error'); }
-                                        }).catch(()=>{ requesting=false; });
-                                    " class="kid-goal-card-redeem-btn" :disabled="requesting">
-                                        <span x-show="!requesting"><i class="fas fa-gift"></i> Ask Parent to Fulfill! 🎉</span>
-                                        <span x-show="requesting" x-cloak><span class="kid-goal-add-spinner"></span> Sending...</span>
-                                    </button>
-                                    <span x-show="requested" x-cloak class="kid-goal-card-pending-label">
-                                        <i class="fas fa-clock"></i> Awaiting parent approval
-                                    </span>
-                                @elseif($goal->status === 'pending_redemption')
-                                    <span class="kid-goal-card-pending-label"><i class="fas fa-clock"></i> Awaiting parent approval</span>
-                                @else
-                                    <button @click="showAdd = !showAdd" class="kid-goal-card-add-btn" style="background: {{ $accentColor }};">
-                                        <i class="fas fa-plus"></i> Add Funds
-                                    </button>
-                                @endif
-                                <a href="{{ route('kid.goals.show', $goal) }}" class="kid-goal-card-view-btn">
-                                    <i class="fas fa-eye"></i> View Goal
-                                </a>
-                            </div>
+                            {{-- Flexible spacer pushes bottom section down uniformly across all cards --}}
+                            <div class="kid-goal-card-spacer"></div>
 
-                            <form x-ref="addForm" :class="showAdd && !addSuccess ? 'kid-goal-card-add-form kid-goal-add-open' : (addSuccess ? 'kid-goal-card-add-form kid-goal-add-open kid-goal-card-fading' : 'kid-goal-card-add-form')">
+                            {{-- Bottom section: actions + add form grouped so they stay pinned to bottom together --}}
+                            <div class="kid-goal-card-bottom">
+                                {{-- Add form sits above the buttons so it expands upward --}}
+                                <form x-ref="addForm" :class="showAdd && !addSuccess ? 'kid-goal-card-add-form kid-goal-add-open' : (addSuccess ? 'kid-goal-card-add-form kid-goal-add-open kid-goal-card-fading' : 'kid-goal-card-add-form')">
                                 <div class="kid-goal-add-row">
                                     <input type="text" x-model="addAmount"
                                            @input="let v=addAmount.replace(/[^0-9]/g,''); addAmount=v===''?'':'$'+(parseInt(v)/100).toFixed(2);"
@@ -187,9 +215,62 @@
                                     <button type="button" @click="showAdd=false;addAmount=''" class="kid-goal-card-add-cancel"><i class="fas fa-times"></i></button>
                                 </div>
                                 <div x-show="hintText" x-cloak class="kid-goal-add-hint" :class="isOverLimit ? 'error' : 'success'" x-text="hintText"></div>
-                            </form>
-                        </div>
-                    </div>
+                                </form>
+
+                                {{-- Actions row: always at bottom --}}
+                                <div class="kid-goal-card-actions">
+                                    {{-- Cooldown notice (after acknowledging denial, within 24h) --}}
+                                    <template x-if="isNowReady && !requested && !showDenialBanner && cooldownActive">
+                                        <div style="padding:10px 14px; background:#fef3c7; border:1px solid #fcd34d; border-radius:10px; text-align:center; font-size:13px; font-weight:600; color:#92400e; margin:0 2px;">
+                                            <i class="fas fa-clock"></i> You can ask again in <span x-text="Math.ceil(cooldownHoursLeft)"></span> hour<span x-show="Math.ceil(cooldownHoursLeft) !== 1">s</span>
+                                        </div>
+                                    </template>
+
+                                    {{-- Ask to Redeem (visible when ready, not requested, banner dismissed, no cooldown) --}}
+                                    <template x-if="isNowReady && !requested && !showDenialBanner && !cooldownActive">
+                                        <button @click="
+                                            requesting = true;
+                                            fetch('/kid/goals/{{ $goal->id }}/request-redemption', {
+                                                method: 'POST',
+                                                headers: {'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content}
+                                            }).then(r=>r.json()).then(d=>{
+                                                requesting = false;
+                                                if(d.success){
+                                                    requested = true;
+                                                } else if(d.cooldown) {
+                                                    cooldownActive = true;
+                                                    cooldownHoursLeft = d.hours_left;
+                                                } else {
+                                                    alert(d.message||'Error');
+                                                }
+                                            }).catch(()=>{ requesting=false; });
+                                        " class="kid-goal-card-redeem-btn" :disabled="requesting">
+                                            <span x-show="!requesting"><i class="fas fa-gift"></i> Ask Parent to Fulfill! 🎉</span>
+                                            <span x-show="requesting" x-cloak><span class="kid-goal-add-spinner"></span> Sending...</span>
+                                        </button>
+                                    </template>
+
+                                    {{-- Pending label (visible when ready + requested) --}}
+                                    <template x-if="isNowReady && requested">
+                                        <span class="kid-goal-card-pending-label">
+                                            <i class="fas fa-clock"></i> Awaiting parent approval
+                                        </span>
+                                    </template>
+
+                                    {{-- Add Funds (visible when NOT ready) --}}
+                                    <template x-if="!isNowReady">
+                                        <button @click="showAdd = !showAdd" class="kid-goal-card-add-btn" style="background: {{ $accentColor }};">
+                                            <i class="fas fa-plus"></i> Add Funds
+                                        </button>
+                                    </template>
+
+                                    <a href="{{ route('kid.goals.show', $goal) }}" class="kid-goal-card-view-btn">
+                                        <i class="fas fa-eye"></i> View Goal
+                                    </a>
+                                </div>
+                            </div>{{-- /kid-goal-card-bottom --}}
+                        </div>{{-- /kid-goal-card-body --}}
+                    </div>{{-- /kid-goal-card --}}
                 @endforeach
             </div>
         @else
@@ -453,6 +534,8 @@
 {{-- Scripts in AJAX-injected HTML don't execute, so the component must be pre-registered --}}
 
 <style>
+[x-cloak] { display: none !important; }
+
 .kid-inner-tab {
     padding: 10px 16px;
     font-size: 14px;
@@ -512,6 +595,9 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     align-items: stretch;
+}
+@media (max-width: 1100px) {
+    .kid-goals-card-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
 }
 @media (max-width: 900px) {
     .kid-goals-card-grid { grid-template-columns: repeat(2, 1fr); }
@@ -579,8 +665,9 @@
 /* Card Body */
 .kid-goal-card-body {
     padding: 16px 16px 16px;
-    display: flex; flex-direction: column; gap: 10px;
+    display: flex; flex-direction: column;
     flex: 1;
+    gap: 10px;
 }
 .kid-goal-card-title {
     font-size: 15px; font-weight: 700; color: #1f2937;
@@ -616,8 +703,14 @@
     font-size: 12px; color: #9ca3af;
     display: flex; align-items: center; gap: 4px;
 }
+.kid-goal-card-spacer {
+    flex: 1;
+    min-height: 0;
+}
+.kid-goal-card-bottom {
+    display: flex; flex-direction: column; gap: 0;
+}
 .kid-goal-card-actions {
-    margin-top: auto;
     padding-top: 8px;
     display: flex; flex-direction: column; gap: 8px; align-items: stretch;
 }

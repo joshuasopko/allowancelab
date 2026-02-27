@@ -3,11 +3,14 @@
 @section('title', $wish->item_name)
 
 @section('content')
-<div class="kid-content-wrapper">
-    <!-- Back Button -->
-    <a href="{{ route('kid.dashboard') }}?tab=wishes" class="btn-back">
-        <i class="fas fa-arrow-left"></i> Back to Wish List
-    </a>
+<div class="wish-show-container">
+    <!-- Header -->
+    <div class="wish-show-header">
+        <h1 class="wish-show-title">Wish Details</h1>
+        <a href="{{ route('kid.dashboard') }}?tab=wishes" class="wish-show-btn-back">
+            ← Back to Wishes
+        </a>
+    </div>
 
     <!-- Success/Error Messages -->
     @if(session('success'))
@@ -54,6 +57,40 @@
                 <div class="wish-status-badge wish-status-purchased">
                     <i class="fas fa-check-circle"></i> Purchased {{ $wish->purchased_at->diffForHumans() }}
                 </div>
+            @elseif($wish->isDeclined())
+                @php
+                    $declineTransaction = $wish->wishTransactions
+                        ->where('transaction_type', 'declined')
+                        ->sortByDesc('created_at')
+                        ->first();
+                    $declineReason = $declineTransaction?->note;
+                    // Use declined_at if set, otherwise fall back to the transaction timestamp
+                    $declinedTimestamp = $wish->declined_at
+                        ?? ($declineTransaction ? $declineTransaction->created_at : null);
+                    $declinedAtMs = $declinedTimestamp ? $declinedTimestamp->timestamp * 1000 : null;
+                    $hoursElapsed = $declinedTimestamp ? now()->floatDiffInHours($declinedTimestamp) : 25;
+                    $canReAsk = $hoursElapsed >= 24;
+                    $hoursLeft = max(0, 24 - $hoursElapsed);
+                @endphp
+                <div class="wish-declined-banner">
+                    <div class="wish-declined-banner-header">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Declined</span>
+                    </div>
+                    <p class="wish-declined-banner-body">Your parent declined this wish.</p>
+                    @if($declineReason)
+                        <div class="wish-declined-reason">
+                            <i class="fas fa-comment"></i>
+                            <span>{{ $declineReason }}</span>
+                        </div>
+                    @endif
+                    @if(!$canReAsk && $declinedAtMs)
+                        <div class="wish-declined-countdown" id="reAskCountdownBox">
+                            <i class="fas fa-clock"></i>
+                            <span>You can ask again in <strong id="reAskCountdown">...</strong></span>
+                        </div>
+                    @endif
+                </div>
             @endif
 
             <!-- URL Link -->
@@ -74,7 +111,22 @@
             @endif
 
             <!-- Action Buttons -->
-            @if($wish->canBeEdited())
+            @if($wish->isDeclined())
+                <div class="wish-detail-actions" style="margin-top: 24px;">
+                    @if($canReAsk)
+                        <button onclick="reAskParent({{ $wish->id }})" class="btn-wish-primary" id="reAskBtn">
+                            <i class="fas fa-paper-plane"></i> Ask Parent Again
+                        </button>
+                    @else
+                        <button class="btn-wish-cooldown" disabled id="reAskBtn">
+                            <i class="fas fa-clock"></i> <span id="reAskBtnCountdown">...</span>
+                        </button>
+                    @endif
+                    <button type="button" onclick="openDeleteModal()" class="btn-wish-danger">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            @elseif($wish->canBeEdited())
                 @if($wish->isSaved() && !$wish->canBeRequested())
                     <div class="wish-goal-nudge-banner">
                         <div class="wish-goal-nudge-icon"><i class="fas fa-piggy-bank"></i></div>
@@ -116,7 +168,7 @@
             @endif
         </div>
     </div>
-</div>
+</div><!-- /.wish-show-container -->
 
 <!-- Edit Modal (simplified for now) -->
 <div id="editWishModal" class="kid-modal" style="display: none;">
@@ -217,24 +269,20 @@
                 <span style="color: #6b7280; font-size: 14px;">Your Balance</span>
                 <span style="font-weight: 700; color: #1f2937;">${{ number_format($kid->balance, 2) }}</span>
             </div>
+            @php $afterBalance = $kid->balance - $wish->price; @endphp
             <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; display: flex; justify-content: space-between;">
                 <span style="color: #6b7280; font-size: 14px;">Balance After Purchase</span>
-                @php $afterBalance = $kid->balance - $wish->price; @endphp
-                <span style="font-weight: 700; color: {{ $afterBalance >= 0 ? '#10b981' : '#ef4444' }};">
+                <span id="showPageAfterBalance" style="font-weight: 700; color: {{ $afterBalance >= 0 ? '#10b981' : '#ef4444' }};">
                     ${{ number_format($afterBalance, 2) }}
                 </span>
             </div>
-        </div>
-
-        <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #854d0e; line-height: 1.5;">
-            <i class="fas fa-info-circle"></i> <strong>Heads up:</strong> Your parent may add taxes or shipping fees, so the final amount deducted may differ from the price shown above.
         </div>
 
         <div style="display: flex; gap: 12px;">
             <button onclick="closeRequestModal()" style="flex: 1; padding: 12px; background: #e5e7eb; color: #374151; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
                 Cancel
             </button>
-            <button onclick="confirmRequestPurchase({{ $wish->id }})" style="flex: 1; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+            <button id="showPageConfirmBtn" onclick="confirmRequestPurchase({{ $wish->id }})" style="flex: 1; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
                 <i class="fas fa-paper-plane"></i> Yes, Ask Parent!
             </button>
         </div>
@@ -242,21 +290,44 @@
 </div>
 
 <style>
-.btn-back {
+/* Container — matches goal-detail-container */
+.wish-show-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Header — matches goal-detail-header */
+.wish-show-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.wish-show-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+/* Back button — matches .btn-back in goals/show.blade.php */
+.wish-show-btn-back {
+    padding: 10px 20px;
+    background: #6b7280;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 0;
-    background: transparent;
-    color: #6b7280;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 14px;
-    transition: color 0.2s;
-    margin-bottom: 20px;
 }
-.btn-back:hover {
-    color: #374151;
+.wish-show-btn-back:hover {
+    background: #4b5563;
+    color: white;
     text-decoration: none;
 }
 
@@ -265,7 +336,6 @@
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
-    margin-top: 24px;
 }
 
 .wish-detail-image-container {
@@ -385,6 +455,21 @@
     cursor: not-allowed;
 }
 
+.btn-wish-cooldown {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: not-allowed;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #6b7280;
+    color: white;
+    opacity: 0.8;
+}
+
 .btn-wish-secondary {
     background: #e5e7eb;
     color: #374151;
@@ -482,6 +567,68 @@
     align-items: center;
     gap: 6px;
 }
+
+.wish-declined-banner {
+    background: #fff1f2;
+    border: 1px solid #fca5a5;
+    border-left: 4px solid #ef4444;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.wish-declined-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #991b1b;
+    margin-bottom: 6px;
+}
+
+.wish-declined-banner-header i {
+    font-size: 18px;
+}
+
+.wish-declined-banner-body {
+    font-size: 14px;
+    color: #b91c1c;
+    margin: 0 0 10px 0;
+}
+
+.wish-declined-reason {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: white;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #7f1d1d;
+    line-height: 1.5;
+}
+
+.wish-declined-reason i {
+    color: #ef4444;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.wish-declined-countdown {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #b91c1c;
+    font-weight: 500;
+}
+
+.wish-declined-countdown i {
+    color: #ef4444;
+}
 </style>
 
 <script>
@@ -503,6 +650,9 @@ function closeDeleteModal() {
     modal.style.display = 'none';
 }
 
+const SHOW_PAGE_PRICE = {{ $wish->price }};
+const SHOW_PAGE_BALANCE = {{ $kid->balance }};
+
 function openRequestModal() {
     document.getElementById('requestPurchaseModal').style.display = 'flex';
 }
@@ -512,17 +662,19 @@ function closeRequestModal() {
 }
 
 async function confirmRequestPurchase(wishId) {
-    const btn = event.target.closest('button');
+    const btn = document.getElementById('showPageConfirmBtn');
     btn.disabled = true;
-    btn.textContent = 'Sending...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
     try {
         const response = await fetch(`/kid/wishes/${wishId}/request-purchase`, {
             method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json'
-            }
+            },
+            body: JSON.stringify({})
         });
 
         const result = await response.json();
@@ -561,6 +713,92 @@ async function remindParent(wishId) {
         }
     } catch (error) {
         console.error('Reminder error:', error);
+    }
+}
+
+@if($wish->isDeclined() && $declinedAtMs)
+// Live countdown for re-ask cooldown
+(function() {
+    const declinedAt = {{ $declinedAtMs }};
+    const cooldownMs = 24 * 60 * 60 * 1000;
+    const readyAt = declinedAt + cooldownMs;
+
+    function formatCountdown(msLeft) {
+        if (msLeft <= 0) return null;
+        const totalSecs = Math.ceil(msLeft / 1000);
+        const h = Math.floor(totalSecs / 3600);
+        const m = Math.floor((totalSecs % 3600) / 60);
+        const s = totalSecs % 60;
+        if (h > 0) return `${h}h ${m}m`;
+        if (m > 0) return `${m}m ${s}s`;
+        return `${s}s`;
+    }
+
+    function tick() {
+        const msLeft = readyAt - Date.now();
+
+        // Update banner countdown text
+        const bannerEl = document.getElementById('reAskCountdown');
+        const btnEl = document.getElementById('reAskBtn');
+        const btnCountdownEl = document.getElementById('reAskBtnCountdown');
+
+        if (msLeft <= 0) {
+            // Cooldown expired — enable the button without a page reload
+            const box = document.getElementById('reAskCountdownBox');
+            if (box) box.style.display = 'none';
+            if (btnEl) {
+                btnEl.disabled = false;
+                btnEl.className = 'btn-wish-primary';
+                btnEl.innerHTML = '<i class="fas fa-paper-plane"></i> Ask Parent Again';
+                btnEl.onclick = () => reAskParent({{ $wish->id }});
+            }
+            clearInterval(timer);
+            return;
+        }
+
+        const label = formatCountdown(msLeft);
+        if (bannerEl) bannerEl.textContent = label;
+        if (btnCountdownEl) btnCountdownEl.textContent = `Ask Again in ${label}`;
+    }
+
+    tick();
+    const timer = setInterval(tick, 1000);
+})();
+@endif
+
+async function reAskParent(wishId) {
+    const btn = document.getElementById('reAskBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    }
+
+    try {
+        const response = await fetch(`/kid/wishes/${wishId}/re-ask`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            location.reload();
+        } else {
+            alert(result.message || 'Failed to send request');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Ask Parent Again';
+            }
+        }
+    } catch (error) {
+        console.error('Re-ask error:', error);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Ask Parent Again';
+        }
     }
 }
 </script>

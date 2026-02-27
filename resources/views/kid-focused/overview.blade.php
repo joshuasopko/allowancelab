@@ -65,25 +65,53 @@
     <!-- Goals Card -->
     <div class="overview-card goals-card">
         <div class="card-header">
-            <h3><i class="fas fa-bullseye"></i> Active Goals</h3>
+            <h3><i class="fas fa-bullseye"></i> Active Goals <span class="goal-count-badge">{{ $activeGoals->count() }}</span></h3>
             <a href="{{ route('kids.goals', $kid) }}" class="view-all-link">View All</a>
         </div>
         <div class="card-body">
             @if($activeGoals->count() > 0)
                 @foreach($activeGoals as $goal)
-                    <div class="goal-item">
-                        <div class="goal-info">
-                            <div class="goal-name">{{ $goal->title }}</div>
-                            <div class="goal-progress">
-                                ${{ number_format($goal->current_amount, 2) }} / ${{ number_format($goal->target_amount, 2) }}
+                    @php
+                        $gProgress = $goal->target_amount > 0 ? ($goal->current_amount / $goal->target_amount) * 100 : 0;
+                        $gProgress = min($gProgress, 100);
+                        $gIsComplete = $gProgress >= 100;
+                        $gIsDenied = $goal->denied_at && $goal->denial_reason;
+                        $gBarColor = $gIsComplete ? '#10b981' : $kid->color;
+                    @endphp
+                    <div class="goal-card-item">
+                        <div class="goal-card-inner">
+                            @if($goal->photo_path)
+                                <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-card-thumb">
+                            @else
+                                <div class="goal-card-thumb goal-card-thumb-placeholder">
+                                    <i class="fas fa-bullseye" style="color: {{ $gBarColor }};"></i>
+                                </div>
+                            @endif
+                            <div class="goal-card-details">
+                                <div class="goal-card-title">{{ Str::limit($goal->title, 40) }}</div>
+                                <div class="goal-card-progress-bar">
+                                    <div class="goal-card-progress-fill" style="width: {{ $gProgress }}%; background: {{ $gBarColor }};"></div>
+                                </div>
+                                <div class="goal-card-amounts">${{ number_format($goal->current_amount, 2) }} / ${{ number_format($goal->target_amount, 2) }}</div>
+                                <div class="goal-card-actions">
+                                    @if($gIsDenied)
+                                        <span class="goal-card-badge goal-card-badge-denied">
+                                            <i class="fas fa-ban"></i> Denied
+                                        </span>
+                                    @elseif($goal->status === 'pending_redemption')
+                                        <span class="goal-card-badge goal-card-badge-pending">
+                                            <i class="fas fa-clock"></i> Requested
+                                        </span>
+                                    @elseif($gIsComplete)
+                                        <span class="goal-card-badge goal-card-badge-complete">
+                                            <i class="fas fa-check-circle"></i> Complete!
+                                        </span>
+                                    @endif
+                                    <a href="{{ route('parent.goals.show', $goal) }}" class="goal-card-btn goal-card-btn-view">
+                                        <i class="fas fa-eye"></i> View Goal
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                        <div class="goal-progress-bar">
-                            @php
-                                $progress = $goal->target_amount > 0 ? ($goal->current_amount / $goal->target_amount) * 100 : 0;
-                                $progress = min($progress, 100);
-                            @endphp
-                            <div class="progress-fill" style="width: {{ $progress }}%"></div>
                         </div>
                     </div>
                 @endforeach
@@ -103,16 +131,45 @@
             <a href="{{ route('kids.wishes', $kid) }}" class="view-all-link">View All</a>
         </div>
         <div class="card-body">
-            @if($pendingWishesCount > 0)
-                <div class="wishes-pending">
-                    <i class="fas fa-clock"></i>
-                    <span><strong>{{ $pendingWishesCount }}</strong> wish{{ $pendingWishesCount != 1 ? 'es' : '' }} pending approval</span>
-                </div>
+            @if($recentWishes->count() > 0)
+                @foreach($recentWishes as $wish)
+                    <div class="wish-card-item">
+                        <div class="wish-card-inner">
+                            {{-- Thumbnail --}}
+                            @if($wish->image_path)
+                                <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}" class="wish-card-thumb">
+                            @else
+                                <div class="wish-card-thumb wish-card-thumb-placeholder">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                            @endif
+                            {{-- Details --}}
+                            <div class="wish-card-details">
+                                <div class="wish-card-title">{{ Str::limit($wish->item_name, 40) }}</div>
+                                <div class="wish-card-price">${{ number_format($wish->price, 2) }}</div>
+                                <div class="wish-card-actions">
+                                    @if($wish->status === 'pending_approval')
+                                        <span class="wish-card-badge wish-card-badge-pending">
+                                            <i class="fas fa-clock"></i> Pending
+                                        </span>
+                                    @elseif($wish->status === 'declined')
+                                        <span class="wish-card-badge wish-card-badge-declined">
+                                            <i class="fas fa-times-circle"></i> Declined
+                                        </span>
+                                    @endif
+                                    <a href="{{ route('parent.wishes.show', $wish) }}" class="wish-card-btn wish-card-btn-view">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             @else
-                <p style="color: #6b7280; text-align: center; padding: 20px 0;">No pending wishes</p>
+                <p style="color: #6b7280; text-align: center; padding: 20px 0;">No active wishes</p>
             @endif
-            <a href="{{ route('kids.wishes', $kid) }}" class="btn-settings">
-                <i class="fas fa-eye"></i> View Wishes
+            <a href="{{ route('kids.wishes', $kid) }}" class="btn-settings" style="margin-top: 12px;">
+                <i class="fas fa-eye"></i> View All Wishes
             </a>
         </div>
     </div>
@@ -274,58 +331,221 @@
 }
 
 /* Goals Card */
-.goal-item {
-    margin-bottom: 20px;
+.goal-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e5e7eb;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 2px 8px;
+    margin-left: 6px;
+    vertical-align: middle;
 }
 
-.goal-item:last-child {
+.goal-card-item {
+    margin-bottom: 12px;
+    border: 1px solid #f3f4f6;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fafafa;
+}
+.goal-card-item:last-child {
     margin-bottom: 0;
 }
 
-.goal-info {
+.goal-card-inner {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
+    gap: 12px;
+    padding: 14px;
+    align-items: flex-start;
 }
 
-.goal-name {
-    font-weight: 600;
-    color: #1f2937;
+.goal-card-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
-.goal-progress {
-    color: #6b7280;
-    font-size: 14px;
-}
-
-.goal-progress-bar {
-    height: 8px;
+.goal-card-thumb-placeholder {
     background: #e5e7eb;
-    border-radius: 4px;
-    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 22px;
 }
 
-.progress-fill {
+.goal-card-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.goal-card-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #1f2937;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.goal-card-progress-bar {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.goal-card-progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #3b82f6, #10b981);
+    border-radius: 3px;
     transition: width 0.3s;
 }
 
-/* Wishes Card */
-.wishes-pending {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: #fef3c7;
-    border-radius: 8px;
-    color: #92400e;
-    margin-bottom: 16px;
+.goal-card-amounts {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 10px;
 }
 
-.wishes-pending i {
-    font-size: 24px;
+.goal-card-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
+
+.goal-card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s;
+}
+.goal-card-btn:hover { opacity: 0.85; }
+
+.goal-card-btn-view {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.goal-card-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 700;
+    white-space: nowrap;
+}
+.goal-card-badge-denied  { background: #fee2e2; color: #dc2626; }
+.goal-card-badge-pending { background: #fef3c7; color: #92400e; }
+.goal-card-badge-complete { background: #d1fae5; color: #059669; }
+
+/* Wishes Card */
+.wish-card-item {
+    margin-bottom: 12px;
+    border: 1px solid #f3f4f6;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fafafa;
+}
+.wish-card-item:last-child { margin-bottom: 0; }
+
+.wish-card-inner {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    align-items: flex-start;
+}
+
+.wish-card-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.wish-card-thumb-placeholder {
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 22px;
+}
+
+.wish-card-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.wish-card-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #1f2937;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.wish-card-price {
+    font-size: 13px;
+    font-weight: 600;
+    color: #3b82f6;
+    margin-bottom: 8px;
+}
+
+.wish-card-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.wish-card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s;
+}
+.wish-card-btn:hover { opacity: 0.85; }
+
+.wish-card-btn-view {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.wish-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.wish-card-badge-pending  { background: #fef3c7; color: #92400e; }
+.wish-card-badge-declined { background: #fee2e2; color: #991b1b; }
 
 /* Activity Card */
 .activity-item {

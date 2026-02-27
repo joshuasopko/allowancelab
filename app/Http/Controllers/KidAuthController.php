@@ -109,7 +109,8 @@ class KidAuthController extends Controller
             ->get();
 
         $previewWishes = $kid->wishes()
-            ->whereIn('status', ['saved', 'pending_approval'])
+            ->whereIn('status', ['saved', 'pending_approval', 'declined'])
+            ->orderByRaw("CASE status WHEN 'pending_approval' THEN 0 WHEN 'saved' THEN 1 ELSE 2 END")
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -150,7 +151,8 @@ class KidAuthController extends Controller
         $kid = Auth::guard('kid')->user();
 
         $currentWishes = $kid->wishes()
-            ->whereIn('status', ['saved', 'pending_approval'])
+            ->whereIn('status', ['saved', 'pending_approval', 'declined'])
+            ->orderByRaw("CASE status WHEN 'pending_approval' THEN 0 WHEN 'saved' THEN 1 ELSE 2 END")
             ->orderBy('created_at', 'desc')
             ->get();
 

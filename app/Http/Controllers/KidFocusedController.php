@@ -22,21 +22,28 @@ class KidFocusedController extends Controller
 
         // Get overview data
         $activeGoals = Goal::where('kid_id', $kid->id)
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
+            ->orderByRaw("CASE status WHEN 'pending_redemption' THEN 0 WHEN 'ready_to_redeem' THEN 1 ELSE 2 END")
             ->orderBy('created_at', 'desc')
             ->take(3)
             ->get();
 
-        $pendingWishesCount = Wish::where('kid_id', $kid->id)
-            ->where('status', 'pending_approval')
-            ->count();
+        $recentWishes = Wish::where('kid_id', $kid->id)
+            ->whereIn('status', ['pending_approval', 'saved', 'declined'])
+            ->orderByRaw("CASE status WHEN 'pending_approval' THEN 0 WHEN 'saved' THEN 1 ELSE 2 END")
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get();
+
+        $pendingWishesCount = $recentWishes->where('status', 'pending_approval')->count();
+        $declinedWishesCount = $recentWishes->where('status', 'declined')->count();
 
         $recentTransactions = $kid->transactions()
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        return view('kid-focused.overview', compact('kid', 'activeGoals', 'pendingWishesCount', 'recentTransactions'));
+        return view('kid-focused.overview', compact('kid', 'activeGoals', 'recentWishes', 'pendingWishesCount', 'declinedWishesCount', 'recentTransactions'));
     }
 
     /**
