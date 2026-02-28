@@ -32,7 +32,7 @@
         <!-- Wish Image -->
         <div class="wish-detail-image-container">
             @if($wish->image_path)
-                <img src="{{ asset('storage/' . $wish->image_path) }}"
+                <img src="{{ \Storage::url($wish->image_path) }}"
                      alt="{{ $wish->item_name }}"
                      class="wish-detail-image">
             @else

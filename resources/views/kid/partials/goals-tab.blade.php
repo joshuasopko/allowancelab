@@ -104,7 +104,7 @@
                         <div class="kid-goal-card-image"
                              :style="'background: ' + (isNowReady ? '#10b98118' : '{{ $accentColor }}18')">
                             @if($goal->photo_path)
-                                <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}">
+                                <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}">
                             @else
                                 <div class="kid-goal-card-icon-placeholder">
                                     <i class="fas fa-bullseye" style="color: {{ $accentColor }};"></i>
@@ -290,7 +290,7 @@
                     <div class="kid-goal-card kid-goal-card-completed">
                         <div class="kid-goal-card-image" style="background: #d1fae5;">
                             @if($goal->photo_path)
-                                <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}">
+                                <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}">
                             @else
                                 <div class="kid-goal-card-icon-placeholder">
                                     <i class="fas fa-check-circle" style="color: #10b981;"></i>

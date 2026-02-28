@@ -1627,73 +1627,7 @@ window.toggleKidDropdown = toggleKidDropdown;
 window.toggleMoreActions = toggleMoreActions;
 window.toggleCategory = toggleCategory;
 
-// Decline Wish Modal
-let currentDeclineWishId = null;
-let currentDeclineKidId = null;
-
-function openDeclineWishModal(wishId, kidId) {
-    currentDeclineWishId = wishId;
-    currentDeclineKidId = kidId;
-    
-    // Create modal if it doesn't exist
-    if (!document.getElementById('declineWishModal')) {
-        const modal = document.createElement('div');
-        modal.id = 'declineWishModal';
-        modal.style.cssText = 'display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;';
-        modal.innerHTML = `
-            <div style="background: white; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
-                <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #111827;">Decline Wish Request</h3>
-                <form id="declineWishForm" method="POST">
-                    <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
-                    <p style="margin-bottom: 12px; color: #374151; font-size: 14px;">Why are you declining this wish? (optional)</p>
-                    <textarea name="reason" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-family: inherit;" placeholder="Let them know why..."></textarea>
-                    <div style="display: flex; gap: 12px; margin-top: 20px;">
-                        <button type="button" onclick="closeDeclineWishModal()" style="flex: 1; padding: 10px 16px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                            Cancel
-                        </button>
-                        <button type="submit" style="flex: 1; padding: 10px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                            <i class="fas fa-times"></i> Decline Request
-                        </button>
-                    </div>
-                </form>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        // Close on backdrop click
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeDeclineWishModal();
-            }
-        });
-    }
-    
-    // Set form action
-    const form = document.getElementById('declineWishForm');
-    form.action = `/wishes/${wishId}/decline`;
-    
-    document.getElementById('declineWishModal').style.display = 'flex';
-}
-
-function closeDeclineWishModal() {
-    const modal = document.getElementById('declineWishModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    currentDeclineWishId = null;
-    currentDeclineKidId = null;
-}
-
-// Close on ESC key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeDeclineWishModal();
-    }
-});
-
-// Expose wishes functions globally
-window.openDeclineWishModal = openDeclineWishModal;
-window.closeDeclineWishModal = closeDeclineWishModal;
+// Decline Wish Modal — handled entirely by blade-rendered modal + inline script in dashboard.blade.php
 
 // Kids menu toggle
 function toggleKidsMenu(event) {

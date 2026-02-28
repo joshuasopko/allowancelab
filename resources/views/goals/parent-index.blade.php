@@ -253,7 +253,7 @@
                             {{-- Card Image / Banner --}}
                             <div class="kid-goal-card-image" style="background: {{ $accentColor }}18;">
                                 @if($goal->photo_path)
-                                    <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}">
+                                    <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}">
                                 @else
                                     <div class="kid-goal-card-icon-placeholder">
                                         <i class="fas fa-bullseye" style="color: {{ $accentColor }};"></i>
@@ -449,7 +449,7 @@
                             <div class="goal-card-header">
                                 <div class="goal-card-header-left">
                                     @if($goal->photo_path)
-                                        <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
+                                        <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
                                     @else
                                         <div class="goal-icon goal-icon-placeholder">
                                             <i class="fas fa-trophy"></i>
@@ -749,9 +749,10 @@
                 document.getElementById('goalAutoAllocation').value = data.auto_allocation_percentage || 0;
                 currentGoalAllocation = parseFloat(data.auto_allocation_percentage) || 0;
 
-                if (data.photo_path) {
+                if (data.photo_url || data.photo_path) {
+                    const photoUrl = data.photo_url || '/storage/' + data.photo_path;
                     document.getElementById('photoUploadContent').innerHTML = `
-                        <img src="/storage/${data.photo_path}" alt="Preview" class="photo-preview">
+                        <img src="${photoUrl}" alt="Preview" class="photo-preview">
                     `;
                     document.getElementById('removePhotoBtn').style.display = 'block';
                 }

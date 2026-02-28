@@ -133,7 +133,8 @@ class Kid extends Authenticatable
     public function getRecentWishes($limit = 2)
     {
         return $this->wishes()
-            ->whereIn('status', ['saved', 'pending_approval'])
+            ->whereIn('status', ['saved', 'pending_approval', 'declined'])
+            ->orderByRaw("CASE status WHEN 'pending_approval' THEN 0 WHEN 'saved' THEN 1 ELSE 2 END")
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();

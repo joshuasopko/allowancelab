@@ -81,7 +81,7 @@
                     <div class="goal-card-item">
                         <div class="goal-card-inner">
                             @if($goal->photo_path)
-                                <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-card-thumb">
+                                <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-card-thumb">
                             @else
                                 <div class="goal-card-thumb goal-card-thumb-placeholder">
                                     <i class="fas fa-bullseye" style="color: {{ $gBarColor }};"></i>
@@ -137,7 +137,7 @@
                         <div class="wish-card-inner">
                             {{-- Thumbnail --}}
                             @if($wish->image_path)
-                                <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}" class="wish-card-thumb">
+                                <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}" class="wish-card-thumb">
                             @else
                                 <div class="wish-card-thumb wish-card-thumb-placeholder">
                                     <i class="fas fa-gift"></i>

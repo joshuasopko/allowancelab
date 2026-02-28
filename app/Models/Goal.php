@@ -24,6 +24,10 @@ class Goal extends Model
         'status',
         'redeemed_at',
         'redeemed_by_user_id',
+        'denial_reason',
+        'denied_at',
+        'denial_acknowledged_at',
+        'last_redemption_requested_at',
     ];
 
     protected $casts = [
@@ -32,6 +36,9 @@ class Goal extends Model
         'auto_allocation_percentage' => 'decimal:2',
         'expected_completion_date' => 'date',
         'redeemed_at' => 'datetime',
+        'denied_at' => 'datetime',
+        'denial_acknowledged_at' => 'datetime',
+        'last_redemption_requested_at' => 'datetime',
     ];
 
     // Relationship: Goal belongs to a Family

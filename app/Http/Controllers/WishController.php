@@ -70,7 +70,7 @@ class WishController extends Controller
 
             if ($request->hasFile('image')) {
                 // Manual upload takes precedence
-                $imagePath = $request->file('image')->store('wish-photos', 'public');
+                $imagePath = $request->file('image')->store('wish-photos');
             } elseif ($request->filled('scraped_image_url')) {
                 // Download scraped image
                 $imagePath = $this->urlScraper->downloadImage($request->scraped_image_url);
@@ -160,13 +160,13 @@ class WishController extends Controller
             if ($request->hasFile('image')) {
                 // Delete old image if exists
                 if ($wish->image_path) {
-                    Storage::disk('public')->delete($wish->image_path);
+                    Storage::delete($wish->image_path);
                 }
-                $wish->image_path = $request->file('image')->store('wish-photos', 'public');
+                $wish->image_path = $request->file('image')->store('wish-photos');
             } elseif ($request->filled('scraped_image_url') && $request->scraped_image_url !== $wish->image_path) {
                 // New scraped image
                 if ($wish->image_path) {
-                    Storage::disk('public')->delete($wish->image_path);
+                    Storage::delete($wish->image_path);
                 }
                 $wish->image_path = $this->urlScraper->downloadImage($request->scraped_image_url);
             }
@@ -475,7 +475,7 @@ class WishController extends Controller
             $imagePath = null;
 
             if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('wish-photos', 'public');
+                $imagePath = $request->file('image')->store('wish-photos');
             } elseif ($request->filled('scraped_image_url')) {
                 $imagePath = $this->urlScraper->downloadImage($request->scraped_image_url);
             }

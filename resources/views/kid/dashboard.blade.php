@@ -1482,7 +1482,7 @@
                                     {{-- Thumbnail --}}
                                     <div class="kid-goal-item-thumb">
                                         @if($goal->photo_path)
-                                            <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}">
+                                            <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}">
                                         @else
                                             <div class="kid-goal-item-thumb-placeholder">
                                                 <i class="fas {{ $isGoalComplete ? 'fa-check-circle' : 'fa-bullseye' }}" style="color: {{ $barColor }};"></i>
@@ -1543,7 +1543,7 @@
                                     {{-- Thumbnail --}}
                                     <div class="kid-wish-item-thumb">
                                         @if($wish->image_path)
-                                            <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}">
+                                            <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                         @else
                                             <div class="kid-wish-item-thumb-placeholder">
                                                 <i class="fas fa-box-open"></i>

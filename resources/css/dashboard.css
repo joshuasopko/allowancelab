@@ -1132,6 +1132,11 @@ body {
     margin-left: auto;
 }
 
+/* Mobile-only dropdown: hidden on desktop (desktop uses the one inside action-buttons-compact) */
+.kid-card-dropdown-mobile-only {
+    display: none;
+}
+
 .kid-card-dropdown-trigger {
     background: transparent;
     border: none;
@@ -4964,6 +4969,14 @@ Manage Family Styles
         overflow: visible !important;
     }
 
+    /* Show mobile-only dropdown, hide the desktop one inside action-buttons-compact */
+    .kid-card-dropdown-mobile-only {
+        display: block;
+    }
+    .kid-card-line-2 .kid-card-dropdown {
+        display: none !important;
+    }
+
     /* Hide desktop layout */
     .kid-card-line-1,
     .kid-card-line-2 {
@@ -5540,6 +5553,17 @@ Manage Family Styles
     display: inline-block;
     padding: 3px 8px;
     background: #ef4444;
+    color: white;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.item-declined-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #991b1b;
     color: white;
     border-radius: 12px;
     font-size: 10px;

@@ -67,18 +67,22 @@
 
         <!-- Price -->
         <div class="form-group">
-            <label for="price">Price *</label>
-            <div class="input-prefix-wrapper">
-                <span class="input-prefix">$</span>
-                <input type="number"
+            <label for="price_display">Price *</label>
+            <div class="price-input-wrapper" id="price_wrapper">
+                <span class="price-symbol">$</span>
+                <input type="text"
+                       id="price_display"
+                       class="price-input"
+                       placeholder="0.00"
+                       inputmode="numeric"
+                       autocomplete="off"
+                       value="{{ old('price') ? number_format((float)old('price'), 2) : '' }}"
+                       oninput="formatPriceInput(this)"
+                       onfocus="document.getElementById('price_wrapper').style.borderColor='#3b82f6'"
+                       onblur="document.getElementById('price_wrapper').style.borderColor='#e5e7eb'">
+                <input type="hidden"
                        id="price"
                        name="price"
-                       class="form-input input-with-prefix"
-                       placeholder="0.00"
-                       step="0.01"
-                       min="0"
-                       max="99999.99"
-                       required
                        value="{{ old('price') }}">
             </div>
             @error('price')
@@ -277,23 +281,36 @@
     border: 1px solid #fca5a5;
 }
 
-.input-prefix-wrapper {
-    position: relative;
+.price-input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+    background: white;
 }
 
-.input-prefix {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
+.price-symbol {
+    padding: 0 4px 0 14px;
     color: #6b7280;
     font-weight: 600;
-    pointer-events: none;
     font-size: 15px;
+    line-height: 1;
+    flex-shrink: 0;
+    user-select: none;
 }
 
-.input-with-prefix {
-    padding-left: 32px;
+.price-input {
+    flex: 1;
+    padding: 12px 12px 12px 2px;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 15px;
+    color: #1f2937;
+    background: transparent;
+    font-family: inherit;
+    border-radius: 0;
 }
 
 .image-preview {
@@ -439,6 +456,20 @@
 <script>
 let isScrapingWish = false;
 
+function formatPriceInput(input) {
+    // Strip everything except digits
+    let value = input.value.replace(/[^0-9]/g, '');
+
+    // Cash-register style: digits become cents
+    if (value === '') value = '0';
+    const cents = parseInt(value);
+    const dollars = (cents / 100).toFixed(2);
+    input.value = dollars;
+
+    // Sync to hidden field for form submission
+    document.getElementById('price').value = dollars;
+}
+
 function scrapeWishUrl() {
     const url = document.getElementById('wish_url').value.trim();
     const scrapeBtn = document.getElementById('scrapeBtn');
@@ -484,7 +515,9 @@ function scrapeWishUrl() {
                 document.getElementById('item_name').value = data.data.title;
             }
             if (data.data.price) {
-                document.getElementById('price').value = parseFloat(data.data.price).toFixed(2);
+                const formatted = parseFloat(data.data.price).toFixed(2);
+                document.getElementById('price_display').value = formatted;
+                document.getElementById('price').value = formatted;
             }
             if (data.data.image_url) {
                 document.getElementById('scraped_image_url').value = data.data.image_url;

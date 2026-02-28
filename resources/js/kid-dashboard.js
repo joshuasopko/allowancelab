@@ -894,9 +894,20 @@ window.kidActivityPageNext = kidActivityPageNext;
 
 // Wish card interaction functions
 let kidRequestActiveWishId = null;
+let kidRequestActiveWishPrice = 0;
+
+function kidRequestUpdateAfterBalance() {
+    const balance = kidBalance || 0;
+    const afterEl = document.getElementById('kidRequestAfterBalance');
+    if (!afterEl) return;
+    const after = balance - kidRequestActiveWishPrice;
+    afterEl.textContent = '$' + after.toFixed(2);
+    afterEl.style.color = after >= 0 ? '#10b981' : '#ef4444';
+}
 
 window.kidWishAskToBuy = function(wishId, wishName, wishPrice) {
     kidRequestActiveWishId = wishId;
+    kidRequestActiveWishPrice = parseFloat(wishPrice);
 
     // Populate modal
     const balance = kidBalance || 0;
@@ -923,6 +934,7 @@ window.kidCloseRequestModal = function() {
     const modal = document.getElementById('kidRequestPurchaseModal');
     if (modal) modal.style.display = 'none';
     kidRequestActiveWishId = null;
+    kidRequestActiveWishPrice = 0;
 };
 
 window.kidWishConfirmRequest = async function() {
@@ -936,10 +948,12 @@ window.kidWishConfirmRequest = async function() {
         const response = await fetch('/kid/wishes/' + wishId + '/request-purchase', {
             method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
-            }
+            },
+            body: JSON.stringify({})
         });
         const result = await response.json();
         if (result.success) {

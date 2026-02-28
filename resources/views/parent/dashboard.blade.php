@@ -42,27 +42,6 @@
     @if($kids->count() > 0)
         @foreach($kids as $kid)
             <div class="kid-card-compact" data-kid-id="{{ $kid->id }}">
-                <!-- 3-dot menu (positioned in upper right on mobile) -->
-                <div class="kid-card-dropdown">
-                    <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown('{{ $kid->id }}-footer')">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                    <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
-                        <a href="{{ route('kids.overview', $kid) }}" class="kid-card-dropdown-item">
-                            <i class="fas fa-chart-pie"></i> Overview
-                        </a>
-                        <a href="{{ route('kids.goals', $kid) }}" class="kid-card-dropdown-item">
-                            <i class="fas fa-bullseye"></i> View Goals
-                        </a>
-                        <a href="{{ route('kids.wishes', $kid) }}" class="kid-card-dropdown-item">
-                            <i class="fas fa-heart"></i> View Wishes
-                        </a>
-                        <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
-                            <i class="fas fa-cog"></i> Manage Kid
-                        </a>
-                    </div>
-                </div>
-
                 @php
                     $invite = $kid->invite;
                     $showPendingBadge = $invite && $invite->status === 'pending' && !$invite->isExpired();
@@ -79,6 +58,27 @@
                         ->orderBy('created_at', 'desc')
                         ->get();
                 @endphp
+
+                <!-- 3-dot dropdown: inline in action buttons on desktop, absolute upper-right on mobile via CSS -->
+                <div class="kid-card-dropdown kid-card-dropdown-mobile-only">
+                    <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown('{{ $kid->id }}-mobile')">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                    <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-mobile">
+                        <a href="{{ route('kids.overview', $kid) }}" class="kid-card-dropdown-item">
+                            <i class="fas fa-chart-pie"></i> Overview
+                        </a>
+                        <a href="{{ route('kids.goals', $kid) }}" class="kid-card-dropdown-item">
+                            <i class="fas fa-bullseye"></i> View Goals
+                        </a>
+                        <a href="{{ route('kids.wishes', $kid) }}" class="kid-card-dropdown-item">
+                            <i class="fas fa-heart"></i> View Wishes
+                        </a>
+                        <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
+                            <i class="fas fa-cog"></i> Manage Kid
+                        </a>
+                    </div>
+                </div>
 
                 <!-- Desktop Layout: Line 1 - Avatar | Name | Balance | Action Buttons -->
                 <div class="kid-card-line-1">
@@ -102,7 +102,7 @@
                     </div>
                 </div>
 
-                <!-- Desktop Layout: Line 2 - Points Badge | Next Allowance -->
+                <!-- Desktop Layout: Line 2 - Points Badge | Next Allowance | 3-dot menu -->
                 <div class="kid-card-line-2">
                     <div class="kid-card-line-2-left">
                         @if($kid->points_enabled)
@@ -117,6 +117,25 @@
                         @else
                             Next: ${{ number_format($kid->allowance_amount, 2) }} on {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}
                         @endif
+                    </div>
+                    <div class="kid-card-dropdown">
+                        <button class="kid-card-dropdown-trigger" onclick="toggleKidDropdown('{{ $kid->id }}-footer')">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                        <div class="kid-card-dropdown-menu" id="kidDropdown{{ $kid->id }}-footer">
+                            <a href="{{ route('kids.overview', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-chart-pie"></i> Overview
+                            </a>
+                            <a href="{{ route('kids.goals', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-bullseye"></i> View Goals
+                            </a>
+                            <a href="{{ route('kids.wishes', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-heart"></i> View Wishes
+                            </a>
+                            <a href="{{ route('kids.manage', $kid) }}" class="kid-card-dropdown-item">
+                                <i class="fas fa-cog"></i> Manage Kid
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -397,11 +416,13 @@
                                                 <i class="fas fa-check"></i> Approve
                                             </button>
                                         </form>
-                                        <form action="{{ route('parent.goals.deny-redemption', $goal) }}" method="POST" style="margin: 0;">
+                                        <button type="button" class="btn-category-action" style="background: #ef4444;"
+                                            onclick="showDashboardDenyModal('{{ $goal->id }}', '{{ $kid->name }}', '{{ addslashes($goal->title) }}')">
+                                            <i class="fas fa-times"></i> Deny
+                                        </button>
+                                        <form id="dashboard-deny-form-{{ $goal->id }}" action="{{ route('parent.goals.deny-redemption', $goal) }}" method="POST" style="display:none;">
                                             @csrf
-                                            <button type="submit" class="btn-category-action" style="background: #ef4444;" onclick="return confirm('Deny redemption? Goal will remain active for {{ $kid->name }}.');">
-                                                <i class="fas fa-times"></i> Deny
-                                            </button>
+                                            <input type="hidden" name="denial_reason" id="dashboard-deny-reason-{{ $goal->id }}">
                                         </form>
                                     </div>
                                 @elseif($goal->status === 'ready_to_redeem')
@@ -477,7 +498,7 @@
                             @endphp
                             <div class="category-item-row {{ $wish->isPendingApproval() ? 'pending-attention' : '' }}">
                                 @if($wish->image_path)
-                                    <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}" class="item-thumbnail">
+                                    <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}" class="item-thumbnail">
                                 @endif
                                 <div class="item-name-cell">
                                     {{ $truncatedName }}
@@ -485,21 +506,45 @@
                                         <span class="item-pending-badge">
                                             PENDING APPROVAL
                                         </span>
+                                    @elseif($wish->isDeclined())
+                                        <span class="item-declined-badge">
+                                            DECLINED
+                                        </span>
                                     @endif
                                 </div>
                                 <div class="item-amount-cell">${{ number_format($wish->price, 2) }}</div>
 
                                 @if($wish->isPendingApproval())
+                                    {{-- Hidden form submitted by approve modal --}}
+                                    <form id="approve-wish-form-{{ $wish->id }}" action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: none;">
+                                        @csrf
+                                        <input type="hidden" name="adjusted_amount" id="approve-wish-amount-{{ $wish->id }}" value="{{ $wish->price }}">
+                                    </form>
                                     <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                                        <form action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="margin: 0;">
-                                            @csrf
-                                            <button type="submit" class="btn-category-action btn-approve" onclick="return confirm('Approve this purchase? ${{ number_format($wish->price, 2) }} will be deducted from {{ $kid->name }}\'s balance.')">
-                                                <i class="fas fa-check"></i> Approve
-                                            </button>
-                                        </form>
-                                        <button onclick="openDeclineWishModal('{{ $wish->id }}', '{{ $kid->id }}')" class="btn-category-action btn-decline">
-                                            <i class="fas fa-times"></i> Decline
+                                        <button
+                                            onclick="openApproveWishModal('{{ $wish->id }}', '{{ addslashes($wish->item_name) }}', '{{ number_format($wish->price, 2) }}', '{{ addslashes($kid->name) }}', '{{ number_format($kid->balance, 2) }}')"
+                                            class="btn-category-action btn-approve">
+                                            <i class="fas fa-check"></i> Approve
                                         </button>
+                                        <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-category-action btn-view">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </div>
+                                @elseif($wish->isSaved())
+                                    {{-- Hidden form submitted by redeem modal --}}
+                                    <form id="dashboard-redeem-form-{{ $wish->id }}" action="{{ route('parent.wishes.redeem', $wish) }}" method="POST" style="display: none;">
+                                        @csrf
+                                        <input type="hidden" name="adjusted_amount" id="dashboard-redeem-amount-{{ $wish->id }}" value="{{ $wish->price }}">
+                                    </form>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                        <button
+                                            onclick="openDashboardRedeemModal('{{ $wish->id }}', '{{ addslashes($wish->item_name) }}', {{ $wish->price }}, {{ $kid->balance }})"
+                                            class="btn-category-action btn-redeem-wish">
+                                            <i class="fas fa-gift"></i> Redeem
+                                        </button>
+                                        <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-category-action btn-view">
+                                            View
+                                        </a>
                                     </div>
                                 @else
                                     <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-category-action btn-view">
@@ -586,6 +631,35 @@
         </div>
     </div>
 
+    <!-- Deny Goal Redemption Modal -->
+    <div id="dashboardDenyModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #ef4444; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-times" style="color: white; font-size: 22px;"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #111827;">Deny Fulfillment</h3>
+                    <p id="dashboardDenyGoalTitle" style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;"></p>
+                </div>
+            </div>
+            <p id="dashboardDenyMessage" style="margin: 0 0 16px 0; color: #374151; font-size: 14px; line-height: 1.5;"></p>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Reason <span style="color:#9ca3af; font-weight:400;">(optional — shown to your kid)</span></label>
+                <textarea id="dashboardDenyReasonInput" placeholder="e.g. Let's wait until after your birthday..." rows="3"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #111827; resize: vertical; box-sizing: border-box; font-family: inherit;"></textarea>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeDashboardDenyModal()" style="flex: 1; padding: 10px 16px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    Cancel
+                </button>
+                <button onclick="confirmDashboardDeny()" style="flex: 1; padding: 10px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-times"></i> Deny
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Redeem Goal Confirmation Modal -->
     <div id="redeemConfirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
@@ -610,7 +684,286 @@
         </div>
     </div>
 
+    {{-- All modal JS is consolidated at the bottom of this section, after all modal HTML --}}
+
+    <!-- Approve Wish Modal -->
+    <div id="approveWishModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 16px; padding: 28px; width: 90%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-check" style="color: white; font-size: 20px;"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #111827;">Approve Purchase</h3>
+                    <p id="approveWishName" style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280; font-weight: 500;"></p>
+                </div>
+            </div>
+
+            <!-- Item price row -->
+            <div style="background: #f9fafb; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Item Price:</span>
+                    <span id="approveWishPrice" style="font-size: 18px; font-weight: 700; color: #1f2937;"></span>
+                </div>
+            </div>
+
+            <!-- Additional Fees Input -->
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">
+                    Additional Fees <span style="font-weight: 400; color: #9ca3af;">(shipping, tax, etc.)</span>
+                </label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; font-weight: 600;">$</span>
+                    <input type="text" id="approveWishFees" placeholder="0.00"
+                        style="width: 100%; padding: 10px 10px 10px 24px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 15px; font-weight: 600; color: #1f2937; box-sizing: border-box;"
+                        oninput="approveWishUpdateTotal()">
+                </div>
+            </div>
+
+            <!-- Balance breakdown -->
+            <div style="background: #f9fafb; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0;">
+                    <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Total Deducted:</span>
+                    <span id="approveWishTotal" style="font-size: 18px; font-weight: 700; color: #ef4444;"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0;">
+                    <span style="font-size: 14px; font-weight: 600; color: #4b5563;"><span id="approveWishKidName"></span>'s Balance:</span>
+                    <span id="approveWishBalance" style="font-size: 18px; font-weight: 700; color: #3b82f6;"></span>
+                </div>
+                <div style="border-top: 1px solid #e5e7eb; margin: 8px 0;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0;">
+                    <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Balance After:</span>
+                    <span id="approveWishAfter" style="font-size: 18px; font-weight: 700;"></span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeApproveWishModal()" style="flex: 1; padding: 11px 16px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    Cancel
+                </button>
+                <button onclick="confirmApproveWish()" style="flex: 1; padding: 11px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-check"></i> Approve & Deduct
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decline Wish Modal -->
+    <div id="declineWishModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 16px; padding: 28px; width: 90%; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #ef4444; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-times" style="color: white; font-size: 20px;"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #111827;">Decline Request</h3>
+                    <p id="declineWishModalTitle" style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280; font-weight: 500;"></p>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label id="declineWishModalSubtitle" style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;"></label>
+                <textarea id="declineWishReasonInput" placeholder="e.g. Let's save up a bit more first..." rows="3"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #111827; resize: vertical; box-sizing: border-box; font-family: inherit;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeDeclineWishModal()" style="flex: 1; padding: 11px 16px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    Cancel
+                </button>
+                <button onclick="confirmDeclineWish()" style="flex: 1; padding: 11px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-times"></i> Decline Request
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redeem Wish Modal -->
+    <div id="dashboardRedeemWishModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); text-align: center;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px;">
+                <i class="fas fa-gift"></i>
+            </div>
+            <h3 style="font-size: 24px; font-weight: 700; color: #1f2937; margin: 0 0 8px 0;">Redeem Wish?</h3>
+            <p id="dashboardRedeemWishName" style="color: #6b7280; font-size: 15px; margin-bottom: 16px; font-weight: 500;"></p>
+
+            <!-- Item Price Display -->
+            <div style="background: #f9fafb; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="font-weight: 600; color: #4b5563; font-size: 15px;">Item Price:</span>
+                    <span id="dashboardRedeemItemPrice" style="font-size: 18px; font-weight: 700; color: #1f2937;"></span>
+                    <div id="dashboardRedeemAdjustedContainer" style="display: none; align-items: center; gap: 8px;">
+                        <span id="dashboardRedeemAdjustedPrice" style="font-size: 18px; font-weight: 700; color: #10b981;"></span>
+                        <span style="font-size: 12px; color: #6b7280; white-space: nowrap;">(adjusted price)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Fees Input -->
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="display: block; font-weight: 600; color: #4b5563; font-size: 14px; margin-bottom: 8px;">
+                    Additional Fees (shipping, tax, etc.)
+                </label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; font-weight: 600;">$</span>
+                    <input type="text" id="dashboardRedeemFees" placeholder="0.00"
+                        style="width: 100%; padding: 10px 10px 10px 24px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; font-weight: 600; color: #1f2937; box-sizing: border-box;"
+                        oninput="dashboardRedeemUpdateTotal()">
+                </div>
+            </div>
+
+            <!-- Balance Preview -->
+            <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                    <span style="font-weight: 600; color: #4b5563; font-size: 15px;">Current Balance:</span>
+                    <span id="dashboardRedeemCurrentBalance" style="font-size: 20px; font-weight: 700; color: #3b82f6;"></span>
+                </div>
+                <div style="display: flex; justify-content: center; padding: 8px 0; color: #9ca3af; font-size: 18px;">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                    <span style="font-weight: 600; color: #4b5563; font-size: 15px;">After Purchase:</span>
+                    <span id="dashboardRedeemAfterBalance" style="font-size: 20px; font-weight: 700;"></span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeDashboardRedeemWishModal()" style="flex: 1; padding: 12px 16px; background: #e5e7eb; color: #4b5563; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                    Cancel
+                </button>
+                <button onclick="confirmDashboardRedeemWish()" style="flex: 1; padding: 12px 16px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-gift"></i> Confirm Purchase
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .btn-redeem-wish {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.2s;
+        }
+        .btn-redeem-wish:hover { background: #7c3aed; }
+    </style>
+
     <script>
+        let dashboardRedeemWishId = null;
+        let dashboardRedeemData = { basePrice: 0, currentBalance: 0 };
+
+        function openDashboardRedeemModal(wishId, wishName, price, balance) {
+            dashboardRedeemWishId = wishId;
+            dashboardRedeemData.basePrice = price;
+            dashboardRedeemData.currentBalance = balance;
+
+            document.getElementById('dashboardRedeemWishName').textContent = wishName;
+            document.getElementById('dashboardRedeemItemPrice').textContent = '$' + price.toFixed(2);
+            document.getElementById('dashboardRedeemCurrentBalance').textContent = '$' + balance.toFixed(2);
+            document.getElementById('dashboardRedeemFees').value = '';
+            document.getElementById('dashboardRedeemAdjustedContainer').style.display = 'none';
+
+            const afterBalance = balance - price;
+            const afterEl = document.getElementById('dashboardRedeemAfterBalance');
+            afterEl.textContent = '$' + afterBalance.toFixed(2);
+            afterEl.style.color = afterBalance < 0 ? '#ef4444' : '#10b981';
+
+            document.getElementById('dashboard-redeem-amount-' + wishId).value = price.toFixed(2);
+            document.getElementById('dashboardRedeemWishModal').style.display = 'flex';
+        }
+
+        function closeDashboardRedeemWishModal() {
+            document.getElementById('dashboardRedeemWishModal').style.display = 'none';
+            dashboardRedeemWishId = null;
+            dashboardRedeemData = { basePrice: 0, currentBalance: 0 };
+        }
+
+        function dashboardRedeemUpdateTotal() {
+            const input = document.getElementById('dashboardRedeemFees');
+            let value = input.value.replace(/[^0-9]/g, '');
+
+            if (value === '') {
+                input.value = '';
+                document.getElementById('dashboardRedeemAdjustedContainer').style.display = 'none';
+                const afterBalance = dashboardRedeemData.currentBalance - dashboardRedeemData.basePrice;
+                const afterEl = document.getElementById('dashboardRedeemAfterBalance');
+                afterEl.textContent = '$' + afterBalance.toFixed(2);
+                afterEl.style.color = afterBalance < 0 ? '#ef4444' : '#10b981';
+                if (dashboardRedeemWishId) {
+                    document.getElementById('dashboard-redeem-amount-' + dashboardRedeemWishId).value = dashboardRedeemData.basePrice.toFixed(2);
+                }
+                return;
+            }
+
+            const cents = parseInt(value);
+            const dollars = (cents / 100).toFixed(2);
+            input.value = dollars;
+
+            const additionalFee = parseFloat(dollars);
+            const adjustedTotal = dashboardRedeemData.basePrice + additionalFee;
+
+            document.getElementById('dashboardRedeemAdjustedPrice').textContent = '$' + adjustedTotal.toFixed(2);
+            document.getElementById('dashboardRedeemAdjustedContainer').style.display = 'flex';
+
+            const afterBalance = dashboardRedeemData.currentBalance - adjustedTotal;
+            const afterEl = document.getElementById('dashboardRedeemAfterBalance');
+            afterEl.textContent = '$' + afterBalance.toFixed(2);
+            afterEl.style.color = afterBalance < 0 ? '#ef4444' : '#10b981';
+
+            if (dashboardRedeemWishId) {
+                document.getElementById('dashboard-redeem-amount-' + dashboardRedeemWishId).value = adjustedTotal.toFixed(2);
+            }
+        }
+
+        function confirmDashboardRedeemWish() {
+            if (dashboardRedeemWishId) {
+                document.getElementById('dashboard-redeem-form-' + dashboardRedeemWishId).submit();
+            }
+        }
+
+        // Backdrop click — redeem wish
+        const _redeemWishModal = document.getElementById('dashboardRedeemWishModal');
+        if (_redeemWishModal) _redeemWishModal.addEventListener('click', function(e) {
+            if (e.target === this) closeDashboardRedeemWishModal();
+        });
+    </script>
+
+    {{-- ── Consolidated modal JS (runs after all modal HTML is in the DOM) ── --}}
+    <script>
+        // ── Goal Deny Modal ─────────────────────────────────────────────────
+        let currentDashboardDenyGoalId = null;
+
+        function showDashboardDenyModal(goalId, kidName, goalTitle) {
+            currentDashboardDenyGoalId = goalId;
+            document.getElementById('dashboardDenyGoalTitle').textContent = goalTitle;
+            document.getElementById('dashboardDenyMessage').textContent =
+                `The goal will remain active and ${kidName} can request again after 24 hours.`;
+            document.getElementById('dashboardDenyReasonInput').value = '';
+            document.getElementById('dashboardDenyModal').style.display = 'flex';
+        }
+
+        function closeDashboardDenyModal() {
+            document.getElementById('dashboardDenyModal').style.display = 'none';
+            currentDashboardDenyGoalId = null;
+        }
+
+        function confirmDashboardDeny() {
+            if (currentDashboardDenyGoalId) {
+                const reason = document.getElementById('dashboardDenyReasonInput').value.trim();
+                document.getElementById('dashboard-deny-reason-' + currentDashboardDenyGoalId).value = reason;
+                document.getElementById('dashboard-deny-form-' + currentDashboardDenyGoalId).submit();
+            }
+        }
+
+        // ── Goal Redeem Confirmation Modal ──────────────────────────────────
         let currentRedeemFormId = null;
 
         function showRedeemConfirmation(goalId, kidName, goalTitle, amount) {
@@ -630,7 +983,8 @@
         }
 
         function closeRedeemConfirmation() {
-            document.getElementById('redeemConfirmModal').style.display = 'none';
+            const m = document.getElementById('redeemConfirmModal');
+            if (m) m.style.display = 'none';
             currentRedeemFormId = null;
         }
 
@@ -640,18 +994,120 @@
             }
         }
 
-        // Close modal on backdrop click
-        document.getElementById('redeemConfirmModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeRedeemConfirmation();
+        // ── Approve Wish Modal ──────────────────────────────────────────────
+        let currentApproveWishId = null;
+        let approveWishBasePrice = 0;
+        let approveWishBalance = 0;
+
+        function openApproveWishModal(wishId, wishName, price, kidName, balance) {
+            currentApproveWishId = wishId;
+            approveWishBasePrice = parseFloat(price.replace(/,/g, ''));
+            approveWishBalance   = parseFloat(balance.replace(/,/g, ''));
+
+            document.getElementById('approveWishName').textContent    = wishName;
+            document.getElementById('approveWishKidName').textContent = kidName;
+            document.getElementById('approveWishPrice').textContent   = '$' + approveWishBasePrice.toFixed(2);
+            document.getElementById('approveWishBalance').textContent = '$' + approveWishBalance.toFixed(2);
+            document.getElementById('approveWishFees').value = '';
+
+            document.getElementById('approveWishTotal').textContent = '$' + approveWishBasePrice.toFixed(2);
+            const afterEl = document.getElementById('approveWishAfter');
+            const after = approveWishBalance - approveWishBasePrice;
+            afterEl.textContent = '$' + after.toFixed(2);
+            afterEl.style.color = after >= 0 ? '#10b981' : '#ef4444';
+
+            document.getElementById('approve-wish-amount-' + wishId).value = approveWishBasePrice.toFixed(2);
+            document.getElementById('approveWishModal').style.display = 'flex';
+        }
+
+        function approveWishUpdateTotal() {
+            const input = document.getElementById('approveWishFees');
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value === '') {
+                input.value = '';
+                const total = approveWishBasePrice;
+                document.getElementById('approveWishTotal').textContent = '$' + total.toFixed(2);
+                const after = approveWishBalance - total;
+                const afterEl = document.getElementById('approveWishAfter');
+                afterEl.textContent = '$' + after.toFixed(2);
+                afterEl.style.color = after >= 0 ? '#10b981' : '#ef4444';
+                if (currentApproveWishId) document.getElementById('approve-wish-amount-' + currentApproveWishId).value = total.toFixed(2);
+                return;
             }
+            const cents = parseInt(value);
+            const dollars = (cents / 100).toFixed(2);
+            input.value = dollars;
+            const fees = parseFloat(dollars);
+            const total = approveWishBasePrice + fees;
+            document.getElementById('approveWishTotal').textContent = '$' + total.toFixed(2);
+            const after = approveWishBalance - total;
+            const afterEl = document.getElementById('approveWishAfter');
+            afterEl.textContent = '$' + after.toFixed(2);
+            afterEl.style.color = after >= 0 ? '#10b981' : '#ef4444';
+            if (currentApproveWishId) document.getElementById('approve-wish-amount-' + currentApproveWishId).value = total.toFixed(2);
+        }
+
+        function closeApproveWishModal() {
+            document.getElementById('approveWishModal').style.display = 'none';
+            currentApproveWishId = null; approveWishBasePrice = 0; approveWishBalance = 0;
+        }
+
+        function confirmApproveWish() {
+            if (currentApproveWishId) document.getElementById('approve-wish-form-' + currentApproveWishId).submit();
+        }
+
+        // ── Decline Wish Modal ──────────────────────────────────────────────
+        let currentDeclineWishId = null;
+
+        function openDeclineWishModal(wishId, kidName, wishName) {
+            currentDeclineWishId = wishId;
+            document.getElementById('declineWishModalTitle').textContent = wishName;
+            document.getElementById('declineWishModalSubtitle').textContent = 'Let ' + kidName + ' know why (optional)';
+            document.getElementById('declineWishReasonInput').value = '';
+            document.getElementById('declineWishModal').style.display = 'flex';
+        }
+
+        function closeDeclineWishModal() {
+            document.getElementById('declineWishModal').style.display = 'none';
+            currentDeclineWishId = null;
+        }
+
+        function confirmDeclineWish() {
+            if (currentDeclineWishId) {
+                const reason = document.getElementById('declineWishReasonInput').value.trim();
+                document.getElementById('decline-wish-reason-' + currentDeclineWishId).value = reason;
+                document.getElementById('decline-wish-form-' + currentDeclineWishId).submit();
+            }
+        }
+
+        // ── Backdrop click & ESC handlers (all modals safe — HTML exists above) ──
+        document.getElementById('dashboardDenyModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDashboardDenyModal();
+        });
+        const _rcModal = document.getElementById('redeemConfirmModal');
+        if (_rcModal) _rcModal.addEventListener('click', function(e) {
+            if (e.target === this) closeRedeemConfirmation();
+        });
+        document.getElementById('approveWishModal').addEventListener('click', function(e) {
+            if (e.target === this) closeApproveWishModal();
+        });
+        document.getElementById('declineWishModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeclineWishModal();
         });
 
-        // Close modal on ESC key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('redeemConfirmModal').style.display === 'flex') {
-                closeRedeemConfirmation();
-            }
+            if (e.key !== 'Escape') return;
+            const checks = [
+                ['redeemConfirmModal',       closeRedeemConfirmation],
+                ['dashboardDenyModal',        closeDashboardDenyModal],
+                ['approveWishModal',          closeApproveWishModal],
+                ['declineWishModal',          closeDeclineWishModal],
+                ['dashboardRedeemWishModal',  closeDashboardRedeemWishModal],
+            ];
+            checks.forEach(([id, fn]) => {
+                const el = document.getElementById(id);
+                if (el && el.style.display === 'flex') fn();
+            });
         });
     </script>
 @endsection

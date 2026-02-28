@@ -131,7 +131,7 @@
         @media (max-width: 800px) { .parent-goals-card-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 540px) { .parent-goals-card-grid { grid-template-columns: 1fr; } }
 
-        .kid-goal-card { background: white; border-radius: 16px; border: 1.5px solid #e5e7eb; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: box-shadow 0.2s, transform 0.2s; display: flex; flex-direction: column; }
+        .kid-goal-card { background: white; border-radius: 16px; border: 1.5px solid #e5e7eb; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: box-shadow 0.2s, transform 0.2s; display: flex; flex-direction: column; height: 100%; }
         .kid-goal-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
         .kid-goal-card-ready { border-color: #10b981; box-shadow: 0 2px 8px rgba(16,185,129,0.15); }
         .kid-goal-card-image { position: relative; height: 140px; overflow: hidden; flex-shrink: 0; }
@@ -142,7 +142,7 @@
         .kid-goal-card-status-badge { position: absolute; top: 8px; left: 8px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
         .kid-goal-card-status-ready { background: #10b981; color: white; }
         .kid-goal-card-status-pending { background: #f59e0b; color: white; }
-        .kid-goal-card-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .kid-goal-card-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
         .kid-goal-card-title { font-size: 15px; font-weight: 700; color: #1f2937; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
         .kid-goal-card-progress-section { margin-top: 4px; }
         .kid-goal-card-amounts { display: flex; align-items: baseline; gap: 2px; margin-bottom: 10px; }
@@ -152,7 +152,8 @@
         .kid-goal-card-bar { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }
         .kid-goal-card-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
         .kid-goal-card-auto { font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
-        .kid-goal-card-actions { margin-top: auto; padding-top: 8px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+        .kid-goal-card-spacer { flex: 1; min-height: 0; }
+        .kid-goal-card-actions { padding-top: 8px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
         .kid-goal-card-add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; color: white; cursor: pointer; width: 100%; justify-content: center; transition: opacity 0.15s; }
         .kid-goal-card-add-btn:hover { opacity: 0.88; }
         .kid-goal-card-redeem-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; color: white; cursor: pointer; width: 100%; justify-content: center; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 2px 8px rgba(16,185,129,0.35); transition: opacity 0.15s, transform 0.1s; }
@@ -221,6 +222,7 @@
                     $progress = $goal->target_amount > 0 ? min(100, ($goal->current_amount / $goal->target_amount) * 100) : 0;
                     $isPending = $goal->status === 'pending_redemption';
                     $isReady = $goal->status === 'ready_to_redeem' || ($progress >= 100 && !$isPending);
+                    $isDenied = $goal->denial_reason && $goal->denied_at;
                     $accentColor = ($isReady || $isPending) ? '#10b981' : $kid->color;
                 @endphp
                 <div class="kid-goal-card {{ ($isReady || $isPending) ? 'kid-goal-card-ready' : '' }}"
@@ -242,7 +244,7 @@
                     {{-- Card Image / Banner --}}
                     <div class="kid-goal-card-image" style="background: {{ $accentColor }}18;">
                         @if($goal->photo_path)
-                            <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}">
+                            <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}">
                         @else
                             <div class="kid-goal-card-icon-placeholder">
                                 <i class="fas fa-bullseye" style="color: {{ $accentColor }};"></i>
@@ -258,6 +260,11 @@
                         @elseif($isReady)
                             <div class="kid-goal-card-status-badge kid-goal-card-status-ready">
                                 <i class="fas fa-check-circle"></i> Ready!
+                            </div>
+                        @endif
+                        @if($isDenied)
+                            <div class="kid-goal-card-status-badge" style="background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; bottom: auto; top: 8px; right: 8px;">
+                                <i class="fas fa-ban"></i> Denied
                             </div>
                         @endif
                     </div>
@@ -288,7 +295,49 @@
                             </div>
                         @endif
 
+                        @if($isDenied)
+                            <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:8px; padding:8px 10px; font-size:12px; color:#dc2626;">
+                                <strong><i class="fas fa-ban"></i> Denied:</strong> {{ $goal->denial_reason }}
+                            </div>
+                        @endif
+
+                        <div class="kid-goal-card-spacer"></div>
+
                         <div class="kid-goal-card-actions">
+                            @if($goal->status === 'active')
+                            {{-- Inline add form (collapsed by default, expands above buttons) --}}
+                            <form :class="showAdd ? 'kid-goal-card-add-form kid-goal-add-open' : 'kid-goal-card-add-form'"
+                                  @submit.prevent="
+                                    if (!addAmount || isOverLimit) return;
+                                    adding = true; addError = '';
+                                    const amt = addDollars;
+                                    fetch('{{ route('parent.goals.add-funds', $goal) }}', {
+                                        method:'POST',
+                                        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+                                        body:JSON.stringify({amount: amt})
+                                    }).then(r=>r.json()).then(d=>{
+                                        if(d.success){ addSuccess=true; setTimeout(()=>window.location.reload(), 1200); }
+                                        else { adding=false; addError=d.message||'Error'; }
+                                    }).catch(()=>{ adding=false; addError='An error occurred.'; });
+                                  ">
+                                <div class="kid-goal-add-row">
+                                    <input type="text" x-model="addAmount"
+                                           @input="let v=addAmount.replace(/[^0-9]/g,''); addAmount=v===''?'':'$'+(parseInt(v)/100).toFixed(2);"
+                                           placeholder="$0.00" class="kid-goal-card-add-input" :class="isOverLimit ? 'input-error' : ''">
+                                    <button type="submit" class="kid-goal-card-add-submit"
+                                        :style="addSuccess ? 'background:#10b981' : (isOverLimit ? 'background:#ef4444' : 'background:{{ $kid->color }}')"
+                                        :disabled="adding || addSuccess || isOverLimit || !addDollars">
+                                        <span x-show="!adding && !addSuccess">Add</span>
+                                        <span x-show="adding && !addSuccess" x-cloak><i class="fas fa-spinner fa-spin" style="font-size:11px;"></i></span>
+                                        <span x-show="addSuccess" x-cloak><i class="fas fa-check"></i></span>
+                                    </button>
+                                    <button type="button" @click="showAdd=false;addAmount='';addError='';" class="kid-goal-card-add-cancel"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div x-show="addError" x-cloak style="font-size:11px; color:#dc2626; font-weight:600; padding:0 2px;" x-text="addError"></div>
+                                <div x-show="isOverLimit && !addError" x-cloak style="font-size:11px; color:#dc2626; font-weight:600; padding:0 2px;">Max $<span x-text="remaining.toFixed(2)"></span> to complete</div>
+                            </form>
+                            @endif
+
                             @if($isPending)
                                 <div style="display: flex; gap: 8px;">
                                     <form id="approve-form-{{ $goal->id }}" action="{{ route('parent.goals.approve-redemption', $goal) }}" method="POST" style="flex:1; margin:0;">
@@ -299,13 +348,14 @@
                                             <i class="fas fa-check"></i> Approve
                                         </button>
                                     </form>
-                                    <form action="{{ route('parent.goals.deny-redemption', $goal) }}" method="POST" style="flex:1; margin:0;">
+                                    <button type="button"
+                                        onclick="showDenyConfirmation('{{ $goal->id }}', '{{ $kid->name }}', '{{ addslashes($goal->title) }}')"
+                                        style="flex:1; padding:10px; background:#ef4444; color:white; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">
+                                        <i class="fas fa-times"></i> Deny
+                                    </button>
+                                    <form id="deny-form-{{ $goal->id }}" action="{{ route('parent.goals.deny-redemption', $goal) }}" method="POST" style="display:none;">
                                         @csrf
-                                        <button type="submit"
-                                            onclick="return confirm('Deny redemption? Goal will remain active for {{ $kid->name }}.');"
-                                            style="width:100%; padding:10px; background:#ef4444; color:white; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">
-                                            <i class="fas fa-times"></i> Deny
-                                        </button>
+                                        <input type="hidden" name="denial_reason" id="deny-reason-{{ $goal->id }}">
                                     </form>
                                 </div>
                                 <div style="font-size:12px; color:#f59e0b; font-weight:600; text-align:center;">
@@ -324,79 +374,12 @@
                                 <button @click="showAdd = !showAdd; showRemove = false;" class="kid-goal-card-add-btn" style="background: {{ $kid->color }};">
                                     <i class="fas fa-plus"></i> Add Funds
                                 </button>
-                                <button @click="showRemove = !showRemove; showAdd = false;"
-                                    style="background:none; border:none; font-size:12px; color:#9ca3af; font-weight:600; cursor:pointer; padding:2px 0; text-align:center;">
-                                    Remove Funds
-                                </button>
                             @endif
 
                             <a href="{{ route('parent.goals.show', $goal) }}" class="kid-goal-card-view-btn">
                                 <i class="fas fa-eye"></i> View Goal
                             </a>
                         </div>
-
-                        @if($goal->status === 'active')
-                        <form :class="showAdd ? 'kid-goal-card-add-form kid-goal-add-open' : 'kid-goal-card-add-form'"
-                              @submit.prevent="
-                                if (!addAmount || isOverLimit) return;
-                                adding = true; addError = '';
-                                const amt = addDollars;
-                                fetch('{{ route('parent.goals.add-funds', $goal) }}', {
-                                    method:'POST',
-                                    headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-                                    body:JSON.stringify({amount: amt})
-                                }).then(r=>r.json()).then(d=>{
-                                    if(d.success){ addSuccess=true; setTimeout(()=>window.location.reload(), 1200); }
-                                    else { adding=false; addError=d.message||'Error'; }
-                                }).catch(()=>{ adding=false; addError='An error occurred.'; });
-                              ">
-                            <div class="kid-goal-add-row">
-                                <input type="text" x-model="addAmount"
-                                       @input="let v=addAmount.replace(/[^0-9]/g,''); addAmount=v===''?'':'$'+(parseInt(v)/100).toFixed(2);"
-                                       placeholder="$0.00" class="kid-goal-card-add-input" :class="isOverLimit ? 'input-error' : ''">
-                                <button type="submit" class="kid-goal-card-add-submit"
-                                    :style="addSuccess ? 'background:#10b981' : (isOverLimit ? 'background:#ef4444' : 'background:{{ $kid->color }}')"
-                                    :disabled="adding || addSuccess || isOverLimit || !addDollars">
-                                    <span x-show="!adding && !addSuccess">Add</span>
-                                    <span x-show="adding && !addSuccess" x-cloak><i class="fas fa-spinner fa-spin" style="font-size:11px;"></i></span>
-                                    <span x-show="addSuccess" x-cloak><i class="fas fa-check"></i></span>
-                                </button>
-                                <button type="button" @click="showAdd=false;addAmount='';addError='';" class="kid-goal-card-add-cancel"><i class="fas fa-times"></i></button>
-                            </div>
-                            <div x-show="addError" x-cloak style="font-size:11px; color:#dc2626; font-weight:600; padding:0 2px;" x-text="addError"></div>
-                            <div x-show="isOverLimit && !addError" x-cloak style="font-size:11px; color:#dc2626; font-weight:600; padding:0 2px;">Max $<span x-text="remaining.toFixed(2)"></span> to complete</div>
-                        </form>
-
-                        <form :class="showRemove ? 'kid-goal-card-add-form kid-goal-add-open' : 'kid-goal-card-add-form'"
-                              @submit.prevent="
-                                if (!removeAmount) return;
-                                removing = true; removeError = '';
-                                const amt = removeDollars;
-                                fetch('{{ route('parent.goals.remove-funds', $goal) }}', {
-                                    method:'POST',
-                                    headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-                                    body:JSON.stringify({amount: amt})
-                                }).then(r=>r.json()).then(d=>{
-                                    if(d.success){ removeSuccess=true; setTimeout(()=>window.location.reload(), 1200); }
-                                    else { removing=false; removeError=d.message||'Error'; }
-                                }).catch(()=>{ removing=false; removeError='An error occurred.'; });
-                              ">
-                            <div class="kid-goal-add-row">
-                                <input type="text" x-model="removeAmount"
-                                       @input="let v=removeAmount.replace(/[^0-9]/g,''); removeAmount=v===''?'':'$'+(parseInt(v)/100).toFixed(2);"
-                                       placeholder="$0.00" class="kid-goal-card-add-input">
-                                <button type="submit" class="kid-goal-card-add-submit"
-                                    :style="removeSuccess ? 'background:#10b981' : 'background:#ef4444'"
-                                    :disabled="removing || removeSuccess || !removeDollars">
-                                    <span x-show="!removing && !removeSuccess">Remove</span>
-                                    <span x-show="removing && !removeSuccess" x-cloak><i class="fas fa-spinner fa-spin" style="font-size:11px;"></i></span>
-                                    <span x-show="removeSuccess" x-cloak><i class="fas fa-check"></i></span>
-                                </button>
-                                <button type="button" @click="showRemove=false;removeAmount='';removeError='';" class="kid-goal-card-add-cancel"><i class="fas fa-times"></i></button>
-                            </div>
-                            <div x-show="removeError" x-cloak style="font-size:11px; color:#dc2626; font-weight:600; padding:0 2px;" x-text="removeError"></div>
-                        </form>
-                        @endif
                     </div>
                 </div>
             @endforeach
@@ -426,7 +409,7 @@
                             <div class="goal-card-header">
                                 <div class="goal-card-header-left">
                                     @if($goal->photo_path)
-                                        <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
+                                        <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
                                     @else
                                         <div class="goal-icon goal-icon-placeholder">
                                             <i class="fas fa-trophy"></i>
@@ -736,9 +719,10 @@
                 document.getElementById('goalAutoAllocation').value = data.auto_allocation_percentage || 0;
                 currentGoalAllocation = parseFloat(data.auto_allocation_percentage) || 0;
 
-                if (data.photo_path) {
+                if (data.photo_url || data.photo_path) {
+                    const photoUrl = data.photo_url || '/storage/' + data.photo_path;
                     document.getElementById('photoUploadContent').innerHTML = `
-                        <img src="/storage/${data.photo_path}" alt="Preview" class="photo-preview">
+                        <img src="${photoUrl}" alt="Preview" class="photo-preview">
                     `;
                     document.getElementById('removePhotoBtn').style.display = 'block';
                 }
@@ -2167,6 +2151,35 @@
     </div>
 </div>
 
+<!-- Deny Redemption Modal -->
+<div id="denyConfirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #ef4444; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-times" style="color: white; font-size: 24px;"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #111827;">Deny Redemption</h3>
+                <p id="denyGoalTitle" style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;"></p>
+            </div>
+        </div>
+        <p id="denyConfirmMessage" style="margin: 0 0 16px 0; color: #374151; font-size: 14px; line-height: 1.5;"></p>
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Reason (optional)</label>
+            <textarea id="denyReasonInput" placeholder="Let them know why..." rows="3"
+                style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #111827; resize: vertical; box-sizing: border-box; font-family: inherit;"></textarea>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeDenyConfirmation()" style="flex: 1; padding: 10px 16px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                Cancel
+            </button>
+            <button onclick="confirmDeny()" style="flex: 1; padding: 10px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                <i class="fas fa-times"></i> Deny Redemption
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Transaction History Modal -->
 <div id="transactionHistoryModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 12px; padding: 24px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
@@ -2235,6 +2248,35 @@
         }
     }
 
+    // Deny Redemption Modal
+    let currentDenyGoalId = null;
+
+    function showDenyConfirmation(goalId, kidName, goalTitle) {
+        currentDenyGoalId = goalId;
+        document.getElementById('denyGoalTitle').textContent = goalTitle;
+        document.getElementById('denyConfirmMessage').textContent =
+            `The goal will remain active and ${kidName} can request fulfillment again.`;
+        document.getElementById('denyReasonInput').value = '';
+        document.getElementById('denyConfirmModal').style.display = 'flex';
+    }
+
+    function closeDenyConfirmation() {
+        document.getElementById('denyConfirmModal').style.display = 'none';
+        currentDenyGoalId = null;
+    }
+
+    function confirmDeny() {
+        if (currentDenyGoalId) {
+            const reason = document.getElementById('denyReasonInput').value.trim();
+            document.getElementById('deny-reason-' + currentDenyGoalId).value = reason;
+            document.getElementById('deny-form-' + currentDenyGoalId).submit();
+        }
+    }
+
+    document.getElementById('denyConfirmModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDenyConfirmation();
+    });
+
     // Close modal on backdrop click
     document.getElementById('redeemConfirmModal').addEventListener('click', function(e) {
         if (e.target === this) {
@@ -2242,10 +2284,11 @@
         }
     });
 
-    // Close modal on ESC key
+    // Close modals on ESC key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && document.getElementById('redeemConfirmModal').style.display === 'flex') {
-            closeRedeemConfirmation();
+        if (e.key === 'Escape') {
+            if (document.getElementById('redeemConfirmModal').style.display === 'flex') closeRedeemConfirmation();
+            if (document.getElementById('denyConfirmModal').style.display === 'flex') closeDenyConfirmation();
         }
     });
 

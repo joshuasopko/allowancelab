@@ -58,7 +58,7 @@
                             <div class="wish-row">
                                 <div class="wish-image">
                                     @if($wish->image_path)
-                                        <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}">
+                                        <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                     @else
                                         <div class="wish-placeholder"><i class="fas fa-box"></i></div>
                                     @endif
@@ -108,7 +108,7 @@
                             <div class="wish-card">
                                 <div class="wish-card-image">
                                     @if($wish->image_path)
-                                        <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}">
+                                        <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                     @else
                                         <div class="wish-placeholder"><i class="fas fa-box"></i></div>
                                     @endif
@@ -166,7 +166,7 @@
                             <div class="wish-card wish-purchased">
                                 <div class="wish-card-image">
                                     @if($wish->image_path)
-                                        <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}">
+                                        <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                     @else
                                         <div class="wish-placeholder"><i class="fas fa-box"></i></div>
                                     @endif

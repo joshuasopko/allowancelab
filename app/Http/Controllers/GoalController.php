@@ -111,7 +111,7 @@ class GoalController extends Controller
 
         $photoPath = null;
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('goal-photos', 'public');
+            $photoPath = $request->file('photo')->store('goal-photos');
         } elseif ($request->filled('scraped_image_url')) {
             $photoPath = $this->urlScraper->downloadImage($request->scraped_image_url);
         }
@@ -188,7 +188,7 @@ class GoalController extends Controller
 
         $photoPath = null;
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('goal-photos', 'public');
+            $photoPath = $request->file('photo')->store('goal-photos');
         }
 
         $expectedCompletionDate = null;
@@ -248,9 +248,14 @@ class GoalController extends Controller
             $isParent = true;
         }
 
-        $goal->load(['goalTransactions.performedBy']);
+        $totalTransactionCount = $goal->goalTransactions()->count();
 
-        return view('goals.show', compact('goal', 'isParent'));
+        $goalTransactions = $goal->goalTransactions()
+            ->with('performedBy')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('goals.show', compact('goal', 'isParent', 'goalTransactions', 'totalTransactionCount'));
     }
 
     /**
@@ -351,12 +356,12 @@ class GoalController extends Controller
         if ($request->hasFile('photo')) {
             // Delete old photo if exists
             if ($goal->photo_path) {
-                Storage::disk('public')->delete($goal->photo_path);
+                Storage::delete($goal->photo_path);
             }
-            $goal->photo_path = $request->file('photo')->store('goal-photos', 'public');
+            $goal->photo_path = $request->file('photo')->store('goal-photos');
         } elseif ($request->filled('scraped_image_url')) {
             if ($goal->photo_path) {
-                Storage::disk('public')->delete($goal->photo_path);
+                Storage::delete($goal->photo_path);
             }
             $goal->photo_path = $this->urlScraper->downloadImage($request->scraped_image_url);
         }
@@ -420,7 +425,10 @@ class GoalController extends Controller
             }
         }
 
-        return response()->json($goal);
+        $goalData = $goal->toArray();
+        $goalData['photo_url'] = $goal->photo_path ? Storage::url($goal->photo_path) : null;
+
+        return response()->json($goalData);
     }
 
     /**
@@ -478,7 +486,7 @@ class GoalController extends Controller
 
             // Delete photo if exists
             if ($goal->photo_path) {
-                Storage::disk('public')->delete($goal->photo_path);
+                Storage::delete($goal->photo_path);
             }
 
             $goal->delete();
@@ -749,8 +757,26 @@ class GoalController extends Controller
             ], 400);
         }
 
-        // Update status to pending_redemption
+        // Enforce 24-hour cooldown after a denial
+        if ($goal->denied_at && $goal->denial_acknowledged_at) {
+            $hoursElapsed = $goal->denied_at->diffInHours(now());
+            if ($hoursElapsed < 24) {
+                $hoursLeft = 24 - $hoursElapsed;
+                return response()->json([
+                    'success' => false,
+                    'cooldown' => true,
+                    'hours_left' => $hoursLeft,
+                    'message' => 'You need to wait ' . $hoursLeft . ' more hour' . ($hoursLeft === 1 ? '' : 's') . ' before asking again.',
+                ], 429);
+            }
+        }
+
+        // Clear denial state when a new request is made
+        $goal->denial_reason = null;
+        $goal->denied_at = null;
+        $goal->denial_acknowledged_at = null;
         $goal->status = 'pending_redemption';
+        $goal->last_redemption_requested_at = now();
         $goal->save();
 
         // Create a goal transaction to record the redemption request
@@ -769,6 +795,35 @@ class GoalController extends Controller
             'success' => true,
             'message' => 'Redemption requested! Your parent will be notified.',
             'goal_status' => $goal->status,
+        ]);
+    }
+
+    /**
+     * Kid acknowledges a denial, clearing the denial notification
+     */
+    public function acknowledgeDenial(Goal $goal)
+    {
+        $kid = Auth::guard('kid')->user();
+
+        if ($goal->kid_id !== $kid->id) {
+            abort(403, 'Unauthorized access to this goal.');
+        }
+
+        if (!$goal->denied_at || $goal->denial_acknowledged_at) {
+            return response()->json(['success' => false, 'message' => 'Nothing to acknowledge.'], 400);
+        }
+
+        $goal->denial_acknowledged_at = now();
+        $goal->save();
+
+        // Calculate how many hours remain on the cooldown
+        $hoursElapsed = $goal->denied_at->diffInHours(now());
+        $hoursLeft = max(0, 24 - $hoursElapsed);
+
+        return response()->json([
+            'success' => true,
+            'hours_left' => $hoursLeft,
+            'cooldown_active' => $hoursLeft > 0,
         ]);
     }
 
@@ -855,7 +910,7 @@ class GoalController extends Controller
     /**
      * Deny a pending redemption request from a kid
      */
-    public function denyRedemption(Goal $goal)
+    public function denyRedemption(Request $request, Goal $goal)
     {
         // Verify parent has access
         $familyIds = Auth::user()->families()->pluck('families.id');
@@ -867,10 +922,17 @@ class GoalController extends Controller
             return back()->with('error', 'This goal does not have a pending redemption request.');
         }
 
+        $request->validate([
+            'denial_reason' => 'nullable|string|max:500',
+        ]);
+
         $kid = $goal->kid;
+        $reason = $request->input('denial_reason');
 
         // Reset status to ready_to_redeem (since goal is still complete)
         $goal->status = 'ready_to_redeem';
+        $goal->denial_reason = $reason;
+        $goal->denied_at = now();
         $goal->save();
 
         // Create transaction record for denial
@@ -880,7 +942,7 @@ class GoalController extends Controller
             'family_id' => $goal->family_id,
             'amount' => 0,
             'transaction_type' => 'redemption_denied',
-            'description' => 'Redemption request denied by parent',
+            'description' => $reason ? 'Redemption denied: ' . $reason : 'Redemption request denied by parent',
             'performed_by_user_id' => Auth::id(),
             'created_at' => now(),
         ]);

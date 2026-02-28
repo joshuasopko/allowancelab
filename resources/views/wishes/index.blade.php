@@ -72,7 +72,7 @@
                         <!-- Wish Image -->
                         <div class="wish-card-image-container">
                             @if($wish->image_path)
-                                <img src="{{ asset('storage/' . $wish->image_path) }}"
+                                <img src="{{ \Storage::url($wish->image_path) }}"
                                      alt="{{ $wish->item_name }}"
                                      class="wish-card-image">
                             @else
@@ -163,7 +163,7 @@
                         <!-- Wish Image -->
                         <div class="wish-card-image-container">
                             @if($wish->image_path)
-                                <img src="{{ asset('storage/' . $wish->image_path) }}"
+                                <img src="{{ \Storage::url($wish->image_path) }}"
                                      alt="{{ $wish->item_name }}"
                                      class="wish-card-image">
                             @else

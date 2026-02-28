@@ -326,7 +326,7 @@
                     <!-- Card Header: Icon, Title/Link, Buttons -->
                     <div class="goal-card-header">
                         @if($goal->photo_path)
-                            <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
+                            <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
                         @else
                             <div class="goal-icon goal-icon-placeholder">
                                 <i class="fas fa-bullseye"></i>
@@ -617,7 +617,7 @@
                             <div class="goal-card-header">
                                 <div class="goal-card-header-left">
                                     @if($goal->photo_path)
-                                        <img src="{{ asset('storage/' . $goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
+                                        <img src="{{ \Storage::url($goal->photo_path) }}" alt="{{ $goal->title }}" class="goal-icon">
                                     @else
                                         <div class="goal-icon goal-icon-placeholder">
                                             <i class="fas fa-trophy"></i>
@@ -1329,8 +1329,8 @@
                     this.currentGoalAmount = parseFloat(data.current_amount) || 0;
                     this.currentGoalAllocation = parseFloat(data.auto_allocation_percentage) || 0;
 
-                    if (data.photo_path) {
-                        this.photoPreview = `/storage/${data.photo_path}`;
+                    if (data.photo_url || data.photo_path) {
+                        this.photoPreview = data.photo_url || `/storage/${data.photo_path}`;
                     }
                 })
                 .catch(error => {
