@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Notifications\KidDepositedNotification;
+use App\Notifications\KidSpentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,6 +29,12 @@ class KidDashboardController extends Controller
             'description' => $request->note,
             'initiated_by' => 'kid'
         ]);
+
+        // Notify parents in family about kid self-deposit
+        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+        foreach ($familyParents as $parent) {
+            $parent->notify(new KidDepositedNotification($kid, (float) $request->amount, (string) $request->note));
+        }
 
         return response()->json([
             'success' => true,
@@ -53,6 +62,12 @@ class KidDashboardController extends Controller
             'description' => $request->note,
             'initiated_by' => 'kid'
         ]);
+
+        // Notify parents in family about kid self-spend
+        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+        foreach ($familyParents as $parent) {
+            $parent->notify(new KidSpentNotification($kid, (float) $request->amount, (string) $request->note));
+        }
 
         return response()->json([
             'success' => true,
