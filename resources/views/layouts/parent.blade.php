@@ -27,9 +27,8 @@
     @yield('modals')
 
     @include('partials.version')
-</body>
-</body>
 
+    @include('partials.push-banner-parent')
 </body>
 
 </html>

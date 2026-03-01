@@ -6,6 +6,12 @@ use App\Models\Goal;
 use App\Models\GoalTransaction;
 use App\Models\Kid;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Notifications\GoalCreatedNotification;
+use App\Notifications\GoalRedemptionRequestedNotification;
+use App\Notifications\GoalApprovedNotification;
+use App\Notifications\GoalDeniedNotification;
+use App\Notifications\GoalCompletedNotification;
 use App\Services\UrlScraperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -148,6 +154,12 @@ class GoalController extends Controller
             'expected_completion_date' => $expectedCompletionDate,
             'status' => 'active',
         ]);
+
+        // Notify parents in family
+        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+        foreach ($familyParents as $parent) {
+            $parent->notify(new GoalCreatedNotification($kid, $goal));
+        }
 
         // Check if this is an AJAX request
         if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
@@ -638,7 +650,15 @@ class GoalController extends Controller
         });
 
         $refreshedGoal = $goal->fresh();
-        $refreshedKid = $kid->fresh();
+        $refreshedKid  = $kid->fresh();
+
+        // Notify parents when goal is newly completed (status changed to ready_to_redeem or pending_redemption)
+        if (in_array($refreshedGoal->status, ['ready_to_redeem', 'pending_redemption'])) {
+            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $refreshedGoal->family_id))->get();
+            foreach ($familyParents as $parent) {
+                $parent->notify(new GoalCompletedNotification($refreshedKid, $refreshedGoal));
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -768,6 +788,12 @@ class GoalController extends Controller
             'created_at' => now(),
         ]);
 
+        // Notify parents in family about redemption request
+        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $goal->family_id))->get();
+        foreach ($familyParents as $parent) {
+            $parent->notify(new GoalRedemptionRequestedNotification($kid, $goal));
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Redemption requested! Your parent will be notified.',
@@ -812,6 +838,9 @@ class GoalController extends Controller
             $goal->save();
         });
 
+        // Notify the kid: goal approved/redeemed by parent directly
+        $kid->notify(new GoalApprovedNotification($goal));
+
         return redirect()->route('kids.goals', $kid)->with('success', 'Goal redeemed successfully! ' . $kid->name . ' can now enjoy their purchase.');
     }
 
@@ -852,6 +881,9 @@ class GoalController extends Controller
             $goal->save();
         });
 
+        // Notify the kid: goal approved
+        $kid->notify(new GoalApprovedNotification($goal));
+
         return redirect()->route('kids.goals', $kid)->with('success', 'Redemption approved! ' . $kid->name . ' can now enjoy their purchase.');
     }
 
@@ -887,6 +919,9 @@ class GoalController extends Controller
             'performed_by_user_id' => Auth::id(),
             'created_at' => now(),
         ]);
+
+        // Notify the kid: redemption denied
+        $kid->notify(new GoalDeniedNotification($goal));
 
         return redirect()->route('kids.goals', $kid)->with('success', 'Redemption denied. Goal remains active for ' . $kid->name . '.');
     }

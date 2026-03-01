@@ -158,12 +158,260 @@
         </div>
 
         <!-- Notification Settings Section -->
-        <div class="accounts-section invite-section-disabled">
+        <div class="accounts-section" id="notificationSettingsSection">
             <h2 class="section-title">Notification Settings</h2>
-            <p class="coming-soon-text">
-                <i class="fas fa-clock"></i> This feature is coming soon. Check back later!
+
+            {{-- Push subscription status row --}}
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+                        gap:12px; padding:14px 16px; background:#f8fafc; border-radius:10px;
+                        border:1px solid #e2e8f0; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-bell" style="color:#6366f1; font-size:18px;"></i>
+                    <div>
+                        <div style="font-weight:600; font-size:14px; color:#1e293b;">
+                            Browser Push Notifications
+                        </div>
+                        <div id="pushStatusText" style="font-size:12px; color:#64748b;">
+                            @if($hasPushSubscription)
+                                Active on this device
+                            @else
+                                Not enabled on this device
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button id="pushToggleBtn"
+                            onclick="togglePushSubscription()"
+                            style="padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600;
+                                   border:none; cursor:pointer; transition:background 0.2s;
+                                   {{ $hasPushSubscription ? 'background:#fee2e2; color:#dc2626;' : 'background:#e0e7ff; color:#4f46e5;' }}">
+                        @if($hasPushSubscription)
+                            <i class="fas fa-bell-slash"></i> Disable
+                        @else
+                            <i class="fas fa-bell"></i> Enable
+                        @endif
+                    </button>
+                </div>
+            </div>
+
+            <p style="font-size:13px; color:#64748b; margin-bottom:16px;">
+                Choose how you want to be notified for each event. <strong>Push</strong> sends an instant
+                browser notification. <strong>Email</strong> sends a message to {{ $user->email }}.
             </p>
+
+            @php
+                $eventLabels = [
+                    'goal_created'              => ['label' => 'Kid creates a goal',           'icon' => 'fa-bullseye'],
+                    'goal_redemption_requested' => ['label' => 'Kid requests goal redemption', 'icon' => 'fa-gift'],
+                    'goal_completed'            => ['label' => 'Kid reaches their goal',        'icon' => 'fa-trophy'],
+                    'kid_deposited'             => ['label' => 'Kid adds money',                'icon' => 'fa-arrow-up',  'threshold' => true],
+                    'kid_spent'                 => ['label' => 'Kid spends money',              'icon' => 'fa-arrow-down','threshold' => true],
+                    'allowance_processed'       => ['label' => 'Allowance posts (or is denied)','icon' => 'fa-calendar-check'],
+                    'points_low_warning'        => ['label' => "Kid's points are critically low",'icon' => 'fa-exclamation-triangle'],
+                ];
+            @endphp
+
+            <form id="notificationPrefsForm">
+                @csrf
+                {{-- Header row --}}
+                <div style="display:grid; grid-template-columns:1fr 64px 64px; gap:8px;
+                            padding:8px 12px; font-size:11px; font-weight:700; text-transform:uppercase;
+                            color:#94a3b8; letter-spacing:0.05em; border-bottom:1px solid #e2e8f0;
+                            margin-bottom:4px;">
+                    <div>Event</div>
+                    <div style="text-align:center;">Push</div>
+                    <div style="text-align:center;">Email</div>
+                </div>
+
+                @foreach($eventLabels as $event => $meta)
+                    @php
+                        $pref   = $notificationPreferences[$event] ?? [];
+                        $push   = $pref['push']  ?? false;
+                        $email  = $pref['email'] ?? false;
+                        $thresh = $pref['threshold'] ?? null;
+                    @endphp
+                    <div style="display:grid; grid-template-columns:1fr 64px 64px; gap:8px;
+                                align-items:center; padding:12px 12px;
+                                border-bottom:1px solid #f1f5f9;">
+                        <div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <i class="fas {{ $meta['icon'] }}" style="color:#6366f1; width:16px; text-align:center;"></i>
+                                <span style="font-size:14px; color:#1e293b; font-weight:500;">{{ $meta['label'] }}</span>
+                            </div>
+                            @if(!empty($meta['threshold']))
+                                <div style="display:flex; align-items:center; gap:6px; margin-top:6px; padding-left:24px;">
+                                    <span style="font-size:12px; color:#64748b;">Notify when over $</span>
+                                    <input type="number"
+                                           name="threshold_{{ $event }}"
+                                           value="{{ $thresh ?? 20 }}"
+                                           min="0" step="1"
+                                           style="width:64px; padding:4px 8px; border:1px solid #d1d5db; border-radius:6px;
+                                                  font-size:13px; color:#1e293b;">
+                                </div>
+                            @endif
+                        </div>
+                        <div style="text-align:center;">
+                            <label class="notif-toggle" title="Push">
+                                <input type="checkbox"
+                                       name="push_{{ $event }}"
+                                       {{ $push ? 'checked' : '' }}>
+                                <span class="notif-toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div style="text-align:center;">
+                            <label class="notif-toggle" title="Email">
+                                <input type="checkbox"
+                                       name="email_{{ $event }}"
+                                       {{ $email ? 'checked' : '' }}>
+                                <span class="notif-toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                @endforeach
+
+                <div style="margin-top:16px; display:flex; align-items:center; gap:12px;">
+                    <button type="button" onclick="saveNotificationPrefs()"
+                            id="saveNotifsBtn"
+                            style="background:#6366f1; color:#fff; border:none; border-radius:8px;
+                                   padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;">
+                        <i class="fas fa-save"></i> Save Preferences
+                    </button>
+                    <span id="notifSaveStatus" style="font-size:13px; display:none;"></span>
+                </div>
+            </form>
         </div>
+
+        {{-- Toggle switch CSS (inline, scoped) --}}
+        <style>
+            .notif-toggle {
+                position: relative;
+                display: inline-block;
+                width: 40px;
+                height: 22px;
+                cursor: pointer;
+            }
+            .notif-toggle input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+                position: absolute;
+            }
+            .notif-toggle-slider {
+                position: absolute;
+                inset: 0;
+                background: #cbd5e1;
+                border-radius: 22px;
+                transition: background 0.2s;
+            }
+            .notif-toggle-slider::before {
+                content: '';
+                position: absolute;
+                width: 16px;
+                height: 16px;
+                left: 3px;
+                top: 3px;
+                background: #fff;
+                border-radius: 50%;
+                transition: transform 0.2s;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            }
+            .notif-toggle input:checked + .notif-toggle-slider {
+                background: #6366f1;
+            }
+            .notif-toggle input:checked + .notif-toggle-slider::before {
+                transform: translateX(18px);
+            }
+        </style>
+
+        <script>
+        // ── Push subscription toggle ────────────────────────────────────────────
+        async function togglePushSubscription() {
+            if (!window.PushManager) {
+                alert('Push notifications are not supported on this browser.');
+                return;
+            }
+
+            const isSubscribed = await window.PushManager.isSubscribed();
+
+            if (isSubscribed) {
+                await window.PushManager.unsubscribe();
+                document.getElementById('pushStatusText').textContent = 'Not enabled on this device';
+                const btn = document.getElementById('pushToggleBtn');
+                btn.style.background = '#e0e7ff';
+                btn.style.color = '#4f46e5';
+                btn.innerHTML = '<i class="fas fa-bell"></i> Enable';
+            } else {
+                await window.PushManager.init({
+                    subscribeUrl:   '{{ route("notifications.subscribe") }}',
+                    unsubscribeUrl: '{{ route("notifications.unsubscribe") }}',
+                });
+                const success = await window.PushManager.subscribe();
+                if (success) {
+                    document.getElementById('pushStatusText').textContent = 'Active on this device';
+                    const btn = document.getElementById('pushToggleBtn');
+                    btn.style.background = '#fee2e2';
+                    btn.style.color = '#dc2626';
+                    btn.innerHTML = '<i class="fas fa-bell-slash"></i> Disable';
+                }
+            }
+        }
+
+        // ── Notification preference save ────────────────────────────────────────
+        async function saveNotificationPrefs() {
+            const btn    = document.getElementById('saveNotifsBtn');
+            const status = document.getElementById('notifSaveStatus');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+            @php
+                $eventKeys = array_keys($eventLabels);
+            @endphp
+            const events = @json($eventKeys);
+
+            const preferences = {};
+            events.forEach(function (event) {
+                const pushInput  = document.querySelector('[name="push_'  + event + '"]');
+                const emailInput = document.querySelector('[name="email_' + event + '"]');
+                const threshInput= document.querySelector('[name="threshold_' + event + '"]');
+
+                preferences[event] = {
+                    push:  pushInput  ? pushInput.checked  : false,
+                    email: emailInput ? emailInput.checked : false,
+                };
+                if (threshInput) {
+                    preferences[event].threshold = parseFloat(threshInput.value) || 0;
+                }
+            });
+
+            try {
+                const resp = await fetch('{{ route("notifications.preferences.update") }}', {
+                    method:  'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({ preferences }),
+                });
+
+                if (resp.ok) {
+                    status.style.display = 'inline';
+                    status.style.color   = '#16a34a';
+                    status.textContent   = '✓ Saved!';
+                    setTimeout(() => { status.style.display = 'none'; }, 3000);
+                } else {
+                    throw new Error('Server error');
+                }
+            } catch (e) {
+                status.style.display = 'inline';
+                status.style.color   = '#dc2626';
+                status.textContent   = 'Failed to save. Please try again.';
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Preferences';
+        }
+        </script>
 
         <!-- Account Management Section -->
         <div class="accounts-section">

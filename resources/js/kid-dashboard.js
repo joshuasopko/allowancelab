@@ -2,6 +2,8 @@
  * AllowanceLab - Kid Dashboard JavaScript
  * All functions prefixed with 'kid' to avoid conflicts with parent dashboard
  */
+import { PushManager } from './push-notifications.js';
+window.PushManager = PushManager;
 
 // ============================================
 // GLOBAL VARIABLES

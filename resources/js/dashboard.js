@@ -2,6 +2,8 @@
  * AllowanceLab Dashboard JavaScript
  * Parent dashboard functionality
  */
+import { PushManager } from './push-notifications.js';
+window.PushManager = PushManager;
 
 // ============================================
 // GLOBAL VARIABLES

@@ -6,10 +6,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Kid;
+use App\Models\User;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Mail;
 use App\Mail\KidInviteMail;
+use App\Notifications\MoneyAddedNotification;
+use App\Notifications\MoneyDeductedNotification;
+use App\Notifications\PointsAdjustedNotification;
+use App\Notifications\KidDepositedNotification;
+use App\Notifications\KidSpentNotification;
 
 class KidController extends Controller
 {
@@ -140,6 +146,15 @@ class KidController extends Controller
             'initiated_by' => 'parent'
         ]);
 
+        // Notify the kid: money added
+        $kid->notify(new MoneyAddedNotification((float) $request->amount, (string) ($request->note ?? '')));
+
+        // Notify all parents in the family
+        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+        foreach ($familyParents as $parent) {
+            $parent->notify(new KidDepositedNotification($kid, (float) $request->amount, (string) ($request->note ?? '')));
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -168,6 +183,15 @@ class KidController extends Controller
             'initiated_by' => 'parent'
         ]);
 
+        // Notify the kid: money deducted
+        $kid->notify(new MoneyDeductedNotification((float) $request->amount, (string) ($request->note ?? '')));
+
+        // Notify all parents in the family
+        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+        foreach ($familyParents as $parent) {
+            $parent->notify(new KidSpentNotification($kid, (float) $request->amount, (string) ($request->note ?? '')));
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -193,6 +217,13 @@ class KidController extends Controller
             'points_change' => $request->points,
             'reason' => $request->reason
         ]);
+
+        // Notify the kid: points adjusted
+        $kid->notify(new PointsAdjustedNotification(
+            (int) $request->points,
+            (int) $kid->points,
+            (string) ($request->reason ?? '')
+        ));
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

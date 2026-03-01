@@ -5,6 +5,12 @@ namespace App\Console\Commands;
 use App\Models\Kid;
 use App\Models\Goal;
 use App\Models\GoalTransaction;
+use App\Models\User;
+use App\Notifications\AllowanceProcessedNotification;
+use App\Notifications\AllowanceReceivedNotification;
+use App\Notifications\AllowanceDeniedNotification;
+use App\Notifications\GoalCompletedNotification;
+use App\Notifications\PointsLowWarningNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -19,6 +25,10 @@ class ProcessWeeklyAllowance extends Command
         $today = $now->format('l'); // Get day name (e.g., 'Monday')
         $todayLower = strtolower($today);
         $currentHour = (int) $now->format('G'); // 24-hour format without leading zeros
+
+        // ─── Points low warning check (runs every hour, not just at 2AM) ────────
+        // Warn parents if a kid has ≤ 3 points and their allowance day is today or tomorrow.
+        $this->checkPointsLowWarnings($now, $todayLower);
 
         // Only run at 2:00 AM (hour 2)
         if ($currentHour !== 2) {
@@ -61,6 +71,15 @@ class ProcessWeeklyAllowance extends Command
                 $allowancePosted++;
                 $allowanceAwarded = true;
                 $this->info("✓ Posted $" . number_format($kid->allowance_amount, 2) . " allowance (had {$kid->points} points)");
+
+                // Notify kid: allowance received
+                $kid->notify(new AllowanceReceivedNotification((float) $kid->allowance_amount));
+
+                // Notify parents: allowance processed (awarded)
+                $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+                foreach ($familyParents as $parent) {
+                    $parent->notify(new AllowanceProcessedNotification($kid, true, (float) $kid->allowance_amount));
+                }
             } else {
                 // Deny allowance due to insufficient points
                 $kid->transactions()->create([
@@ -72,6 +91,15 @@ class ProcessWeeklyAllowance extends Command
 
                 $allowanceDenied++;
                 $this->warn("✗ Denied allowance (had {$kid->points} points)");
+
+                // Notify kid: allowance denied
+                $kid->notify(new AllowanceDeniedNotification((int) $kid->points, (int) $kid->max_points));
+
+                // Notify parents: allowance processed (denied)
+                $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+                foreach ($familyParents as $parent) {
+                    $parent->notify(new AllowanceProcessedNotification($kid, false));
+                }
             }
 
             // Step 1.5: Process goal auto-allocations (only if allowance was awarded)
@@ -112,6 +140,15 @@ class ProcessWeeklyAllowance extends Command
 
                         $goalsAutoAllocated++;
                         $this->info("  ✓ Auto-allocated $" . number_format($allocationAmount, 2) . " to '{$goal->title}' (" . number_format($goal->auto_allocation_percentage, 0) . "%)");
+
+                        // Notify parents if goal is now complete
+                        $goal->refresh();
+                        if ($goal->current_amount >= $goal->target_amount) {
+                            $familyParentsForGoal = User::whereHas('families', fn($q) => $q->where('families.id', $goal->family_id))->get();
+                            foreach ($familyParentsForGoal as $parent) {
+                                $parent->notify(new GoalCompletedNotification($kid, $goal));
+                            }
+                        }
                     } else {
                         $this->warn("  ✗ Insufficient balance for auto-allocation to '{$goal->title}'");
                     }
@@ -144,5 +181,30 @@ class ProcessWeeklyAllowance extends Command
         $this->info("Points: {$pointsReset} kids reset");
 
         return 0;
+    }
+
+    /**
+     * Warn parents when a kid has ≤ 3 points and their allowance day is today.
+     * Fires once per hourly run so parents get the notification during the day.
+     */
+    private function checkPointsLowWarnings(\Carbon\Carbon $now, string $todayLower): void
+    {
+        $kidsWithLowPoints = Kid::where('allowance_day', $todayLower)
+            ->whereNotNull('username')
+            ->where('points_enabled', true)
+            ->where('points', '<=', 3)
+            ->where('points', '>=', 0) // exclude already-zero (will be denied, separate notification)
+            ->get();
+
+        foreach ($kidsWithLowPoints as $kid) {
+            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+            $allowanceDayName = ucfirst($kid->allowance_day);
+
+            foreach ($familyParents as $parent) {
+                $parent->notify(new PointsLowWarningNotification($kid, $allowanceDayName));
+            }
+
+            $this->warn("⚡ Low points warning sent for {$kid->name} ({$kid->points}/{$kid->max_points} pts)");
+        }
     }
 }

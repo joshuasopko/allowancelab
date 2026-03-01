@@ -40,7 +40,7 @@
         <div class="kid-toast-message" id="kidToastMessage"></div>
     </div>
     @include('partials.version')
-</body>
+    @include('partials.push-banner-kid')
 </body>
 
 </html>

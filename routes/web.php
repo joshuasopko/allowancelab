@@ -95,7 +95,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/kids/{kid}/goals', [KidFocusedController::class, 'goals'])->name('kids.goals');
     Route::get('/kids/{kid}/wishes', [KidFocusedController::class, 'wishes'])->name('kids.wishes');
 
-    // Parent goal management routes (legacy - keep for now)
+    // Notification preferences + push subscription (parent)
+    Route::get('/notifications/preferences', [App\Http\Controllers\NotificationController::class, 'getPreferences'])->name('notifications.preferences');
+    Route::patch('/notifications/preferences', [App\Http\Controllers\NotificationController::class, 'updatePreferences'])->name('notifications.preferences.update');
+    Route::post('/notifications/subscribe', [App\Http\Controllers\NotificationController::class, 'parentSubscribe'])->name('notifications.subscribe');
+    Route::delete('/notifications/subscribe', [App\Http\Controllers\NotificationController::class, 'parentUnsubscribe'])->name('notifications.unsubscribe');
+
+    // Parent goal management routes
     Route::post('/kids/{kid}/goals', [GoalController::class, 'parentStore'])->name('parent.goals.store');
     Route::post('/kids/{kid}/goals/scrape-url', [GoalController::class, 'scrapeUrl'])->name('parent.goals.scrape-url');
     Route::get('/goals/{goal}', [GoalController::class, 'show'])->name('parent.goals.show');
@@ -137,6 +143,10 @@ Route::prefix('kid')->name('kid.')->group(function () {
         // Kid profile
         Route::get('/profile', [KidAuthController::class, 'profile'])->name('profile');
         Route::patch('/update-color', [KidAuthController::class, 'updateColor'])->name('update-color');
+
+        // Push subscription (kid)
+        Route::post('/notifications/subscribe', [App\Http\Controllers\NotificationController::class, 'kidSubscribe'])->name('notifications.subscribe');
+        Route::delete('/notifications/subscribe', [App\Http\Controllers\NotificationController::class, 'kidUnsubscribe'])->name('notifications.unsubscribe');
 
         // Kid goal routes (use kid prefix)
         Route::get('/goals', [GoalController::class, 'index'])->name('goals.index');

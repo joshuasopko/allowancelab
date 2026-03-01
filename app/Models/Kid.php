@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Concerns\HasPushSubscriptions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class Kid extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable, HasPushSubscriptions;
 
     protected $fillable = [
         'family_id',
@@ -27,6 +29,7 @@ class Kid extends Authenticatable
         'allowance_day',
         'max_points',
         'last_login_at',
+        'notification_preferences',
     ];
 
     protected $hidden = [
@@ -38,7 +41,8 @@ class Kid extends Authenticatable
         'balance' => 'decimal:2',
         'points_enabled' => 'boolean',
         'allowance_amount' => 'decimal:2',
-        'last_login_at' => 'datetime',
+        'last_login_at'            => 'datetime',
+        'notification_preferences' => 'array',
     ];
 
     // Relationship: Kid belongs to a Family

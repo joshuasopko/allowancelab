@@ -65,6 +65,17 @@ class ParentAccountController extends Controller
             'Pacific/Honolulu' => 'Hawaii Time (HST)',
         ];
 
+        // Notification preferences (merged config defaults + stored user preferences)
+        $defaults = config('webpush.parent_defaults', []);
+        $stored   = $user->notification_preferences ?? [];
+        $notificationPreferences = [];
+        foreach ($defaults as $event => $default) {
+            $notificationPreferences[$event] = array_merge($default, $stored[$event] ?? []);
+        }
+
+        // Whether the user has at least one active push subscription
+        $hasPushSubscription = $user->pushSubscriptions()->exists();
+
         return view('parent.account', compact(
             'user',
             'family',
@@ -74,7 +85,9 @@ class ParentAccountController extends Controller
             'nextAllowanceDate',
             'totalUpcomingAllowance',
             'lowPointsKids',
-            'timezones'
+            'timezones',
+            'notificationPreferences',
+            'hasPushSubscription'
         ));
     }
 
