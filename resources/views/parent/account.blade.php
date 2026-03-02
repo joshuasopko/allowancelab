@@ -195,10 +195,28 @@
                 </div>
             </div>
 
-            <p style="font-size:13px; color:#64748b; margin-bottom:16px;">
+            <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
                 Choose how you want to be notified for each event. <strong>Push</strong> sends an instant
                 browser notification. <strong>Email</strong> sends a message to {{ $user->email }}.
             </p>
+
+            {{-- Bulk toggle pills --}}
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+                <button type="button" id="toggleAllPushBtn" onclick="toggleAllChannel('push')"
+                        style="display:inline-flex; align-items:center; gap:6px;
+                               padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600;
+                               border:1.5px solid #6366f1; background:#f5f3ff; color:#4f46e5;
+                               cursor:pointer; transition:background 0.15s, color 0.15s;">
+                    <i class="fas fa-bell"></i> Enable All Push
+                </button>
+                <button type="button" id="toggleAllEmailBtn" onclick="toggleAllChannel('email')"
+                        style="display:inline-flex; align-items:center; gap:6px;
+                               padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600;
+                               border:1.5px solid #0ea5e9; background:#f0f9ff; color:#0284c7;
+                               cursor:pointer; transition:background 0.15s, color 0.15s;">
+                    <i class="fas fa-envelope"></i> Enable All Email
+                </button>
+            </div>
 
             @php
                 $eventLabels = [
@@ -209,6 +227,8 @@
                     'kid_spent'                 => ['label' => 'Kid spends money',              'icon' => 'fa-arrow-down','threshold' => true],
                     'allowance_processed'       => ['label' => 'Allowance posts (or is denied)','icon' => 'fa-calendar-check'],
                     'points_low_warning'        => ['label' => "Kid's points are critically low",'icon' => 'fa-exclamation-triangle'],
+                    'wish_created'              => ['label' => 'Kid adds a wish',                'icon' => 'fa-star'],
+                    'wish_purchase_requested'   => ['label' => 'Kid requests to buy a wish',     'icon' => 'fa-shopping-cart'],
                 ];
             @endphp
 
@@ -355,6 +375,30 @@
                     btn.innerHTML = '<i class="fas fa-bell-slash"></i> Disable';
                 }
             }
+        }
+
+        // ── Bulk channel toggle ─────────────────────────────────────────────────
+        function syncBulkPillState(channel) {
+            const checkboxes = document.querySelectorAll('[name^="' + channel + '_"]');
+            const btn = document.getElementById('toggleAll' + channel.charAt(0).toUpperCase() + channel.slice(1) + 'Btn');
+            if (!btn || !checkboxes.length) return;
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            const icon = channel === 'push'
+                ? (allChecked ? 'fas fa-bell-slash' : 'fas fa-bell')
+                : (allChecked ? 'fas fa-envelope-open' : 'fas fa-envelope');
+            const label = (allChecked ? 'Disable All ' : 'Enable All ') + (channel === 'push' ? 'Push' : 'Email');
+            btn.innerHTML = '<i class="' + icon + '"></i> ' + label;
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            syncBulkPillState('push');
+            syncBulkPillState('email');
+        });
+
+        function toggleAllChannel(channel) {
+            const checkboxes = document.querySelectorAll('[name^="' + channel + '_"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => { cb.checked = !allChecked; });
+            syncBulkPillState(channel);
         }
 
         // ── Notification preference save ────────────────────────────────────────

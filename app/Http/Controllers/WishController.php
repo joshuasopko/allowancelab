@@ -6,6 +6,9 @@ use App\Models\Wish;
 use App\Models\WishTransaction;
 use App\Models\Kid;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Notifications\WishCreatedNotification;
+use App\Notifications\WishPurchaseRequestedNotification;
 use App\Services\UrlScraperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -97,8 +100,19 @@ class WishController extends Controller
 
             DB::commit();
 
+            // Notify parents in family
+            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+            $isRequest = $request->input('action') === 'request';
+            foreach ($familyParents as $parent) {
+                if ($isRequest) {
+                    $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
+                } else {
+                    $parent->notify(new WishCreatedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
+                }
+            }
+
             return redirect()->route('kid.wishes.index')
-                ->with('success', $request->input('action') === 'request'
+                ->with('success', $isRequest
                     ? 'Wish sent to your parent for approval!'
                     : 'Wish added to your list!');
 
@@ -268,6 +282,12 @@ class WishController extends Controller
             ]);
 
             DB::commit();
+
+            // Notify parents in family
+            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $wish->family_id))->get();
+            foreach ($familyParents as $parent) {
+                $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
+            }
 
             return response()->json([
                 'success' => true,
