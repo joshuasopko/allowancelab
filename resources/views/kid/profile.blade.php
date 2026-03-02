@@ -363,10 +363,19 @@
 
         <!-- Notifications Section -->
         <div class="kid-profile-section" id="notificationsSection">
-            <h3 class="kid-section-title">
-                <i class="fas fa-bell" style="color: {{ $kid->color }};"></i>
-                Notifications
-            </h3>
+            <div class="kid-notif-section-header">
+                <h3 class="kid-section-title" style="margin-bottom: 0;">
+                    <i class="fas fa-bell" style="color: {{ $kid->color }};"></i>
+                    Notifications
+                </h3>
+                <div class="kid-notif-toggle-all-wrap">
+                    <span class="kid-notif-toggle-all-label">Toggle All</span>
+                    <label class="kid-toggle">
+                        <input type="checkbox" id="kidToggleAllCheck" onchange="toggleAllNotifs(this.checked)">
+                        <span class="kid-toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
             <p class="kid-notifications-hint">Choose which push notifications you want to receive on this device.</p>
 
             <div id="kidNotifList" class="kid-notif-list">
@@ -964,10 +973,32 @@
             }
 
             /* Notification preferences */
+            .kid-notif-section-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 8px;
+            }
+
+            .kid-notif-toggle-all-wrap {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-shrink: 0;
+            }
+
+            .kid-notif-toggle-all-label {
+                font-size: 13px;
+                font-weight: 600;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
             .kid-notifications-hint {
                 font-size: 14px;
                 color: #888;
-                margin: -12px 0 24px 0;
+                margin: 0 0 24px 0;
             }
 
             .kid-notif-loading {
@@ -1004,11 +1035,17 @@
                 gap: 14px;
             }
 
-            .kid-notif-emoji {
-                font-size: 22px;
-                width: 32px;
-                text-align: center;
+            .kid-notif-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
                 flex-shrink: 0;
+                background: {{ $kid->color }}18;
+                color: {{ $kid->color }};
             }
 
             .kid-notif-label {
@@ -1073,6 +1110,11 @@
             }
 
             @media (max-width: 900px) {
+                .kid-notif-section-header {
+                    align-items: flex-start;
+                    gap: 12px;
+                }
+
                 .kid-notif-row {
                     padding: 14px 16px;
                 }
@@ -1230,15 +1272,15 @@
             // ─── Kid Notification Preferences ────────────────────────────────
 
             const KID_NOTIF_META = {
-                money_added:        { emoji: '💰', label: 'Money Added',        desc: 'When your parent adds money to your account' },
-                money_deducted:     { emoji: '💸', label: 'Money Deducted',     desc: 'When your parent takes money from your account' },
-                allowance_received: { emoji: '🎉', label: 'Allowance Received', desc: 'When your weekly allowance is paid' },
-                allowance_denied:   { emoji: '⚠️', label: 'Allowance Skipped',  desc: 'When your allowance is skipped due to low points' },
-                points_adjusted:    { emoji: '⭐', label: 'Points Changed',     desc: 'When your parent adjusts your points' },
-                goal_approved:      { emoji: '✅', label: 'Goal Approved',      desc: 'When your parent approves a goal redemption' },
-                goal_denied:        { emoji: '❌', label: 'Goal Denied',        desc: 'When your parent denies a goal redemption' },
-                wish_approved:      { emoji: '🛒', label: 'Wish Approved',      desc: 'When your parent approves a wish purchase' },
-                wish_denied:        { emoji: '🚫', label: 'Wish Denied',        desc: 'When your parent declines a wish purchase' },
+                money_added:        { icon: 'fa-arrow-down',     label: 'Money Added',        desc: 'When your parent adds money to your account' },
+                money_deducted:     { icon: 'fa-arrow-up',       label: 'Money Deducted',     desc: 'When your parent takes money from your account' },
+                allowance_received: { icon: 'fa-calendar-check', label: 'Allowance Received', desc: 'When your weekly allowance is paid' },
+                allowance_denied:   { icon: 'fa-calendar-times', label: 'Allowance Skipped',  desc: 'When your allowance is skipped due to low points' },
+                points_adjusted:    { icon: 'fa-star',           label: 'Points Changed',     desc: 'When your parent adjusts your points' },
+                goal_approved:      { icon: 'fa-bullseye',       label: 'Goal Approved',      desc: 'When your parent approves a goal redemption' },
+                goal_denied:        { icon: 'fa-times-circle',   label: 'Goal Denied',        desc: 'When your parent denies a goal redemption' },
+                wish_approved:      { icon: 'fa-gift',           label: 'Wish Approved',      desc: 'When your parent approves a wish purchase' },
+                wish_denied:        { icon: 'fa-ban',            label: 'Wish Denied',        desc: 'When your parent declines a wish purchase' },
             };
 
             let kidNotifPrefs = {};
@@ -1267,19 +1309,36 @@
                     row.className = 'kid-notif-row';
                     row.innerHTML = `
                         <div class="kid-notif-info">
-                            <div class="kid-notif-emoji">${meta.emoji}</div>
+                            <div class="kid-notif-icon"><i class="fas ${meta.icon}"></i></div>
                             <div>
                                 <div class="kid-notif-label">${meta.label}</div>
                                 <div class="kid-notif-desc">${meta.desc}</div>
                             </div>
                         </div>
                         <label class="kid-toggle">
-                            <input type="checkbox" data-event="${event}" ${enabled ? 'checked' : ''}>
+                            <input type="checkbox" data-event="${event}" ${enabled ? 'checked' : ''}
+                                   onchange="syncToggleAll()">
                             <span class="kid-toggle-slider"></span>
                         </label>
                     `;
                     list.appendChild(row);
                 }
+
+                syncToggleAll();
+            }
+
+            // Set all individual toggles and update the toggle-all checkbox
+            function toggleAllNotifs(checked) {
+                document.querySelectorAll('#kidNotifList input[data-event]').forEach(cb => {
+                    cb.checked = checked;
+                });
+            }
+
+            // Update the toggle-all checkbox to reflect current individual states
+            function syncToggleAll() {
+                const all  = document.querySelectorAll('#kidNotifList input[data-event]');
+                const allOn = Array.from(all).every(cb => cb.checked);
+                document.getElementById('kidToggleAllCheck').checked = allOn;
             }
 
             async function saveKidNotifPrefs() {
