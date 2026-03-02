@@ -246,7 +246,7 @@ class GoalController extends Controller
     public function show(Goal $goal)
     {
         // Check if user is kid or parent with access
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             $kid = Auth::guard('kid')->user();
             if ($goal->kid_id !== $kid->id) {
                 abort(403, 'Unauthorized access to this goal.');
@@ -275,7 +275,7 @@ class GoalController extends Controller
      */
     public function edit(Goal $goal)
     {
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             $kid = Auth::guard('kid')->user();
             if ($goal->kid_id !== $kid->id) {
                 abort(403, 'Unauthorized access to this goal.');
@@ -318,7 +318,7 @@ class GoalController extends Controller
      */
     public function update(Request $request, Goal $goal)
     {
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             $kid = Auth::guard('kid')->user();
             if ($goal->kid_id !== $kid->id) {
                 abort(403, 'Unauthorized access to this goal.');
@@ -412,7 +412,7 @@ class GoalController extends Controller
             ]);
         }
 
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             return redirect()->route('kid.goals.index')->with('success', 'Goal updated successfully!');
         } else {
             return redirect()->route('kids.goals', $goal->kid)->with('success', 'Goal updated successfully!');
@@ -425,7 +425,7 @@ class GoalController extends Controller
     public function getEditData(Goal $goal)
     {
         // Check if user is kid or parent with access
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             $kid = Auth::guard('kid')->user();
             if ($goal->kid_id !== $kid->id) {
                 abort(403, 'Unauthorized access to this goal.');
@@ -448,7 +448,7 @@ class GoalController extends Controller
      */
     public function destroy(Request $request, Goal $goal)
     {
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             $kid = Auth::guard('kid')->user();
             if ($goal->kid_id !== $kid->id) {
                 abort(403, 'Unauthorized access to this goal.');
@@ -513,7 +513,7 @@ class GoalController extends Controller
         }
 
         // Handle regular form submissions
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             return redirect()->route('kid.goals.index')->with('success', 'Goal deleted successfully! Funds have been returned to your account.');
         } else {
             return redirect()->route('kids.goals', $kidId)->with('success', 'Goal deleted successfully! Funds have been returned to the account.');
@@ -575,7 +575,7 @@ class GoalController extends Controller
      */
     public function addFunds(Request $request, Goal $goal)
     {
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             $kid = Auth::guard('kid')->user();
             if ($goal->kid_id !== $kid->id) {
                 abort(403, 'Unauthorized access to this goal.');
@@ -680,7 +680,7 @@ class GoalController extends Controller
      */
     public function removeFunds(Request $request, Goal $goal)
     {
-        if (Auth::guard('kid')->check()) {
+        if (!Auth::check() && Auth::guard('kid')->check()) {
             $kid = Auth::guard('kid')->user();
             if ($goal->kid_id !== $kid->id) {
                 abort(403, 'Unauthorized access to this goal.');
