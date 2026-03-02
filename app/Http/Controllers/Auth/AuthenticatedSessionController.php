@@ -28,8 +28,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Auto-detect and save timezone if not set
+        // Track last login timestamp
         $user = Auth::user();
+        $user->last_login_at = now();
+        $user->saveQuietly();
+
+        // Auto-detect and save timezone if not set
         if ($request->has('timezone')) {
             try {
                 if (empty($user->timezone)) {

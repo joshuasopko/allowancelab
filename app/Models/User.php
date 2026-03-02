@@ -27,6 +27,8 @@ class User extends Authenticatable
         'password',
         'timezone',
         'notification_preferences',
+        'is_admin',
+        'last_login_at',
     ];
 
     /**
@@ -50,6 +52,8 @@ class User extends Authenticatable
             'email_verified_at'        => 'datetime',
             'password'                 => 'hashed',
             'notification_preferences' => 'array',
+            'is_admin'                 => 'boolean',
+            'last_login_at'            => 'datetime',
         ];
     }
 

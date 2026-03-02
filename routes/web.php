@@ -185,4 +185,11 @@ Route::prefix('kid')->name('kid.')->group(function () {
     });
 });
 
+// ─── Super Admin ─────────────────────────────────────────────────────────────
+Route::middleware(['auth', \App\Http\Middleware\AdminOnly::class])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.index');
+    });
+
 require __DIR__ . '/auth.php';
