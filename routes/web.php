@@ -148,15 +148,25 @@ Route::prefix('kid')->name('kid.')->group(function () {
         Route::post('/notifications/subscribe', [App\Http\Controllers\NotificationController::class, 'kidSubscribe'])->name('notifications.subscribe');
         Route::delete('/notifications/subscribe', [App\Http\Controllers\NotificationController::class, 'kidUnsubscribe'])->name('notifications.unsubscribe');
 
+        // Dashboard tab lazy-load endpoints
+        Route::get('/tab/goals', [KidAuthController::class, 'tabGoals'])->name('tab.goals');
+        Route::get('/tab/wishes', [KidAuthController::class, 'tabWishes'])->name('tab.wishes');
+        Route::get('/tab/activity', [KidAuthController::class, 'tabActivity'])->name('tab.activity');
+
         // Kid goal routes (use kid prefix)
         Route::get('/goals', [GoalController::class, 'index'])->name('goals.index');
         Route::post('/goals', [GoalController::class, 'store'])->name('goals.store');
+        Route::get('/goals/{goal}', [GoalController::class, 'show'])->name('goals.show');
         Route::get('/goals/{goal}/edit-data', [GoalController::class, 'getEditData'])->name('goals.edit-data');
         Route::put('/goals/{goal}', [GoalController::class, 'update'])->name('goals.update');
         Route::delete('/goals/{goal}', [GoalController::class, 'destroy'])->name('goals.destroy');
         Route::post('/goals/{goal}/add-funds', [GoalController::class, 'addFunds'])->name('goals.add-funds');
         Route::post('/goals/{goal}/remove-funds', [GoalController::class, 'removeFunds'])->name('goals.remove-funds');
         Route::post('/goals/{goal}/request-redemption', [GoalController::class, 'requestRedemption'])->name('goals.request-redemption');
+        Route::post('/goals/{goal}/acknowledge-denial', [GoalController::class, 'acknowledgeDenial'])->name('goals.acknowledge-denial');
+
+        // Kid goal scrape route
+        Route::post('/goals/scrape-url', [WishController::class, 'scrapeUrl'])->name('goals.scrape-url');
 
         // Kid wish routes
         Route::get('/wishes', [WishController::class, 'index'])->name('wishes.index');
@@ -167,6 +177,7 @@ Route::prefix('kid')->name('kid.')->group(function () {
         Route::delete('/wishes/{wish}', [WishController::class, 'destroy'])->name('wishes.destroy');
         Route::post('/wishes/{wish}/request-purchase', [WishController::class, 'requestPurchase'])->name('wishes.request-purchase');
         Route::post('/wishes/{wish}/remind', [WishController::class, 'remindParent'])->name('wishes.remind');
+        Route::post('/wishes/{wish}/re-ask', [WishController::class, 'reAskParent'])->name('wishes.re-ask');
     });
 });
 

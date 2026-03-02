@@ -53,27 +53,30 @@ class UrlScraperService
             // Check if we should use WebScrapingAPI (for Amazon and other difficult sites)
             $useScrapingApi = $this->shouldUseScrapingApi($url);
 
-            if ($useScrapingApi && config('services.web_scraping_api.key')) {
-                // Use WebScrapingAPI for better reliability
-                $html = $this->fetchViaScrapingApi($url);
+            $html = null;
 
-                if (!$html) {
-                    return [
-                        'success' => false,
-                        'error' => 'Could not access website. Please enter details manually.'
-                    ];
-                }
-            } else {
-                // Use direct HTTP request for other sites
+            if ($useScrapingApi && config('services.web_scraping_api.key')) {
+                // Try WebScrapingAPI first for better reliability on difficult sites
+                $html = $this->fetchViaScrapingApi($url);
+            }
+
+            if (!$html) {
+                // Fall back to direct HTTP request (also primary path for non-difficult sites)
                 $response = Http::timeout(15)
                     ->withHeaders([
-                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                        'Accept-Language' => 'en-US,en;q=0.5',
-                        'Accept-Encoding' => 'gzip, deflate',
-                        'DNT' => '1',
-                        'Connection' => 'keep-alive',
-                        'Upgrade-Insecure-Requests' => '1'
+                        'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                        'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                        'Accept-Language' => 'en-US,en;q=0.9',
+                        'Accept-Encoding' => 'gzip, deflate, br',
+                        'Cache-Control' => 'max-age=0',
+                        'Sec-Ch-Ua' => '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+                        'Sec-Ch-Ua-Mobile' => '?0',
+                        'Sec-Ch-Ua-Platform' => '"macOS"',
+                        'Sec-Fetch-Dest' => 'document',
+                        'Sec-Fetch-Mode' => 'navigate',
+                        'Sec-Fetch-Site' => 'none',
+                        'Sec-Fetch-User' => '?1',
+                        'Upgrade-Insecure-Requests' => '1',
                     ])
                     ->get($url);
 
@@ -85,6 +88,19 @@ class UrlScraperService
                 }
 
                 $html = $response->body();
+
+                // Detect bot/CAPTCHA pages (very short response = blocked)
+                if (strlen($html) < 10000 && (
+                    str_contains(strtolower($html), 'robot') ||
+                    str_contains(strtolower($html), 'captcha') ||
+                    str_contains(strtolower($html), 'automated access') ||
+                    str_contains(strtolower($html), 'unusual traffic')
+                )) {
+                    return [
+                        'success' => false,
+                        'error' => 'This website is blocking automated access. Try copying just the product URL (remove tracking parameters after the product ID).'
+                    ];
+                }
             }
 
             // Extract data with multiple fallback methods
@@ -144,8 +160,8 @@ class UrlScraperService
             $extension = pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
             $filename = $directory . '/' . Str::random(40) . '.' . $extension;
 
-            // Store in public disk
-            Storage::disk('public')->put($filename, $response->body());
+            // Store in default disk (local public disk or cloud storage in production)
+            Storage::put($filename, $response->body());
 
             return $filename;
 
@@ -629,17 +645,22 @@ class UrlScraperService
                     'render_js' => $renderJs,
                 ]);
 
-            if ($response->successful()) {
-                $body = $response->body();
+            $body = $response->body();
 
-                // Check if response is JSON (error response)
-                $json = json_decode($body, true);
-                if (json_last_error() === JSON_ERROR_NONE && isset($json['status'])) {
-                    // This is an error response
-                    \Log::warning('WebScrapingAPI error', ['response' => $json]);
+            // Check if response is JSON (error/status response)
+            $json = json_decode($body, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+                if (isset($json['error'])) {
+                    \Log::warning('WebScrapingAPI error', ['response' => $json, 'url' => $url]);
                     return null;
                 }
+                if (isset($json['status'])) {
+                    \Log::warning('WebScrapingAPI status error', ['response' => $json]);
+                    return null;
+                }
+            }
 
+            if ($response->successful() && strlen($body) > 1000) {
                 return $body;
             }
 

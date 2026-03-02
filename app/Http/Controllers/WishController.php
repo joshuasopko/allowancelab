@@ -36,7 +36,8 @@ class WishController extends Controller
         $kid = Auth::guard('kid')->user();
 
         $currentWishes = $kid->wishes()
-            ->whereIn('status', ['saved', 'pending_approval'])
+            ->whereIn('status', ['saved', 'pending_approval', 'declined'])
+            ->orderByRaw("CASE status WHEN 'pending_approval' THEN 0 WHEN 'saved' THEN 1 ELSE 2 END")
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -72,7 +73,7 @@ class WishController extends Controller
 
             if ($request->hasFile('image')) {
                 // Manual upload takes precedence
-                $imagePath = $request->file('image')->store('wish-photos', 'public');
+                $imagePath = $request->file('image')->store('wish-photos');
             } elseif ($request->filled('scraped_image_url')) {
                 // Download scraped image
                 $imagePath = $this->urlScraper->downloadImage($request->scraped_image_url);
@@ -111,10 +112,11 @@ class WishController extends Controller
                 }
             }
 
-            return redirect()->route('kid.wishes.index')
+            return redirect()->route('kid.dashboard')
                 ->with('success', $isRequest
                     ? 'Wish sent to your parent for approval!'
-                    : 'Wish added to your list!');
+                    : 'Wish added to your list!')
+                ->with('active_tab', 'wishes');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -172,13 +174,13 @@ class WishController extends Controller
             if ($request->hasFile('image')) {
                 // Delete old image if exists
                 if ($wish->image_path) {
-                    Storage::disk('public')->delete($wish->image_path);
+                    Storage::delete($wish->image_path);
                 }
-                $wish->image_path = $request->file('image')->store('wish-photos', 'public');
+                $wish->image_path = $request->file('image')->store('wish-photos');
             } elseif ($request->filled('scraped_image_url') && $request->scraped_image_url !== $wish->image_path) {
                 // New scraped image
                 if ($wish->image_path) {
-                    Storage::disk('public')->delete($wish->image_path);
+                    Storage::delete($wish->image_path);
                 }
                 $wish->image_path = $this->urlScraper->downloadImage($request->scraped_image_url);
             }
@@ -236,8 +238,9 @@ class WishController extends Controller
 
             DB::commit();
 
-            return redirect()->route('kid.wishes.index')
-                ->with('success', 'Wish deleted successfully!');
+            return redirect()->route('kid.dashboard')
+                ->with('success', 'Wish deleted successfully!')
+                ->with('active_tab', 'wishes');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -249,7 +252,7 @@ class WishController extends Controller
     /**
      * Kid requests parent to purchase wish
      */
-    public function requestPurchase(Wish $wish)
+    public function requestPurchase(Request $request, Wish $wish)
     {
         $kid = Auth::guard('kid')->user();
 
@@ -266,6 +269,12 @@ class WishController extends Controller
             ]);
         }
 
+        // Optional fees (taxes/shipping) the kid is flagging for the parent
+        $fees = max(0, (float) $request->input('fees', 0));
+        $note = $fees > 0
+            ? 'Kid noted estimated fees (tax/shipping): $' . number_format($fees, 2)
+            : null;
+
         DB::beginTransaction();
 
         try {
@@ -278,6 +287,7 @@ class WishController extends Controller
                 'kid_id' => $kid->id,
                 'family_id' => $wish->family_id,
                 'transaction_type' => 'requested',
+                'note' => $note,
                 'created_at' => now(),
             ]);
 
@@ -345,6 +355,56 @@ class WishController extends Controller
         }
     }
 
+    /**
+     * Kid re-asks parent after a decline (allowed after 24-hour cooldown).
+     * Resets wish to pending_approval and clears declined_at.
+     */
+    public function reAskParent(Wish $wish)
+    {
+        $kid = Auth::guard('kid')->user();
+
+        if ($wish->kid_id !== $kid->id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        if (!$wish->canReAsk()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You need to wait 24 hours before asking again.'
+            ]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $wish->update([
+                'status' => 'pending_approval',
+                'requested_at' => now(),
+                'declined_at' => null,
+            ]);
+
+            $wish->wishTransactions()->create([
+                'kid_id' => $kid->id,
+                'family_id' => $wish->family_id,
+                'transaction_type' => 'requested',
+                'note' => 'Kid re-asked after decline',
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Request sent to your parent again!'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            report($e);
+            return response()->json(['success' => false, 'message' => 'Failed to send request.']);
+        }
+    }
+
     // ============================================
     // PARENT ROUTES
     // ============================================
@@ -366,7 +426,7 @@ class WishController extends Controller
             ->get();
 
         $allWishes = $kid->wishes()
-            ->whereIn('status', ['saved', 'pending_approval'])
+            ->whereIn('status', ['saved', 'pending_approval', 'declined'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -435,7 +495,7 @@ class WishController extends Controller
             $imagePath = null;
 
             if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('wish-photos', 'public');
+                $imagePath = $request->file('image')->store('wish-photos');
             } elseif ($request->filled('scraped_image_url')) {
                 $imagePath = $this->urlScraper->downloadImage($request->scraped_image_url);
             }
@@ -480,7 +540,7 @@ class WishController extends Controller
     /**
      * Parent approves purchase request
      */
-    public function approvePurchase(Wish $wish)
+    public function approvePurchase(Request $request, Wish $wish)
     {
         // Authorization check
         $familyIds = Auth::user()->families()->pluck('families.id');
@@ -492,25 +552,36 @@ class WishController extends Controller
             return back()->withErrors(['error' => 'This wish is not pending approval.']);
         }
 
+        // Use adjusted amount (base price + any fees) if provided
+        $adjustedAmount = $request->input('adjusted_amount');
+        $totalAmount = ($adjustedAmount && is_numeric($adjustedAmount) && floatval($adjustedAmount) >= $wish->price)
+            ? round(floatval($adjustedAmount), 2)
+            : $wish->price;
+        $hasFees = $totalAmount > $wish->price;
+
         DB::beginTransaction();
 
         try {
             $kid = $wish->kid;
 
             // Check balance
-            if ($kid->balance < $wish->price) {
+            if ($kid->balance < $totalAmount) {
                 return back()->withErrors(['error' => $kid->name . ' does not have enough balance for this purchase.']);
             }
 
             // Deduct from kid balance
-            $kid->balance -= $wish->price;
+            $kid->balance -= $totalAmount;
             $kid->save();
 
             // Create transaction ledger entry
+            $description = 'Wish purchase: ' . $wish->item_name;
+            if ($hasFees) {
+                $description .= ' (includes fees)';
+            }
             $kid->transactions()->create([
                 'type' => 'spend',
-                'amount' => $wish->price,
-                'description' => 'Wish purchase: ' . $wish->item_name,
+                'amount' => $totalAmount,
+                'description' => $description,
                 'category' => 'wish_purchase',
                 'initiated_by' => 'parent',
             ]);
@@ -522,18 +593,26 @@ class WishController extends Controller
                 'purchased_by_user_id' => Auth::id(),
             ]);
 
+            // Build note for wish transaction
+            $note = null;
+            if ($hasFees) {
+                $fees = round($totalAmount - $wish->price, 2);
+                $note = 'Includes fees (tax/shipping): $' . number_format($fees, 2);
+            }
+
             // Create wish transaction
             $wish->wishTransactions()->create([
                 'kid_id' => $kid->id,
                 'family_id' => $wish->family_id,
                 'performed_by_user_id' => Auth::id(),
                 'transaction_type' => 'purchased',
+                'note' => $note,
                 'created_at' => now(),
             ]);
 
             DB::commit();
 
-            return back()->with('success', 'Purchase approved! $' . number_format($wish->price, 2) . ' deducted from ' . $kid->name . '\'s balance.');
+            return back()->with('success', 'Purchase approved! $' . number_format($totalAmount, 2) . ' deducted from ' . $kid->name . '\'s balance.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -560,7 +639,10 @@ class WishController extends Controller
         DB::beginTransaction();
 
         try {
-            $wish->update(['status' => 'declined']);
+            $wish->update([
+                'status' => 'declined',
+                'declined_at' => now(),
+            ]);
 
             $wish->wishTransactions()->create([
                 'kid_id' => $wish->kid_id,

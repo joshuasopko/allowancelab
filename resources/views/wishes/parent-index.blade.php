@@ -56,7 +56,7 @@
                             <div class="wish-row">
                                 <div class="wish-image">
                                     @if($wish->image_path)
-                                        <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}">
+                                        <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                     @else
                                         <div class="wish-placeholder"><i class="fas fa-box"></i></div>
                                     @endif
@@ -76,16 +76,19 @@
                                         <span><i class="fas fa-clock"></i> Requested {{ $wish->requested_at->diffForHumans() }}</span>
                                     </div>
                                 </div>
+                                {{-- Hidden form submitted by approve modal --}}
+                                <form id="approve-wish-form-{{ $wish->id }}" action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: none;">
+                                    @csrf
+                                </form>
+
                                 <div class="wish-actions">
                                     <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-view">
                                         <i class="fas fa-eye"></i> View
                                     </a>
-                                    <form action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: inline;" onsubmit="console.log('Form submitting...'); return true;">
-                                        @csrf
-                                        <button type="submit" class="btn-approve" onclick="console.log('Approve clicked'); return confirm('Approve this purchase? ${{ number_format($wish->price, 2) }} will be deducted from {{ $kid->name }}\'s balance.')">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn-approve"
+                                        onclick="openApproveWishModal('{{ $wish->id }}', '{{ addslashes($wish->item_name) }}', {{ $wish->price }}, '{{ addslashes($kid->name) }}', {{ $kid->balance }})">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
                                     <button onclick="openDeclineModal({{ $wish->id }})" class="btn-decline">
                                         <i class="fas fa-times"></i> Decline
                                     </button>
@@ -109,7 +112,7 @@
                             <div class="wish-card">
                                 <div class="wish-card-image">
                                     @if($wish->image_path)
-                                        <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}">
+                                        <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                     @else
                                         <div class="wish-placeholder"><i class="fas fa-box"></i></div>
                                     @endif
@@ -127,6 +130,8 @@
                                     @endif
                                     @if($wish->isPendingApproval())
                                         <span class="badge-pending">Pending Response</span>
+                                    @elseif($wish->isDeclined())
+                                        <span class="badge-declined"><i class="fas fa-times-circle"></i> Declined</span>
                                     @endif
                                     <div class="wish-card-actions">
                                         @if($wish->isSaved())
@@ -165,7 +170,7 @@
                             <div class="wish-card wish-purchased">
                                 <div class="wish-card-image">
                                     @if($wish->image_path)
-                                        <img src="{{ asset('storage/' . $wish->image_path) }}" alt="{{ $wish->item_name }}">
+                                        <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                     @else
                                         <div class="wish-placeholder"><i class="fas fa-box"></i></div>
                                     @endif
@@ -207,6 +212,51 @@
                     {{ $purchasedWishes->links() }}
                 @endif
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Wish Modal (single shared modal) -->
+<div id="approveWishModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-check" style="color: white; font-size: 22px;"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #111827;">Approve Purchase</h3>
+                <p id="approveWishModalName" style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280; font-weight: 500;"></p>
+            </div>
+        </div>
+
+        <!-- Balance breakdown -->
+        <div style="background: #f9fafb; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Purchase Amount:</span>
+                <span id="approveWishModalPrice" style="font-size: 18px; font-weight: 700; color: #ef4444;"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;"><span id="approveWishModalKid"></span>'s Balance:</span>
+                <span id="approveWishModalBalance" style="font-size: 18px; font-weight: 700; color: #3b82f6;"></span>
+            </div>
+            <div style="border-top: 1px solid #e5e7eb; margin: 8px 0;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
+                <span style="font-size: 14px; font-weight: 600; color: #4b5563;">Balance After:</span>
+                <span id="approveWishModalAfter" style="font-size: 18px; font-weight: 700;"></span>
+            </div>
+        </div>
+
+        <p style="font-size: 13px; color: #6b7280; margin: 0 0 24px 0; line-height: 1.5;">
+            This will mark the wish as purchased and deduct the amount from their balance.
+        </p>
+
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeApproveWishModal()" style="flex: 1; padding: 12px 16px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                Cancel
+            </button>
+            <button onclick="confirmApproveWish()" style="flex: 1; padding: 12px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                <i class="fas fa-check"></i> Approve & Deduct
+            </button>
         </div>
     </div>
 </div>
@@ -565,10 +615,34 @@
 .badge-pending {
     background: #fef3c7;
     color: #92400e;
-    padding: 4px 12px;
-    border-radius: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    width: fit-content;
+    margin: 8px 0;
+    border: 1px solid #fde68a;
+}
+
+.badge-declined {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    width: fit-content;
+    margin: 8px 0;
+    border: 1px solid #fecaca;
+    letter-spacing: 0.01em;
 }
 
 .purchased-date {
@@ -788,6 +862,44 @@ function switchWishTab(tab) {
     event.target.classList.add('active');
     document.getElementById(tab + 'Tab').classList.add('active');
 }
+
+// ── Approve Wish Modal ──────────────────────────────────────────────
+let currentApproveWishFormId = null;
+
+function openApproveWishModal(wishId, wishName, price, kidName, balance) {
+    currentApproveWishFormId = 'approve-wish-form-' + wishId;
+    const afterBalance = balance - price;
+
+    document.getElementById('approveWishModalName').textContent    = wishName;
+    document.getElementById('approveWishModalPrice').textContent   = '$' + price.toFixed(2);
+    document.getElementById('approveWishModalKid').textContent     = kidName;
+    document.getElementById('approveWishModalBalance').textContent = '$' + balance.toFixed(2);
+    const afterEl = document.getElementById('approveWishModalAfter');
+    afterEl.textContent = '$' + afterBalance.toFixed(2);
+    afterEl.style.color = afterBalance >= 0 ? '#10b981' : '#ef4444';
+
+    document.getElementById('approveWishModal').style.display = 'flex';
+}
+
+function closeApproveWishModal() {
+    document.getElementById('approveWishModal').style.display = 'none';
+    currentApproveWishFormId = null;
+}
+
+function confirmApproveWish() {
+    if (currentApproveWishFormId) {
+        document.getElementById(currentApproveWishFormId).submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const approveModal = document.getElementById('approveWishModal');
+    if (approveModal) {
+        approveModal.addEventListener('click', function(e) {
+            if (e.target === approveModal) closeApproveWishModal();
+        });
+    }
+});
 
 function openDeclineModal(wishId) {
     document.getElementById('declineModal' + wishId).style.display = 'flex';
