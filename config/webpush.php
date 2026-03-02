@@ -30,14 +30,14 @@ return [
 
     'parent_defaults' => [
         'goal_created'                 => ['push' => false, 'email' => false],
-        'goal_redemption_requested'    => ['push' => false, 'email' => true],
+        'goal_redemption_requested'    => ['push' => true,  'email' => true],
         'kid_deposited'                => ['push' => false, 'email' => false, 'threshold' => 20.00],
         'kid_spent'                    => ['push' => false, 'email' => false, 'threshold' => 20.00],
         'goal_completed'               => ['push' => false, 'email' => false],
-        'allowance_processed'          => ['push' => false, 'email' => false],
+        'allowance_processed'          => ['push' => true,  'email' => true],
         'points_low_warning'           => ['push' => false, 'email' => false],
         'wish_created'                 => ['push' => false, 'email' => false],
-        'wish_purchase_requested'      => ['push' => false, 'email' => true],
+        'wish_purchase_requested'      => ['push' => true,  'email' => true],
     ],
 
     /*
