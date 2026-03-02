@@ -148,6 +148,10 @@ Route::prefix('kid')->name('kid.')->group(function () {
         Route::post('/notifications/subscribe', [App\Http\Controllers\NotificationController::class, 'kidSubscribe'])->name('notifications.subscribe');
         Route::delete('/notifications/subscribe', [App\Http\Controllers\NotificationController::class, 'kidUnsubscribe'])->name('notifications.unsubscribe');
 
+        // Notification preferences (kid)
+        Route::get('/notifications/preferences', [App\Http\Controllers\NotificationController::class, 'getKidPreferences'])->name('notifications.preferences');
+        Route::patch('/notifications/preferences', [App\Http\Controllers\NotificationController::class, 'updateKidPreferences'])->name('notifications.update-preferences');
+
         // Dashboard tab lazy-load endpoints
         Route::get('/tab/goals', [KidAuthController::class, 'tabGoals'])->name('tab.goals');
         Route::get('/tab/wishes', [KidAuthController::class, 'tabWishes'])->name('tab.wishes');

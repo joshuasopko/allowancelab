@@ -6,7 +6,6 @@ use App\Services\Notifications\WebPushChannel;
 
 /**
  * Fired when a parent denies a wish purchase request.
- * Wired in when the Wish feature ships.
  */
 class WishDeniedNotification extends BaseWebPushNotification
 {

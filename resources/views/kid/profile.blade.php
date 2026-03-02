@@ -361,6 +361,27 @@
             </form>
         </div>
 
+        <!-- Notifications Section -->
+        <div class="kid-profile-section" id="notificationsSection">
+            <h3 class="kid-section-title">
+                <i class="fas fa-bell" style="color: {{ $kid->color }};"></i>
+                Notifications
+            </h3>
+            <p class="kid-notifications-hint">Choose which push notifications you want to receive on this device.</p>
+
+            <div id="kidNotifList" class="kid-notif-list">
+                <div class="kid-notif-loading">
+                    <i class="fas fa-circle-notch fa-spin"></i> Loading...
+                </div>
+            </div>
+
+            <div class="kid-notif-actions">
+                <button type="button" id="kidSaveNotifBtn" class="kid-save-btn" onclick="saveKidNotifPrefs()">
+                    <i class="fas fa-check"></i> Save Notification Settings
+                </button>
+            </div>
+        </div>
+
         <!-- Mobile Back Button (bottom) -->
         <a href="{{ route('kid.dashboard') }}" class="kid-back-btn-mobile-bottom">
             ← Back to Dashboard
@@ -942,6 +963,125 @@
                 display: none;
             }
 
+            /* Notification preferences */
+            .kid-notifications-hint {
+                font-size: 14px;
+                color: #888;
+                margin: -12px 0 24px 0;
+            }
+
+            .kid-notif-loading {
+                color: #aaa;
+                padding: 16px 0;
+                font-size: 15px;
+            }
+
+            .kid-notif-list {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                margin-bottom: 28px;
+            }
+
+            .kid-notif-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 16px 20px;
+                background: #f8f9fa;
+                border-radius: 12px;
+                border: 2px solid #e8e8e8;
+                transition: border-color 0.2s;
+            }
+
+            .kid-notif-row:hover {
+                border-color: #d0d0d0;
+            }
+
+            .kid-notif-info {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .kid-notif-emoji {
+                font-size: 22px;
+                width: 32px;
+                text-align: center;
+                flex-shrink: 0;
+            }
+
+            .kid-notif-label {
+                font-size: 15px;
+                font-weight: 600;
+                color: #1a1a1a;
+            }
+
+            .kid-notif-desc {
+                font-size: 13px;
+                color: #888;
+                margin-top: 2px;
+            }
+
+            /* Toggle switch */
+            .kid-toggle {
+                position: relative;
+                width: 52px;
+                height: 28px;
+                flex-shrink: 0;
+            }
+
+            .kid-toggle input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .kid-toggle-slider {
+                position: absolute;
+                inset: 0;
+                background: #ccc;
+                border-radius: 28px;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+
+            .kid-toggle-slider::before {
+                content: '';
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                left: 4px;
+                top: 4px;
+                background: white;
+                border-radius: 50%;
+                transition: transform 0.2s;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            }
+
+            .kid-toggle input:checked + .kid-toggle-slider {
+                background: {{ $kid->color }};
+            }
+
+            .kid-toggle input:checked + .kid-toggle-slider::before {
+                transform: translateX(24px);
+            }
+
+            .kid-notif-actions {
+                display: flex;
+                justify-content: center;
+            }
+
+            @media (max-width: 900px) {
+                .kid-notif-row {
+                    padding: 14px 16px;
+                }
+
+                .kid-notif-label {
+                    font-size: 14px;
+                }
+            }
+
             @media (max-width: 900px) {
                 .kid-back-btn-desktop {
                     display: none;
@@ -1086,5 +1226,99 @@
                     toast.classList.remove('show');
                 }, 4000);
             }
+
+            // ─── Kid Notification Preferences ────────────────────────────────
+
+            const KID_NOTIF_META = {
+                money_added:        { emoji: '💰', label: 'Money Added',        desc: 'When your parent adds money to your account' },
+                money_deducted:     { emoji: '💸', label: 'Money Deducted',     desc: 'When your parent takes money from your account' },
+                allowance_received: { emoji: '🎉', label: 'Allowance Received', desc: 'When your weekly allowance is paid' },
+                allowance_denied:   { emoji: '⚠️', label: 'Allowance Skipped',  desc: 'When your allowance is skipped due to low points' },
+                points_adjusted:    { emoji: '⭐', label: 'Points Changed',     desc: 'When your parent adjusts your points' },
+                goal_approved:      { emoji: '✅', label: 'Goal Approved',      desc: 'When your parent approves a goal redemption' },
+                goal_denied:        { emoji: '❌', label: 'Goal Denied',        desc: 'When your parent denies a goal redemption' },
+                wish_approved:      { emoji: '🛒', label: 'Wish Approved',      desc: 'When your parent approves a wish purchase' },
+                wish_denied:        { emoji: '🚫', label: 'Wish Denied',        desc: 'When your parent declines a wish purchase' },
+            };
+
+            let kidNotifPrefs = {};
+
+            async function loadKidNotifPrefs() {
+                try {
+                    const res = await fetch('{{ route('kid.notifications.preferences') }}', {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    kidNotifPrefs = await res.json();
+                    renderKidNotifList();
+                } catch (e) {
+                    document.getElementById('kidNotifList').innerHTML =
+                        '<p style="color:#aaa;font-size:14px;">Could not load notification settings.</p>';
+                }
+            }
+
+            function renderKidNotifList() {
+                const list = document.getElementById('kidNotifList');
+                list.innerHTML = '';
+
+                for (const [event, meta] of Object.entries(KID_NOTIF_META)) {
+                    const enabled = kidNotifPrefs[event]?.push ?? true;
+
+                    const row = document.createElement('div');
+                    row.className = 'kid-notif-row';
+                    row.innerHTML = `
+                        <div class="kid-notif-info">
+                            <div class="kid-notif-emoji">${meta.emoji}</div>
+                            <div>
+                                <div class="kid-notif-label">${meta.label}</div>
+                                <div class="kid-notif-desc">${meta.desc}</div>
+                            </div>
+                        </div>
+                        <label class="kid-toggle">
+                            <input type="checkbox" data-event="${event}" ${enabled ? 'checked' : ''}>
+                            <span class="kid-toggle-slider"></span>
+                        </label>
+                    `;
+                    list.appendChild(row);
+                }
+            }
+
+            async function saveKidNotifPrefs() {
+                const btn = document.getElementById('kidSaveNotifBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving…';
+
+                const prefs = {};
+                document.querySelectorAll('#kidNotifList input[data-event]').forEach(cb => {
+                    prefs[cb.dataset.event] = { push: cb.checked };
+                });
+
+                try {
+                    const res = await fetch('{{ route('kid.notifications.update-preferences') }}', {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({ preferences: prefs }),
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast('Notification settings saved!');
+                    } else {
+                        showToast('Could not save settings. Try again.');
+                    }
+                } catch (e) {
+                    showToast('Could not save settings. Try again.');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Save Notification Settings';
+                }
+            }
+
+            // Load preferences on page load
+            document.addEventListener('DOMContentLoaded', loadKidNotifPrefs);
         </script>
 @endsection

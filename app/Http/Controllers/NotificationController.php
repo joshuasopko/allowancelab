@@ -135,4 +135,51 @@ class NotificationController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    // ─── Notification Preferences — Kid ──────────────────────────────────────
+
+    /**
+     * Return the current kid's merged notification preferences.
+     */
+    public function getKidPreferences(Request $request)
+    {
+        $kid      = Auth::guard('kid')->user();
+        $defaults = config('webpush.kid_defaults', []);
+        $stored   = $kid->notification_preferences ?? [];
+
+        $merged = [];
+        foreach ($defaults as $event => $default) {
+            $merged[$event] = array_merge($default, $stored[$event] ?? []);
+        }
+
+        return response()->json($merged);
+    }
+
+    /**
+     * Save updated notification preferences for the authenticated kid.
+     * Kids only have push (no email channel), so only 'push' is accepted.
+     */
+    public function updateKidPreferences(Request $request)
+    {
+        $request->validate([
+            'preferences' => 'required|array',
+        ]);
+
+        $kid     = Auth::guard('kid')->user();
+        $allowed = array_keys(config('webpush.kid_defaults', []));
+        $prefs   = [];
+
+        foreach ($request->input('preferences') as $event => $settings) {
+            if (!in_array($event, $allowed)) continue;
+
+            $prefs[$event] = [
+                'push' => (bool) ($settings['push'] ?? false),
+            ];
+        }
+
+        $kid->notification_preferences = $prefs;
+        $kid->save();
+
+        return response()->json(['success' => true]);
+    }
 }

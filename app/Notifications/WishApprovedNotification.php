@@ -6,7 +6,6 @@ use App\Services\Notifications\WebPushChannel;
 
 /**
  * Fired when a parent approves a wish purchase request.
- * Wired in when the Wish feature ships.
  */
 class WishApprovedNotification extends BaseWebPushNotification
 {
@@ -32,8 +31,7 @@ class WishApprovedNotification extends BaseWebPushNotification
             'icon'  => '/icon-192.png',
             'badge' => '/icon-192.png',
             'tag'   => 'wish-approved-' . $this->wishId,
-            'url'   => '/kid/dashboard',
-            'requireInteraction' => true,
+            'url'   => '/kid/wishes',
         ];
     }
 }

@@ -126,6 +126,17 @@ class KidController extends Controller
             'reason' => $request->reason,
         ]);
 
+        // Notify the kid
+        try {
+            $kid->notify(new PointsAdjustedNotification(
+                (int) $request->points_change,
+                (int) $kid->points,
+                (string) $request->reason
+            ));
+        } catch (\Exception $notifyEx) {
+            report($notifyEx);
+        }
+
         return back()->with('success', 'Points updated!');
     }
 

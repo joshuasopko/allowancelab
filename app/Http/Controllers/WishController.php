@@ -7,7 +7,9 @@ use App\Models\WishTransaction;
 use App\Models\Kid;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Notifications\WishApprovedNotification;
 use App\Notifications\WishCreatedNotification;
+use App\Notifications\WishDeniedNotification;
 use App\Notifications\WishPurchaseRequestedNotification;
 use App\Services\UrlScraperService;
 use Illuminate\Http\Request;
@@ -622,6 +624,13 @@ class WishController extends Controller
 
             DB::commit();
 
+            // Notify kid their wish was approved
+            try {
+                $kid->notify(new WishApprovedNotification($wish->item_name, $wish->id));
+            } catch (\Exception $notifyEx) {
+                report($notifyEx);
+            }
+
             return back()->with('success', 'Purchase approved! $' . number_format($totalAmount, 2) . ' deducted from ' . $kid->name . '\'s balance.');
 
         } catch (\Exception $e) {
@@ -664,6 +673,13 @@ class WishController extends Controller
             ]);
 
             DB::commit();
+
+            // Notify kid their wish was declined
+            try {
+                $wish->kid->notify(new WishDeniedNotification($wish->item_name, $wish->id));
+            } catch (\Exception $notifyEx) {
+                report($notifyEx);
+            }
 
             return back()->with('success', 'Purchase request declined.');
 
@@ -734,6 +750,13 @@ class WishController extends Controller
             ]);
 
             DB::commit();
+
+            // Notify kid their wish was purchased
+            try {
+                $kid->notify(new WishApprovedNotification($wish->item_name, $wish->id));
+            } catch (\Exception $notifyEx) {
+                report($notifyEx);
+            }
 
             return back()->with('success', 'Wish redeemed! $' . number_format($amount, 2) . ' deducted from ' . $kid->name . '\'s balance.');
 
