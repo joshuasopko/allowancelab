@@ -44,7 +44,6 @@ class WishPurchaseRequestedNotification extends Notification
             'badge' => '/icon-192.png',
             'tag'   => 'wish-purchase-' . $this->wishId,
             'url'   => '/kids/' . $this->kid->id . '/wishes',
-            'requireInteraction' => true,
         ];
     }
 

@@ -101,15 +101,20 @@ class WishController extends Controller
 
             DB::commit();
 
-            // Notify parents in family
-            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+            // Notify parents — wrapped separately so a notification failure
+            // never blocks the success response back to the kid
             $isRequest = $request->input('action') === 'request';
-            foreach ($familyParents as $parent) {
-                if ($isRequest) {
-                    $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
-                } else {
-                    $parent->notify(new WishCreatedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
+            try {
+                $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+                foreach ($familyParents as $parent) {
+                    if ($isRequest) {
+                        $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
+                    } else {
+                        $parent->notify(new WishCreatedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
+                    }
                 }
+            } catch (\Exception $notifyEx) {
+                report($notifyEx);
             }
 
             return redirect()->route('kid.dashboard')
@@ -293,10 +298,15 @@ class WishController extends Controller
 
             DB::commit();
 
-            // Notify parents in family
-            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $wish->family_id))->get();
-            foreach ($familyParents as $parent) {
-                $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
+            // Notify parents — wrapped separately so a notification failure
+            // never blocks the success response back to the kid
+            try {
+                $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $wish->family_id))->get();
+                foreach ($familyParents as $parent) {
+                    $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
+                }
+            } catch (\Exception $notifyEx) {
+                report($notifyEx);
             }
 
             return response()->json([
