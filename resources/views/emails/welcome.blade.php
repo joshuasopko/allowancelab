@@ -27,7 +27,7 @@
         <p>Thanks for joining AllowanceLab. We're excited to help you teach your kids about financial responsibility!
         </p>
         <p>Get started by adding your first child to your family.</p>
-        <p>If you have any questions, please email allowancelab@gmail.com.</p>
+        <p>If you have any questions, please email <a href="mailto:hello@allowancelab.com">hello@allowancelab.com</a>.</p>
         <p>Happy experimenting!<br>The AllowanceLab Team</p>
     </div>
 </body>
