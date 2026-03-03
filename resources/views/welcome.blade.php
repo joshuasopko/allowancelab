@@ -695,6 +695,111 @@
         .fi-emerald { background: linear-gradient(135deg, #10b981, #059669); }
         .fi-amber   { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .fi-rose    { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+        .fi-teal    { background: linear-gradient(135deg, #0891b2, #0e7490); }
+        .fi-orange  { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .fi-sky     { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+
+        /* ===== COMING SOON SECTION ===== */
+        .coming-soon-section {
+            background: linear-gradient(135deg, #0f172a 0%, #022c22 55%, #064e3b 100%);
+            padding: 84px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coming-soon-section::before {
+            content: '';
+            position: absolute;
+            top: -120px;
+            left: -120px;
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .coming-soon-section::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            right: -80px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.10) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .coming-soon-section .section-label {
+            color: #6ee7b7;
+        }
+
+        .coming-soon-section .section-title {
+            color: #ffffff;
+        }
+
+        .coming-soon-section .section-subtitle {
+            color: #94a3b8;
+        }
+
+        .coming-soon-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cs-card {
+            padding: 28px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .cs-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(16, 185, 129, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .cs-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cs-badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #6ee7b7;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 100px;
+            padding: 4px 10px;
+            white-space: nowrap;
+        }
+
+        .cs-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 6px;
+        }
+
+        .cs-desc {
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.65;
+        }
 
         .feature-text h3 {
             font-size: 16px;
@@ -1218,6 +1323,14 @@
                 padding: 64px 20px;
             }
 
+            .coming-soon-section {
+                padding: 56px 20px;
+            }
+
+            .coming-soon-grid {
+                grid-template-columns: 1fr;
+            }
+
             .cta-title {
                 font-size: 32px;
             }
@@ -1486,8 +1599,8 @@
                         <i class="fas fa-bullseye"></i>
                     </div>
                     <div class="feature-text">
-                        <h3>Savings Goals</h3>
-                        <p>Kids choose something they want, set a target amount, and watch their goal fill up automatically each week.</p>
+                        <h3>Goal-Based Saving</h3>
+                        <p>Kids pick something they want, set a target amount, and watch their goal fill up — saving with a clear purpose they actually care about.</p>
                     </div>
                 </div>
                 <div class="feature-card">
@@ -1515,6 +1628,51 @@
                     <div class="feature-text">
                         <h3>Parent-Controlled</h3>
                         <p>Parents approve everything. Kids learn within guardrails. Safe, secure, and designed for family trust.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Coming Soon Features -->
+        <section class="coming-soon-section">
+            <div class="section-label" style="position:relative;z-index:1;">What's Coming</div>
+            <h2 class="section-title" style="position:relative;z-index:1;">The roadmap is full.</h2>
+            <p class="section-subtitle" style="position:relative;z-index:1;color:#94a3b8;">AllowanceLab is actively growing. Here's what's being built next.</p>
+            <div class="coming-soon-grid">
+                <div class="cs-card">
+                    <div class="cs-card-top">
+                        <div class="feature-icon-box fi-teal">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <span class="cs-badge">Coming Soon</span>
+                    </div>
+                    <div>
+                        <h3 class="cs-title">Rainy Day Savings</h3>
+                        <p class="cs-desc">A dedicated savings bucket — not tied to any goal, just smart habit-building. Kids set aside money for the unexpected and learn that saving "just because" is a superpower.</p>
+                    </div>
+                </div>
+                <div class="cs-card">
+                    <div class="cs-card-top">
+                        <div class="feature-icon-box fi-orange">
+                            <i class="fas fa-hand-holding-heart"></i>
+                        </div>
+                        <span class="cs-badge">Coming Soon</span>
+                    </div>
+                    <div>
+                        <h3 class="cs-title">Giving Bucket</h3>
+                        <p class="cs-desc">Kids allocate a portion of their allowance to giving. When they're ready, they request a donation to a church, charity, or cause they care about — generosity made into a habit.</p>
+                    </div>
+                </div>
+                <div class="cs-card">
+                    <div class="cs-card-top">
+                        <div class="feature-icon-box fi-sky">
+                            <i class="fas fa-list-check"></i>
+                        </div>
+                        <span class="cs-badge">Coming Soon</span>
+                    </div>
+                    <div>
+                        <h3 class="cs-title">Chore Tracking</h3>
+                        <p class="cs-desc">Parents assign chores, kids check them off. A parent approval workflow keeps everyone accountable and gives kids a direct connection between effort and earning.</p>
                     </div>
                 </div>
             </div>
