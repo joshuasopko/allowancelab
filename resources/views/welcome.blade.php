@@ -25,16 +25,25 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 60px;
+            background: transparent;
+            box-shadow: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: background 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        header.scrolled {
             background: white;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
         }
 
         .logo-container img {
             height: 62px;
             width: auto;
+            transition: opacity 0.2s ease;
         }
 
         .nav-links {
@@ -50,63 +59,175 @@
             font-size: 15px;
             padding: 10px 24px;
             border-radius: 8px;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
         }
 
+        /* Transparent state — glowing buttons on dark */
         .nav-links a.parent-login {
             background: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.55), 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .nav-links a.parent-login:hover {
             background: #059669;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+            box-shadow: 0 0 28px rgba(16, 185, 129, 0.7), 0 6px 16px rgba(16, 185, 129, 0.4);
         }
 
         .nav-links a.kid-login {
             background: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.55), 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
         .nav-links a.kid-login:hover {
             background: #2563eb;
             transform: translateY(-1px);
+            box-shadow: 0 0 28px rgba(59, 130, 246, 0.7), 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Scrolled state — clean solid buttons, no glow */
+        header.scrolled .nav-links a.parent-login {
+            box-shadow: none;
+        }
+
+        header.scrolled .nav-links a.parent-login:hover {
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+
+        header.scrolled .nav-links a.kid-login {
+            box-shadow: none;
+        }
+
+        header.scrolled .nav-links a.kid-login:hover {
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
         }
 
-        /* ===== MOBILE LOGIN BUTTONS ===== */
-        .mobile-login-buttons {
+        /* ===== HAMBURGER ===== */
+        .hamburger {
             display: none;
-            gap: 12px;
-            padding: 12px 20px;
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            transition: background 0.2s;
         }
 
-        .mobile-login-btn {
-            flex: 1;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            text-align: center;
+        .hamburger:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        header.scrolled .hamburger:hover {
+            background: rgba(0,0,0,0.06);
+        }
+
+        /* Staggered line widths */
+        .hamburger span {
+            display: block;
+            height: 2px;
+            background: white;
+            border-radius: 2px;
+            transition: width 0.25s ease, opacity 0.25s ease, transform 0.25s ease, background 0.35s ease;
+        }
+
+        .hamburger span:nth-child(1) { width: 22px; }
+        .hamburger span:nth-child(2) { width: 15px; }
+        .hamburger span:nth-child(3) { width: 9px; }
+
+        header.scrolled .hamburger span {
+            background: #0f172a;
+        }
+
+        /* X state when open */
+        .hamburger.open span:nth-child(1) {
+            width: 22px;
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .hamburger.open span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .hamburger.open span:nth-child(3) {
+            width: 22px;
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        /* ===== MOBILE MENU DRAWER ===== */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 76px;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background: linear-gradient(to bottom, #0f172a, #022c22);
+            padding: 20px 20px 24px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+            flex-direction: column;
+            gap: 18px;
+            border-top: 1px solid rgba(16, 185, 129, 0.25);
+            transform: translateY(-6px);
+            opacity: 0;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+        }
+
+        .mobile-menu.open {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-menu.scrolled {
+            background: white;
+            border-top: 1px solid #f1f5f9;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+        }
+
+        .mobile-menu-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
             text-decoration: none;
+            color: white;
             transition: all 0.2s;
         }
 
-        .mobile-login-btn.btn-parent {
+        .mobile-menu-btn.btn-parent {
             background: #10b981;
-            color: white;
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.45);
         }
 
-        .mobile-login-btn.btn-kid {
+        .mobile-menu-btn.btn-parent:hover {
+            background: #059669;
+        }
+
+        .mobile-menu-btn.btn-kid {
             background: #3b82f6;
-            color: white;
+            box-shadow: 0 0 18px rgba(59, 130, 246, 0.45);
+        }
+
+        .mobile-menu-btn.btn-kid:hover {
+            background: #2563eb;
+        }
+
+        .mobile-menu.scrolled .mobile-menu-btn.btn-parent,
+        .mobile-menu.scrolled .mobile-menu-btn.btn-kid {
+            box-shadow: none;
         }
 
         /* ===== HERO ===== */
         .hero {
             background: linear-gradient(135deg, #0f172a 0%, #022c22 55%, #064e3b 100%);
-            padding: 100px 60px 84px;
+            padding: 160px 60px 110px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -172,7 +293,7 @@
 
         .hero-subtitle {
             font-size: 22px;
-            color: #94a3b8;
+            color: #cbd5e1;
             margin-bottom: 12px;
             font-weight: 400;
             max-width: 680px;
@@ -182,7 +303,7 @@
 
         .hero-cta-line {
             font-size: 16px;
-            color: #64748b;
+            color: #94a3b8;
             margin-bottom: 44px;
             max-width: 480px;
             margin-left: auto;
@@ -242,39 +363,105 @@
             transform: translateY(-2px);
         }
 
-        /* ===== PWA INSTALL BUTTON ===== */
-        .pwa-install-container {
-            margin-top: 32px;
-            text-align: center;
-            display: none;
+        /* ===== PWA INSTALL TOAST ===== */
+        .pwa-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            max-width: 480px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.28);
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 9999;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0,0,0,0.2);
+            transform: translateY(120px);
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+            pointer-events: none;
         }
 
-        .pwa-install-text {
-            font-size: 14px;
-            color: #64748b;
-            margin-bottom: 10px;
+        .pwa-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        .pwa-install-button {
-            background: transparent;
-            color: #a7f3d0;
-            border: 1.5px solid rgba(16, 185, 129, 0.38);
-            padding: 9px 24px;
-            font-size: 14px;
-            font-weight: 600;
+        .pwa-toast-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .pwa-toast-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .pwa-toast-text {
+            font-size: 13px;
+            color: #e2e8f0;
+            font-weight: 500;
+            line-height: 1.35;
+        }
+
+        .pwa-toast-btn {
+            background: #10b981;
+            color: white;
+            border: none;
             border-radius: 8px;
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: background 0.2s, transform 0.15s;
+            width: fit-content;
+            font-family: inherit;
         }
 
-        .pwa-install-button:hover {
-            background: rgba(16, 185, 129, 0.14);
-            border-color: #10b981;
+        .pwa-toast-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
         }
 
-        @media (max-width: 900px) {
-            .pwa-install-container {
-                display: block;
+        .pwa-toast-close {
+            background: none;
+            border: none;
+            color: #475569;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 4px 6px;
+            flex-shrink: 0;
+            transition: color 0.2s;
+            line-height: 1;
+            border-radius: 6px;
+        }
+
+        .pwa-toast-close:hover {
+            color: #94a3b8;
+        }
+
+        /* Desktop: hide the toast entirely */
+        @media (min-width: 900px) {
+            .pwa-toast {
+                display: none !important;
             }
         }
 
@@ -663,69 +850,76 @@
         }
 
         /* ===== TESTIMONIALS ===== */
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            max-width: 1100px;
+        .founder-card {
+            max-width: 780px;
             margin: 0 auto;
-        }
-
-        .testimonial-card {
             background: #1e293b;
-            padding: 32px 28px;
-            border-radius: 16px;
+            border-radius: 20px;
             border: 1px solid #334155;
+            padding: 52px 56px;
             position: relative;
-            transition: all 0.3s;
         }
 
-        .testimonial-card:hover {
-            border-color: rgba(16, 185, 129, 0.4);
-            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
-        }
-
-        .quote-mark {
-            font-size: 64px;
+        .founder-quote-mark {
+            font-size: 120px;
             line-height: 1;
             color: #10b981;
-            opacity: 0.35;
+            opacity: 0.18;
             position: absolute;
-            top: 14px;
-            right: 22px;
+            top: 12px;
+            left: 36px;
             font-family: Georgia, serif;
+            pointer-events: none;
         }
 
-        .testimonial-quote {
-            font-size: 15px;
+        .founder-message {
+            font-size: 18px;
             color: #cbd5e1;
-            line-height: 1.75;
-            margin-bottom: 22px;
+            line-height: 1.85;
             font-style: italic;
+            margin-bottom: 36px;
+            position: relative;
+            z-index: 1;
         }
 
-        .testimonial-footer {
+        .founder-footer {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 16px;
+            border-top: 1px solid #334155;
+            padding-top: 28px;
         }
 
-        .testimonial-avatar {
-            width: 34px;
-            height: 34px;
+        .founder-avatar {
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
             background: linear-gradient(135deg, #10b981, #059669);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 13px;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
         }
 
-        .testimonial-author {
-            font-size: 14px;
+        .founder-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .founder-name {
+            font-size: 16px;
             color: #6ee7b7;
-            font-weight: 600;
+            font-weight: 700;
+        }
+
+        .founder-role {
+            font-size: 13px;
+            color: #64748b;
         }
 
         /* ===== CTA SECTION ===== */
@@ -962,7 +1156,7 @@
             }
 
             .hero {
-                padding: 64px 20px 56px;
+                padding: 120px 20px 72px;
             }
 
             .hero-title {
@@ -1016,8 +1210,8 @@
                 grid-template-columns: 1fr;
             }
 
-            .testimonials-grid {
-                grid-template-columns: 1fr;
+            .founder-card {
+                padding: 36px 28px;
             }
 
             .cta-section {
@@ -1085,17 +1279,29 @@
             }
         }
 
-        @media (max-width: 550px) {
+        @media (max-width: 600px) {
             .desktop-only {
                 display: none;
             }
 
-            .mobile-login-buttons {
+            nav.nav-links {
+                display: none;
+            }
+
+            .hamburger {
                 display: flex;
             }
 
-            nav.nav-links {
-                display: none;
+            .mobile-menu {
+                display: flex;
+            }
+
+            header {
+                padding: 14px 20px;
+            }
+
+            .logo-container img {
+                height: 58px;
             }
         }
     </style>
@@ -1127,10 +1333,11 @@
     <div id="website-content">
 
         <!-- Header -->
-        <header>
+        <header id="site-header">
             <div class="logo-container">
-                <img src="{{ asset('/images/Allowance-Lab-logo.png') }}" alt="AllowanceLab">
+                <img id="header-logo" src="{{ asset('/images/Allowance-Lab-logo-white.png') }}" alt="AllowanceLab">
             </div>
+            <!-- Desktop nav -->
             <nav class="nav-links">
                 <a href="{{ route('login') }}" class="parent-login">
                     <i class="fas fa-user-shield"></i> Parent Login
@@ -1139,12 +1346,20 @@
                     <i class="fas fa-star"></i> Kid Login
                 </a>
             </nav>
+            <!-- Mobile hamburger -->
+            <button class="hamburger" id="hamburger-btn" aria-label="Open menu">
+                <span></span><span></span><span></span>
+            </button>
         </header>
 
-        <!-- Mobile Login Buttons (below header) -->
-        <div class="mobile-login-buttons">
-            <a href="{{ route('login') }}" class="mobile-login-btn btn-parent">Parent Login</a>
-            <a href="{{ route('kid.login') }}" class="mobile-login-btn btn-kid">Kid Login</a>
+        <!-- Mobile menu drawer -->
+        <div class="mobile-menu" id="mobile-menu">
+            <a href="{{ route('login') }}" class="mobile-menu-btn btn-parent">
+                <i class="fas fa-user-shield"></i> Parent Login
+            </a>
+            <a href="{{ route('kid.login') }}" class="mobile-menu-btn btn-kid">
+                <i class="fas fa-star"></i> Kid Login
+            </a>
         </div>
 
         <!-- Hero Section -->
@@ -1171,13 +1386,6 @@
                     </a>
                 </div>
 
-                <!-- PWA Install Button (Mobile Only) -->
-                <div class="pwa-install-container">
-                    <p class="pwa-install-text">Want AllowanceLab on your home screen?</p>
-                    <button id="pwa-install-btn" class="pwa-install-button">
-                        <i class="fas fa-mobile-screen-button"></i> Add to Home Screen
-                    </button>
-                </div>
             </div>
         </section>
 
@@ -1389,34 +1597,18 @@
             </div>
         </section>
 
-        <!-- Testimonials -->
+        <!-- Founder Message -->
         <section class="section section-dark">
-            <div class="section-label" style="color: #6ee7b7;">What Families Say</div>
-            <h2 class="section-title section-title-dark">Families love AllowanceLab</h2>
-            <p class="section-subtitle section-subtitle-dark">Real stories from families building real financial habits.</p>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="quote-mark">"</div>
-                    <p class="testimonial-quote">"AllowanceLab is the first system our kids actually stick with. They beg to check their goals."</p>
-                    <div class="testimonial-footer">
-                        <div class="testimonial-avatar"><i class="fas fa-user"></i></div>
-                        <span class="testimonial-author">— Sarah M., Mom of 3</span>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="quote-mark">"</div>
-                    <p class="testimonial-quote">"Finally, a simple way to manage allowance without forgetting payouts. It just runs itself."</p>
-                    <div class="testimonial-footer">
-                        <div class="testimonial-avatar"><i class="fas fa-user"></i></div>
-                        <span class="testimonial-author">— Mike T., Dad of 2</span>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="quote-mark">"</div>
-                    <p class="testimonial-quote">"Our kids understand saving better after two months with this app than we ever expected."</p>
-                    <div class="testimonial-footer">
-                        <div class="testimonial-avatar"><i class="fas fa-user"></i></div>
-                        <span class="testimonial-author">— Jessica R., Mom of 4</span>
+            <div class="section-label" style="color: #6ee7b7;">A Message from the Founder</div>
+            <h2 class="section-title section-title-dark">Built for my own family first</h2>
+            <div class="founder-card">
+                <div class="founder-quote-mark">"</div>
+                <p class="founder-message">I built AllowanceLab because I wanted a real way to teach my kids that money requires responsibility — that allowance is earned, not guaranteed. Every week I was manually transferring money and trying to remember who got what, and I knew there had to be a better way. What started as a tool for my own household grew into something I'm genuinely proud to share. It's free, it's honest, and it works the way real families actually think about money.</p>
+                <div class="founder-footer">
+                    <div class="founder-avatar">JS</div>
+                    <div class="founder-info">
+                        <span class="founder-name">Joshua Sopko</span>
+                        <span class="founder-role">Father &amp; Founder, AllowanceLab</span>
                     </div>
                 </div>
             </div>
@@ -1461,7 +1653,73 @@
         </footer>
     </div> <!-- End #website-content -->
 
+    <!-- PWA Install Toast (Mobile Only) -->
+    <div id="pwa-toast" class="pwa-toast" role="status" aria-live="polite">
+        <div class="pwa-toast-icon">
+            <i class="fas fa-mobile-screen-button"></i>
+        </div>
+        <div class="pwa-toast-content">
+            <span class="pwa-toast-text">Add AllowanceLab to your home screen for quick access</span>
+            <button id="pwa-toast-install-btn" class="pwa-toast-btn">Add to Home Screen</button>
+        </div>
+        <button class="pwa-toast-close" id="pwa-toast-close" aria-label="Dismiss">
+            <i class="fas fa-xmark"></i>
+        </button>
+    </div>
+
     <script>
+        // Scroll-aware header
+        (function() {
+            const header = document.getElementById('site-header');
+            const menu   = document.getElementById('mobile-menu');
+            const logo   = document.getElementById('header-logo');
+            const logoWhite   = '{{ asset('/images/Allowance-Lab-logo-white.png') }}';
+            const logoColored = '{{ asset('/images/Allowance-Lab-logo.png') }}';
+
+            function onScroll() {
+                if (window.scrollY > 80) {
+                    header.classList.add('scrolled');
+                    if (menu) menu.classList.add('scrolled');
+                    logo.src = logoColored;
+                } else {
+                    header.classList.remove('scrolled');
+                    if (menu) menu.classList.remove('scrolled');
+                    logo.src = logoWhite;
+                }
+            }
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        })();
+
+        // Mobile hamburger menu
+        (function() {
+            const btn  = document.getElementById('hamburger-btn');
+            const menu = document.getElementById('mobile-menu');
+            if (!btn || !menu) return;
+
+            function closeMenu() {
+                menu.classList.remove('open');
+                btn.classList.remove('open');
+            }
+
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = menu.classList.toggle('open');
+                btn.classList.toggle('open', isOpen);
+            });
+
+            // Close when tapping outside
+            document.addEventListener('click', function(e) {
+                if (!menu.contains(e.target) && e.target !== btn) {
+                    closeMenu();
+                }
+            });
+
+            // Close on scroll
+            window.addEventListener('scroll', closeMenu, { passive: true });
+        })();
+
         // PWA Mode Detection and Conditional Rendering
         const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
         const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
@@ -1501,76 +1759,79 @@
             });
         });
 
-        // PWA Service Worker Registration and Install Prompt
-        let deferredPrompt;
-        const installButton = document.getElementById('pwa-install-btn');
-        const installContainer = document.querySelector('.pwa-install-container');
+        // ===== PWA INSTALL TOAST =====
+        (function() {
+            const DISMISSED_KEY = 'pwa_toast_dismissed';
+            const toast = document.getElementById('pwa-toast');
+            const installBtn = document.getElementById('pwa-toast-install-btn');
+            const closeBtn = document.getElementById('pwa-toast-close');
 
-        // Detect iOS devices
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+            let deferredPrompt = null;
 
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered:', registration);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
-        }
-
-        // Hide container if already installed as PWA
-        if (isStandalone && installContainer) {
-            installContainer.style.display = 'none';
-        }
-
-        // Capture the beforeinstallprompt event (Android)
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the default mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later
-            deferredPrompt = e;
-        });
-
-        // Handle install button click
-        if (installButton) {
-            installButton.addEventListener('click', async () => {
-                // iOS: Show instructions
-                if (isIOS) {
-                    alert('To install AllowanceLab:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nThe app will appear on your home screen!');
-                    return;
-                }
-
-                // Android: Use native prompt
-                if (deferredPrompt) {
-                    // Show the install prompt
-                    deferredPrompt.prompt();
-                    // Wait for the user to respond to the prompt
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`User response to the install prompt: ${outcome}`);
-                    // Clear the deferredPrompt
-                    deferredPrompt = null;
-                    if (outcome === 'accepted' && installContainer) {
-                        installContainer.style.display = 'none';
-                    }
-                } else {
-                    alert('To install this app, use your browser menu and select "Add to Home Screen" or "Install App".');
-                }
-            });
-        }
-
-        // Hide install container if app is already installed
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA was installed');
-            deferredPrompt = null;
-            if (installContainer) {
-                installContainer.style.display = 'none';
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').catch(() => {});
+                });
             }
-        });
+
+            // Don't show if already a PWA or previously dismissed
+            if (isStandalone || localStorage.getItem(DISMISSED_KEY)) return;
+
+            function showToast() {
+                if (toast) toast.classList.add('show');
+            }
+
+            function hideToast(permanent) {
+                if (toast) toast.classList.remove('show');
+                if (permanent) localStorage.setItem(DISMISSED_KEY, '1');
+            }
+
+            // Capture Android install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+            });
+
+            // Show after 3.5 second delay
+            setTimeout(showToast, 3500);
+
+            // Dismiss button
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => hideToast(true));
+            }
+
+            // Install button
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (isIOS) {
+                        // iOS: show a friendly inline tip instead of alert
+                        installBtn.textContent = 'Tap Share → Add to Home Screen';
+                        installBtn.style.background = '#6366f1';
+                        setTimeout(() => hideToast(true), 4000);
+                        return;
+                    }
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        deferredPrompt = null;
+                        if (outcome === 'accepted') hideToast(true);
+                    } else {
+                        installBtn.textContent = 'Use browser menu → Add to Home Screen';
+                        installBtn.style.fontSize = '11px';
+                        setTimeout(() => hideToast(true), 4000);
+                    }
+                });
+            }
+
+            // Auto-hide after install
+            window.addEventListener('appinstalled', () => {
+                deferredPrompt = null;
+                hideToast(true);
+            });
+        })();
     </script>
 </body>
 
