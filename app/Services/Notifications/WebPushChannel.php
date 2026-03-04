@@ -57,12 +57,17 @@ class WebPushChannel
         }
 
         // Send all queued notifications and clean up expired subscriptions
-        foreach ($webPush->flush() as $report) {
-            if ($report->isSubscriptionExpired()) {
-                $notifiable->pushSubscriptions()
-                    ->where('endpoint', $report->getRequest()->getUri()->__toString())
-                    ->delete();
+        try {
+            foreach ($webPush->flush() as $report) {
+                if ($report->isSubscriptionExpired()) {
+                    $notifiable->pushSubscriptions()
+                        ->where('endpoint', $report->getRequest()->getUri()->__toString())
+                        ->delete();
+                }
             }
+        } catch (\Throwable $e) {
+            \Log::error('[WebPushChannel] Failed to flush notifications: ' . $e->getMessage());
+            report($e);
         }
     }
 }

@@ -103,24 +103,20 @@ class WishController extends Controller
 
             DB::commit();
 
-            // Notify parents — wrapped separately so a notification failure
-            // never blocks the success response back to the kid
+            // Notify parents — each parent wrapped independently so one failure never blocks another
             $isRequest = $request->input('action') === 'request';
-            try {
-                $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
-                \Log::info('[WishNotify] Found ' . $familyParents->count() . ' parent(s) to notify for family ' . $kid->family_id . '. isRequest=' . ($isRequest ? 'true' : 'false'));
-                foreach ($familyParents as $parent) {
-                    \Log::info('[WishNotify] Parent ' . $parent->id . ' prefs=' . json_encode($parent->notification_preferences) . ' wantsPush=' . ($parent->wantsPush($isRequest ? 'wish_purchase_requested' : 'wish_created') ? 'true' : 'false') . ' wantsEmail=' . ($parent->wantsEmail($isRequest ? 'wish_purchase_requested' : 'wish_created') ? 'true' : 'false') . ' subscriptions=' . $parent->pushSubscriptions()->count());
+            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+            foreach ($familyParents as $parent) {
+                try {
                     if ($isRequest) {
                         $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
                     } else {
                         $parent->notify(new WishCreatedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
                     }
-                    \Log::info('[WishNotify] Notification dispatched for parent ' . $parent->id);
+                } catch (\Exception $notifyEx) {
+                    \Log::error('[WishNotify] Exception for parent ' . $parent->id . ': ' . $notifyEx->getMessage());
+                    report($notifyEx);
                 }
-            } catch (\Exception $notifyEx) {
-                \Log::error('[WishNotify] Exception: ' . $notifyEx->getMessage() . ' in ' . $notifyEx->getFile() . ':' . $notifyEx->getLine());
-                report($notifyEx);
             }
 
             return redirect()->route('kid.dashboard')
