@@ -84,6 +84,78 @@
             background: color-mix(in srgb, {{ $kid->color }} 85%, black);
         }
 
+        /* Compact icon-only header buttons (mobile) */
+        .btn-back-compact {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            color: #374151;
+            text-decoration: none;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .btn-back-compact:hover { background: #f3f4f6; border-color: #d1d5db; }
+
+        .btn-edit-compact {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: {{ $kid->color }};
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-edit-compact:hover { background: color-mix(in srgb, {{ $kid->color }} 85%, black); }
+
+        .btn-edit-spacer { width: 42px; flex-shrink: 0; }
+
+        .goal-header-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 12px;
+            min-width: 0;
+        }
+
+        .goal-header-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1f2937;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .goal-header-balance {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 6px 14px;
+            background: white;
+            border: 2px solid {{ $kid->color }}33;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            color: {{ $kid->color }};
+        }
+
         .goal-detail-card {
             background: white;
             border-radius: 12px;
@@ -554,33 +626,31 @@
     <div class="goal-detail-container">
         <!-- Header -->
         <div class="goal-detail-header">
-            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                <h1 class="goal-detail-title">
-                    @if($isParent){{ $kid->name }}@else Goal Details @endif
-                </h1>
+            <a href="{{ $isParent ? route('kids.goals', $kid) : route('kid.dashboard') . '?tab=goals' }}" class="btn-back-compact" title="Back to Goals">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="goal-header-center">
+                <div class="goal-header-name">@if($isParent){{ $kid->name }}@else Goal Details @endif</div>
                 @if($isParent)
-                    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: white; border: 2px solid {{ $kid->color }}33; border-radius: 999px; font-size: 15px; font-weight: 600; color: {{ $kid->color }};">
-                        <i class="fas fa-wallet" style="font-size: 14px;"></i>
+                    <div class="goal-header-balance">
+                        <i class="fas fa-wallet" style="font-size: 11px;"></i>
                         ${{ number_format($kid->balance, 2) }} available
                     </div>
                 @endif
             </div>
-            <div style="display: flex; gap: 12px;">
-                @if(!in_array($goal->status, ['pending_redemption', 'redeemed']))
-                    @if($isParent)
-                        <button onclick="openEditGoalModal({{ $goal->id }})" class="btn-edit">
-                            <i class="fas fa-edit"></i> Edit Goal
-                        </button>
-                    @else
-                        <a href="{{ route('kid.dashboard') }}?tab=goals&edit_goal={{ $goal->id }}" class="btn-edit">
-                            <i class="fas fa-edit"></i> Edit Goal
-                        </a>
-                    @endif
+            @if(!in_array($goal->status, ['pending_redemption', 'redeemed']))
+                @if($isParent)
+                    <button onclick="openEditGoalModal({{ $goal->id }})" class="btn-edit-compact" title="Edit Goal">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                @else
+                    <a href="{{ route('kid.dashboard') }}?tab=goals&edit_goal={{ $goal->id }}" class="btn-edit-compact" title="Edit Goal">
+                        <i class="fas fa-edit"></i>
+                    </a>
                 @endif
-                <a href="{{ $isParent ? route('kids.goals', $kid) : route('kid.dashboard') . '?tab=goals' }}" class="btn-back">
-                    ← Back to Goals
-                </a>
-            </div>
+            @else
+                <div class="btn-edit-spacer"></div>
+            @endif
         </div>
 
         <!-- Goal Card -->

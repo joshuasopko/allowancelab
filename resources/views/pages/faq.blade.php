@@ -78,7 +78,7 @@
 
     .faq-answer {
         display: none;
-        padding: 0 24px 20px;
+        padding: 18px 24px 22px;
         font-size: 15px;
         color: #475569;
         line-height: 1.8;
@@ -127,7 +127,7 @@
     @media (max-width: 700px) {
         .faq-section { padding: 40px 20px 60px; }
         .faq-question { font-size: 15px; padding: 16px 18px; }
-        .faq-answer { padding: 0 18px 16px; }
+        .faq-answer { padding: 16px 18px 18px; }
     }
 </style>
 @endpush
@@ -143,7 +143,7 @@
                 <i class="fas fa-chevron-down faq-chevron"></i>
             </button>
             <div class="faq-answer">
-                <p>Yes — completely free. No plans, no paywalls, no credit card required. AllowanceLab is free for families forever. We believe teaching kids financial responsibility shouldn't cost anything.</p>
+                <p>AllowanceLab has a free plan with no credit card required to get started. Core family features — allowances, points, transaction history, and savings goals — are included at no cost. We believe every family should have access to the tools that build real financial habits.</p>
             </div>
         </div>
 

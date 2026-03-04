@@ -614,7 +614,7 @@
 
         <div class="trust-line">
             <i class="fas fa-lock"></i>
-            Free forever &mdash; no credit card required
+            Free to start &mdash; no credit card required
         </div>
     </div>
 

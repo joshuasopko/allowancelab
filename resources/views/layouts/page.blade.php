@@ -65,6 +65,86 @@
 
         .btn-nav-home:hover { color: #10b981; border-color: #10b981; }
 
+        /* ===== PAGE HAMBURGER (always visible) ===== */
+        .page-hamburger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 16px;
+            line-height: 1;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .page-hamburger:hover { color: #10b981; background: #f0fdf4; }
+
+        /* ===== PAGE MOBILE MENU ===== */
+        .page-mobile-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            padding: 8px;
+            min-width: 220px;
+            z-index: 200;
+        }
+
+        .page-mobile-menu.open { display: block; }
+
+        /* Login buttons inside dropdown (mobile only) */
+        .page-menu-login {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            color: white;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .page-menu-login-parent { background: #10b981; margin-bottom: 8px; }
+        .page-menu-login-parent:hover { background: #059669; color: white; }
+        .page-menu-login-kid { background: #3b82f6; }
+        .page-menu-login-kid:hover { background: #2563eb; color: white; }
+
+        .page-menu-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 6px 0;
+            display: none;
+        }
+
+        .page-mobile-menu a:not(.page-menu-login) {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.15s;
+        }
+
+        .page-mobile-menu a:not(.page-menu-login):hover { background: #f0fdf4; color: #10b981; }
+
         /* ===== PAGE HERO ===== */
         .page-hero {
             background: linear-gradient(135deg, #0f172a 0%, #022c22 55%, #064e3b 100%);
@@ -231,6 +311,10 @@
             .page-header { padding: 12px 20px; }
             .page-header img { height: 44px; }
             .btn-nav-home { display: none; }
+            .btn-nav-parent { display: none; }
+            .btn-nav-kid { display: none; }
+            .page-menu-login { display: flex; }
+            .page-menu-divider { display: block; }
             .page-hero { padding: 48px 20px 40px; }
             .page-hero-title { font-size: 30px; }
             .page-hero-subtitle { font-size: 16px; }
@@ -246,10 +330,22 @@
         <a href="{{ url('/') }}">
             <img src="{{ asset('/images/Allowance-Lab-logo.png') }}" alt="AllowanceLab">
         </a>
-        <nav class="header-nav">
-            <a href="{{ url('/') }}" class="btn-nav-home"><i class="fas fa-arrow-left"></i> Home</a>
+        <nav class="header-nav" style="position: relative;">
             <a href="{{ route('login') }}" class="btn-nav-parent"><i class="fas fa-user-shield"></i> Parent Login</a>
             <a href="{{ route('kid.login') }}" class="btn-nav-kid"><i class="fas fa-star"></i> Kid Login</a>
+            <button class="page-hamburger" id="pageMenuBtn" onclick="togglePageMenu()" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-mobile-menu" id="pageMenu">
+                <a href="{{ route('login') }}" class="page-menu-login page-menu-login-parent"><i class="fas fa-user-shield"></i> Parent Login</a>
+                <a href="{{ route('kid.login') }}" class="page-menu-login page-menu-login-kid"><i class="fas fa-star"></i> Kid Login</a>
+                <div class="page-menu-divider"></div>
+                <div class="nav-dropdown-label" style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;padding:6px 12px 2px;">Pages</div>
+                <a href="{{ url('/') }}"><i class="fas fa-house"></i> Home</a>
+                <a href="{{ route('about') }}"><i class="fas fa-info-circle"></i> About</a>
+                <a href="{{ route('faq') }}"><i class="fas fa-question-circle"></i> FAQ</a>
+                <a href="{{ route('contact') }}"><i class="fas fa-envelope"></i> Contact</a>
+            </div>
         </nav>
     </header>
 
@@ -284,6 +380,22 @@
         <div class="footer-bottom">&copy; {{ date('Y') }} AllowanceLab. All rights reserved.</div>
     </footer>
 
+    <script>
+        function togglePageMenu() {
+            const menu = document.getElementById('pageMenu');
+            menu.classList.toggle('open');
+            if (menu.classList.contains('open')) {
+                setTimeout(() => {
+                    document.addEventListener('click', function handler(e) {
+                        if (!menu.contains(e.target) && e.target !== document.getElementById('pageMenuBtn') && !document.getElementById('pageMenuBtn').contains(e.target)) {
+                            menu.classList.remove('open');
+                            document.removeEventListener('click', handler);
+                        }
+                    });
+                }, 10);
+            }
+        }
+    </script>
     @stack('scripts')
 </body>
 </html>

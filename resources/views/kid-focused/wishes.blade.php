@@ -18,7 +18,7 @@
     @endif
 
     <!-- Tab Navigation with Create Button -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 32px;">
+    <div class="wish-header-row">
         <div class="wish-tabs">
             <button class="wish-tab active" onclick="switchWishTab('pending', event)">
                 Pending Requests
@@ -39,8 +39,7 @@
                 @endif
             </button>
         </div>
-        <a href="{{ route('parent.wishes.create', $kid) }}"
-           style="background: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; white-space: nowrap;">
+        <a href="{{ route('parent.wishes.create', $kid) }}" class="btn-create-wish">
             <i class="fas fa-plus"></i> Create Wish
         </a>
     </div>
@@ -402,6 +401,32 @@
 .btn-back:hover {
     color: #3b82f6;
 }
+
+.wish-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    margin-top: 32px;
+    gap: 12px;
+}
+
+.btn-create-wish {
+    background: #2563eb;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-create-wish:hover { background: #1d4ed8; }
 
 .wish-tabs {
     display: flex;
@@ -963,8 +988,17 @@
 }
 
 @media (max-width: 768px) {
+    .wish-header-row {
+        flex-wrap: wrap;
+    }
+
     .wish-tabs {
-        flex: 1;
+        flex: 1 0 100%;
+    }
+
+    .btn-create-wish {
+        width: 100%;
+        justify-content: center;
     }
 
     .wish-tab {

@@ -102,6 +102,84 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
         }
 
+        /* ===== NAV MENU BUTTON (always visible) ===== */
+        .nav-menu-wrap {
+            position: relative;
+        }
+
+        .nav-menu-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: none;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .nav-menu-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        header.scrolled .nav-menu-btn {
+            color: #94a3b8;
+        }
+
+        header.scrolled .nav-menu-btn:hover {
+            color: #10b981;
+            background: #f0fdf4;
+        }
+
+        /* ===== NAV DROPDOWN ===== */
+        .nav-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+            padding: 8px;
+            min-width: 190px;
+            z-index: 1001;
+        }
+
+        .nav-dropdown.open { display: block; }
+
+        .nav-dropdown-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            padding: 6px 12px 2px;
+        }
+
+        .nav-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.15s;
+        }
+
+        .nav-dropdown a i { color: #94a3b8; font-size: 13px; width: 14px; text-align: center; }
+        .nav-dropdown a:hover { background: #f0fdf4; color: #10b981; }
+        .nav-dropdown a:hover i { color: #10b981; }
+
         /* ===== HAMBURGER ===== */
         .hamburger {
             display: none;
@@ -223,6 +301,45 @@
         .mobile-menu.scrolled .mobile-menu-btn.btn-kid {
             box-shadow: none;
         }
+
+        .mobile-menu-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 8px 0;
+        }
+
+        .mobile-menu.scrolled .mobile-menu-divider {
+            background: #e5e7eb;
+        }
+
+        .mobile-nav-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            padding: 2px 4px 2px;
+        }
+
+        .mobile-menu.scrolled .mobile-nav-label { color: #94a3b8; }
+
+        .mobile-menu-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .mobile-menu-nav-link i { font-size: 13px; opacity: 0.7; }
+        .mobile-menu-nav-link:hover { color: white; background: rgba(255,255,255,0.08); }
+        .mobile-menu.scrolled .mobile-menu-nav-link { color: #475569; }
+        .mobile-menu.scrolled .mobile-menu-nav-link:hover { color: #10b981; background: #f0fdf4; }
 
         /* ===== HERO ===== */
         .hero {
@@ -1458,6 +1575,17 @@
                 <a href="{{ route('kid.login') }}" class="kid-login">
                     <i class="fas fa-star"></i> Kid Login
                 </a>
+                <div class="nav-menu-wrap">
+                    <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleNavMenu()" aria-label="Navigation menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="nav-dropdown" id="navDropdown">
+                        <div class="nav-dropdown-label">Pages</div>
+                        <a href="{{ route('about') }}"><i class="fas fa-info-circle"></i> About</a>
+                        <a href="{{ route('faq') }}"><i class="fas fa-question-circle"></i> FAQ</a>
+                        <a href="{{ route('contact') }}"><i class="fas fa-envelope"></i> Contact</a>
+                    </div>
+                </div>
             </nav>
             <!-- Mobile hamburger -->
             <button class="hamburger" id="hamburger-btn" aria-label="Open menu">
@@ -1473,6 +1601,11 @@
             <a href="{{ route('kid.login') }}" class="mobile-menu-btn btn-kid">
                 <i class="fas fa-star"></i> Kid Login
             </a>
+            <div class="mobile-menu-divider"></div>
+            <div class="mobile-nav-label">Pages</div>
+            <a href="{{ route('about') }}" class="mobile-menu-nav-link"><i class="fas fa-info-circle"></i> About</a>
+            <a href="{{ route('faq') }}" class="mobile-menu-nav-link"><i class="fas fa-question-circle"></i> FAQ</a>
+            <a href="{{ route('contact') }}" class="mobile-menu-nav-link"><i class="fas fa-envelope"></i> Contact</a>
         </div>
 
         <!-- Hero Section -->
@@ -1522,8 +1655,8 @@
                 <div class="stat-item">
                     <div class="stat-icon"><i class="fas fa-lock-open"></i></div>
                     <div class="stat-text-group">
-                        <div class="stat-title">Free Forever</div>
-                        <div class="stat-label">No plans, no paywalls, no tricks</div>
+                        <div class="stat-title">Free to Start</div>
+                        <div class="stat-label">Core features always included, no credit card needed</div>
                     </div>
                 </div>
             </div>
@@ -1848,6 +1981,30 @@
 
             window.addEventListener('scroll', onScroll, { passive: true });
             onScroll();
+        })();
+
+        // Nav dropdown menu (always-visible, all screen sizes)
+        (function() {
+            const btn      = document.getElementById('navMenuBtn');
+            const dropdown = document.getElementById('navDropdown');
+            if (!btn || !dropdown) return;
+
+            window.toggleNavMenu = function() {
+                dropdown.classList.toggle('open');
+                if (dropdown.classList.contains('open')) {
+                    setTimeout(() => {
+                        document.addEventListener('click', function handler(e) {
+                            if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                                dropdown.classList.remove('open');
+                                document.removeEventListener('click', handler);
+                            }
+                        });
+                    }, 10);
+                }
+            };
+
+            // Close on scroll
+            window.addEventListener('scroll', () => dropdown.classList.remove('open'), { passive: true });
         })();
 
         // Mobile hamburger menu

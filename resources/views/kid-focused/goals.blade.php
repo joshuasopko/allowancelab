@@ -1714,6 +1714,16 @@
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
 
+    @media (max-width: 900px) {
+        .modal-overlay {
+            padding-bottom: 90px;
+            align-items: flex-start;
+        }
+        .modal-container {
+            max-height: calc(100vh - 110px);
+        }
+    }
+
     .modal-header {
         display: flex;
         justify-content: space-between;

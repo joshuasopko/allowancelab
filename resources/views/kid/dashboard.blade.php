@@ -1156,14 +1156,31 @@
                 font-size: 10px;
             }
 
-            /* Header */
+            /* Header — stack avatar+name on top, stat cards below */
             .kid-overview-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 17px;
                 margin-bottom: 16px;
             }
+            .kid-header-left {
+                gap: 12px;
+            }
+            .kid-avatar {
+                width: 52px;
+                height: 52px;
+                font-size: 22px;
+            }
+            .kid-name {
+                font-size: 22px;
+            }
             .kid-header-stats {
+                width: 100%;
                 gap: 8px;
             }
             .kid-header-stat-card {
+                flex: 1;
+                min-width: 0;
                 padding: 10px 12px;
             }
             .kid-header-stat-label {

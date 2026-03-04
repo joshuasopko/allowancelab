@@ -1,9 +1,46 @@
 {{-- Goals Tab - Inline version for kid dashboard --}}
+<style>
+    .goal-tab-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+    .goal-tab-group {
+        display: flex;
+        gap: 4px;
+    }
+    .goal-tab-actions .kid-tab-action-btn {
+        white-space: nowrap;
+    }
+    @media (max-width: 540px) {
+        .goal-tab-header {
+            flex-wrap: wrap;
+        }
+        .goal-tab-group {
+            flex: 1 0 100%;
+        }
+        .goal-tab-actions {
+            flex: 1 0 100%;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 10px;
+            margin-bottom: 4px;
+        }
+        .goal-tab-actions .kid-tab-action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
 <div x-data="{ goalsActiveTab: 'active' }">
 
     {{-- Tab Header --}}
-    <div class="kid-inner-tabs" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 0;">
-        <div style="display: flex; gap: 4px;">
+    <div class="goal-tab-header">
+        <div class="goal-tab-group">
             <button @click="goalsActiveTab = 'active'"
                     :class="goalsActiveTab === 'active' ? 'kid-inner-tab-active' : ''"
                     class="kid-inner-tab">
@@ -21,9 +58,11 @@
                 @endif
             </button>
         </div>
-        <button onclick="kidOpenCreateGoalModal()" class="kid-tab-action-btn" style="background: {{ $kid->color }};">
-            <i class="fas fa-plus"></i> New Goal
-        </button>
+        <div class="goal-tab-actions">
+            <button onclick="kidOpenCreateGoalModal()" class="kid-tab-action-btn" style="background: {{ $kid->color }};">
+                <i class="fas fa-plus"></i> New Goal
+            </button>
+        </div>
     </div>
 
     {{-- Active Goals --}}

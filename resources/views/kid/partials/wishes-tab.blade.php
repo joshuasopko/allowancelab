@@ -2,8 +2,8 @@
 <div x-data="{ wishesActiveTab: 'current' }">
 
     {{-- Tab Header --}}
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 0;">
-        <div style="display: flex; gap: 4px;">
+    <div class="wish-tab-header">
+        <div class="wish-tab-group">
             <button @click="wishesActiveTab = 'current'"
                     :class="wishesActiveTab === 'current' ? 'kid-inner-tab-active' : ''"
                     class="kid-inner-tab">
@@ -21,7 +21,7 @@
                 @endif
             </button>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div class="wish-tab-actions">
             <button onclick="kidOpenCreateWishModal()" class="kid-tab-action-btn" style="background: {{ $kid->color }};">
                 <i class="fas fa-plus"></i> New Wish
             </button>
@@ -281,6 +281,48 @@
 
 <style>
 [x-cloak] { display: none !important; }
+
+/* Tab header row */
+.wish-tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0;
+    gap: 8px;
+}
+
+.wish-tab-group {
+    display: flex;
+    gap: 4px;
+}
+
+.wish-tab-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+@media (max-width: 540px) {
+    .wish-tab-header {
+        flex-wrap: wrap;
+        border-bottom: none;
+        gap: 10px;
+    }
+    .wish-tab-group {
+        width: 100%;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .wish-tab-actions {
+        width: 100%;
+    }
+    .kid-tab-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
 
 /* Inner tabs */
 .kid-inner-tab {

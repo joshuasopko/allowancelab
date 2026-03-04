@@ -465,8 +465,8 @@
                 <div class="perk-item">
                     <div class="perk-icon"><i class="fas fa-lock"></i></div>
                     <div class="perk-text">
-                        <span class="perk-title">Completely free</span>
-                        <span class="perk-desc">No subscriptions, no paywalls, no credit card needed.</span>
+                        <span class="perk-title">Free to start</span>
+                        <span class="perk-desc">Core features included at no cost. No credit card needed to get going.</span>
                     </div>
                 </div>
             </div>
@@ -570,7 +570,7 @@
 
         <div class="trust-line">
             <i class="fas fa-lock"></i>
-            Free forever &mdash; no credit card required
+            Free to start &mdash; no credit card required
         </div>
     </div>
 

@@ -26,11 +26,6 @@
     </div>
 
     <div class="sidebar-menu">
-        <a href="{{ route('parent.account') }}" class="menu-item {{ request()->routeIs('parent.account') ? 'active' : '' }}">
-            <div class="menu-item-main">My Account</div>
-            <div class="menu-subtext">{{ $lastName }} Family</div>
-        </a>
-
         <a href="{{ route('dashboard') }}"
             class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
 
@@ -85,30 +80,35 @@
             @endforeach
         </div>
 
-        <div class="menu-item menu-dropdown" onclick="toggleLabTools(event)">
+        @php $isLabToolsActive = request()->routeIs('family-hub'); @endphp
+        <div class="menu-item menu-dropdown {{ $isLabToolsActive ? 'active-parent' : '' }}" onclick="toggleLabTools(event)">
             <span>Lab Tools</span>
             <i class="fas fa-chevron-down dropdown-icon"></i>
         </div>
-        <div class="dropdown-content" id="labToolsDropdown">
+        <div class="dropdown-content {{ $isLabToolsActive ? 'show' : '' }}" id="labToolsDropdown">
+            <a href="{{ route('family-hub') }}" class="dropdown-item {{ $isLabToolsActive ? 'active' : '' }}">
+                <i class="fas fa-house-chimney" style="font-size:12px; margin-right:4px;"></i> Family Hub
+            </a>
             <a href="#" class="dropdown-item">
-                Chore List
+                Savings
                 <span class="coming-soon-badge">Coming Soon</span>
             </a>
             <a href="#" class="dropdown-item">
-                Goals
+                Giving
                 <span class="coming-soon-badge">Coming Soon</span>
             </a>
             <a href="#" class="dropdown-item">
-                Loans
-                <span class="coming-soon-badge">Coming Soon</span>
-            </a>
-            <a href="#" class="dropdown-item">
-                Jobs
+                Chores
                 <span class="coming-soon-badge">Coming Soon</span>
             </a>
         </div>
 
         <div class="menu-divider"></div>
+
+        <a href="{{ route('parent.account') }}" class="menu-item {{ request()->routeIs('parent.account') ? 'active' : '' }}">
+            <div class="menu-item-main">My Account</div>
+            <div class="menu-subtext">{{ $lastName }} Family</div>
+        </a>
 
         <a href="{{ route('manage-family') }}"
             class="menu-item {{ request()->routeIs('manage-family') ? 'active' : '' }}">Manage Family</a>

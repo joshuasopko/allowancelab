@@ -6,6 +6,7 @@ use App\Http\Controllers\KidController;
 use App\Http\Controllers\KidFocusedController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\WishController;
+use App\Http\Controllers\FamilyHubController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\KidDashboardController;
@@ -80,6 +81,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/parent/account/password', [App\Http\Controllers\ParentAccountController::class, 'changePassword'])->name('parent.account.change-password');
     Route::patch('/parent/account/timezone', [App\Http\Controllers\ParentAccountController::class, 'updateTimezone'])->name('parent.account.update-timezone');
     Route::delete('/parent/account', [App\Http\Controllers\ParentAccountController::class, 'deleteAccount'])->name('parent.account.delete');
+
+    Route::get('/family-hub', [FamilyHubController::class, 'index'])->name('family-hub');
 
     Route::get('/manage-family', [App\Http\Controllers\ManageFamilyController::class, 'index'])->name('manage-family');
     // Family invitation and management routes

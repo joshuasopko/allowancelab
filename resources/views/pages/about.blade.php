@@ -201,7 +201,7 @@
 
     <div class="about-cta">
         <h2>Ready to get started?</h2>
-        <p>Set up your family in 5 minutes. Free forever — no credit card required.</p>
+        <p>Set up your family in 5 minutes. Free to start — no credit card required.</p>
         <a href="{{ route('register') }}" class="btn-cta-green">
             <i class="fas fa-rocket"></i> Create Your Family
         </a>
