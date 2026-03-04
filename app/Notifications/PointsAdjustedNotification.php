@@ -24,14 +24,13 @@ class PointsAdjustedNotification extends BaseWebPushNotification
     public function toWebPush(mixed $notifiable, mixed $notification): array
     {
         $sign  = $this->change >= 0 ? '+' : '';
-        $emoji = $this->change >= 0 ? '⭐' : '⚠️';
         $body  = 'Your points changed by ' . $sign . $this->change . ' — now at ' . $this->newPoints;
         if ($this->reason) {
             $body .= ' (' . $this->reason . ')';
         }
 
         return [
-            'title' => $emoji . ' Points updated',
+            'title' => ($this->change >= 0 ? 'Points updated' : '⚠️ Points updated'),
             'body'  => $body,
             'icon'  => '/icon-192.png',
             'badge' => '/icon-192.png',

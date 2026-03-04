@@ -38,7 +38,7 @@ class WishCreatedNotification extends Notification
     public function toWebPush(mixed $notifiable, mixed $notification): array
     {
         return [
-            'title' => '⭐ ' . $this->kid->name . ' added a wish',
+            'title' => $this->kid->name . ' added a wish',
             'body'  => '"' . $this->wishTitle . '" — $' . number_format($this->wishPrice, 2),
             'icon'  => '/icon-192.png',
             'badge' => '/icon-192.png',
