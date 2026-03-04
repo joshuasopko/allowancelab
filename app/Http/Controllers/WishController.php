@@ -108,14 +108,18 @@ class WishController extends Controller
             $isRequest = $request->input('action') === 'request';
             try {
                 $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
+                \Log::info('[WishNotify] Found ' . $familyParents->count() . ' parent(s) to notify for family ' . $kid->family_id . '. isRequest=' . ($isRequest ? 'true' : 'false'));
                 foreach ($familyParents as $parent) {
+                    \Log::info('[WishNotify] Parent ' . $parent->id . ' prefs=' . json_encode($parent->notification_preferences) . ' wantsPush=' . ($parent->wantsPush($isRequest ? 'wish_purchase_requested' : 'wish_created') ? 'true' : 'false') . ' wantsEmail=' . ($parent->wantsEmail($isRequest ? 'wish_purchase_requested' : 'wish_created') ? 'true' : 'false') . ' subscriptions=' . $parent->pushSubscriptions()->count());
                     if ($isRequest) {
                         $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
                     } else {
                         $parent->notify(new WishCreatedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
                     }
+                    \Log::info('[WishNotify] Notification dispatched for parent ' . $parent->id);
                 }
             } catch (\Exception $notifyEx) {
+                \Log::error('[WishNotify] Exception: ' . $notifyEx->getMessage() . ' in ' . $notifyEx->getFile() . ':' . $notifyEx->getLine());
                 report($notifyEx);
             }
 
