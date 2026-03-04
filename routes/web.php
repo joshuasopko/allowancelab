@@ -14,6 +14,30 @@ use App\Http\Controllers\KidDashboardController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Public info pages
+Route::get('/about',   fn() => view('pages.about'))->name('about');
+Route::get('/faq',     fn() => view('pages.faq'))->name('faq');
+Route::get('/privacy', fn() => view('pages.privacy'))->name('privacy');
+Route::get('/terms',   fn() => view('pages.terms'))->name('terms');
+Route::get('/contact', fn() => view('pages.contact'))->name('contact');
+Route::post('/contact', function (\Illuminate\Http\Request $request) {
+    $validated = $request->validate([
+        'name'    => 'required|string|max:255',
+        'email'   => 'required|email|max:255',
+        'subject' => 'required|string|max:255',
+        'message' => 'required|string|max:3000',
+    ]);
+    \Illuminate\Support\Facades\Mail::raw(
+        "Name: {$validated['name']}\nEmail: {$validated['email']}\nSubject: {$validated['subject']}\n\n{$validated['message']}",
+        function ($mail) use ($validated) {
+            $mail->to('joshua.sopko@gmail.com')
+                 ->subject("AllowanceLab Contact: {$validated['subject']}")
+                 ->replyTo($validated['email'], $validated['name']);
+        }
+    );
+    return back()->with('success', "Thanks {$validated['name']}! We got your message and will get back to you soon.");
+})->name('contact.submit');
 // Kid invite acceptance
 Route::get('/invite/{token}', [KidController::class, 'showInvite'])->name('invite.show');
 Route::post('/invite/{token}', [KidController::class, 'acceptInvite'])->name('invite.accept');
