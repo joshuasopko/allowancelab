@@ -109,7 +109,11 @@
                             <div class="points-badge-compact {{ $pointsClass }}">{{ $kid->points }}/{{ $kid->max_points }}</div>
                         @endif
                     </div>
-                    <div class="next-allowance-compact">
+                    <div class="next-allowance-compact"
+                         data-points-enabled="{{ $kid->points_enabled ? 'true' : 'false' }}"
+                         data-normal-content="Next: ${{ number_format($kid->allowance_amount, 2) }} on {{ ucfirst($kid->allowance_day) }}, {{ $nextAllowance->format('M j') }}"
+                         data-next-date-full="{{ $nextAllowance->format('l, M j') }}"
+                         data-layout="desktop">
                         @if($kid->points_enabled && $kid->points === 0)
                             <span style="color: #ef4444; font-weight: 600;">
                                 ⚠️ 0 points - No allowance on {{ $nextAllowance->format('l, M j') }}
@@ -160,7 +164,11 @@
                             <div class="points-badge-compact {{ $pointsClass }}">{{ $kid->points }}/{{ $kid->max_points }}</div>
                         @endif
                     </div>
-                    <div class="next-allowance-compact">
+                    <div class="next-allowance-compact"
+                         data-points-enabled="{{ $kid->points_enabled ? 'true' : 'false' }}"
+                         data-normal-content="Next: ${{ number_format($kid->allowance_amount, 2) }} | {{ ucfirst(substr($kid->allowance_day, 0, 3)) }}, {{ $nextAllowance->format('M j') }}"
+                         data-next-date-full="{{ $nextAllowance->format('l, M j') }}"
+                         data-layout="mobile">
                         @if($kid->points_enabled && $kid->points === 0)
                             <span style="color: #ef4444; font-weight: 600; font-size: 11px;">
                                 ⚠️ 0 pts - No allowance

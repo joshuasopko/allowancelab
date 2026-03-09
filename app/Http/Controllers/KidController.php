@@ -129,6 +129,15 @@ class KidController extends Controller
             report($notifyEx);
         }
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'    => true,
+                'message'    => 'Points updated successfully',
+                'new_points' => $kid->points,
+                'max_points' => $kid->max_points,
+            ]);
+        }
+
         return back()->with('success', 'Points updated!');
     }
 

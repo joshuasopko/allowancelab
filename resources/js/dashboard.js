@@ -391,6 +391,28 @@ function handleFormSubmit(form, successMessage) {
                             if (currentPtsEl) {
                                 currentPtsEl.textContent = 'Current: ' + data.new_points + ' / ' + maxPts + ' points';
                             }
+
+                            // Update "Next allowance" warning — show/hide zero-points alert
+                            kidCard.querySelectorAll('.next-allowance-compact').forEach(div => {
+                                if (div.dataset.pointsEnabled !== 'true') return;
+                                const isZero = data.new_points <= 0;
+                                const layout  = div.dataset.layout;
+                                const dateStr = div.dataset.nextDateFull || '';
+                                const normal  = div.dataset.normalContent || '';
+                                if (isZero) {
+                                    if (layout === 'desktop') {
+                                        div.innerHTML = `<span style="color: #ef4444; font-weight: 600;">⚠️ 0 points - No allowance on ${dateStr}</span>`;
+                                    } else {
+                                        div.innerHTML = `<span style="color: #ef4444; font-weight: 600; font-size: 11px;">⚠️ 0 pts - No allowance</span>`;
+                                    }
+                                } else {
+                                    if (layout === 'desktop') {
+                                        div.textContent = normal;
+                                    } else {
+                                        div.innerHTML = `<span style="font-size: 11px;">${normal}</span>`;
+                                    }
+                                }
+                            });
                         }
                     }
                 }
