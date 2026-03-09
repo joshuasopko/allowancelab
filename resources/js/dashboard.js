@@ -376,18 +376,20 @@ function handleFormSubmit(form, successMessage) {
                         const kidId = kidIdMatch[1];
                         const kidCard = document.querySelector(`[data-kid-id="${kidId}"]`);
                         if (kidCard) {
-                            const pointsBadge = kidCard.querySelector('.points-badge');
-                            if (pointsBadge) {
-                                pointsBadge.textContent = data.new_points + ' / 10';
+                            const maxPts = data.max_points || 10;
 
-                                pointsBadge.classList.remove('points-low', 'points-medium', 'points-high');
-                                if (data.new_points >= 8) {
-                                    pointsBadge.classList.add('points-high');
-                                } else if (data.new_points >= 5) {
-                                    pointsBadge.classList.add('points-medium');
-                                } else {
-                                    pointsBadge.classList.add('points-low');
-                                }
+                            // Update every points badge on this card (desktop + mobile both render one)
+                            kidCard.querySelectorAll('.points-badge-compact').forEach(badge => {
+                                badge.textContent = data.new_points + '/' + maxPts;
+                                const pct = maxPts > 0 ? (data.new_points / maxPts) * 100 : 0;
+                                badge.classList.remove('points-low', 'points-medium', 'points-high');
+                                badge.classList.add(pct >= 80 ? 'points-high' : pct >= 50 ? 'points-medium' : 'points-low');
+                            });
+
+                            // Update the "Current: X / Y points" line inside the open dropdown
+                            const currentPtsEl = kidCard.querySelector('.current-points');
+                            if (currentPtsEl) {
+                                currentPtsEl.textContent = 'Current: ' + data.new_points + ' / ' + maxPts + ' points';
                             }
                         }
                     }

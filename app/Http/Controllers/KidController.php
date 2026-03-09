@@ -222,17 +222,22 @@ class KidController extends Controller
         ]);
 
         // Notify the kid: points adjusted
-        $kid->notify(new PointsAdjustedNotification(
-            (int) $request->points,
-            (int) $kid->points,
-            (string) ($request->reason ?? '')
-        ));
+        try {
+            $kid->notify(new PointsAdjustedNotification(
+                (int) $request->points,
+                (int) $kid->points,
+                (string) ($request->reason ?? '')
+            ));
+        } catch (\Exception $notifyEx) {
+            report($notifyEx);
+        }
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Points adjusted successfully',
-                'new_points' => $kid->points
+                'success'    => true,
+                'message'    => 'Points adjusted successfully',
+                'new_points' => $kid->points,
+                'max_points' => $kid->max_points,
             ]);
         }
 
