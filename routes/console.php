@@ -8,7 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Schedule weekly allowance processing
-// Runs hourly but only processes at 2:00 AM for kids whose allowance_day is today
-// This command checks points, posts allowance if points >= 1, then resets points
-Schedule::command('allowance:process')->hourly();
+// Schedule weekly allowance processing at 2:00 AM Central time daily.
+// The Laravel scheduler handles DST automatically via Carbon timezone awareness,
+// so spring-forward / fall-back won't cause the 2 AM hour to be skipped or doubled.
+Schedule::command('allowance:process')->dailyAt('02:00')->timezone('America/Chicago');

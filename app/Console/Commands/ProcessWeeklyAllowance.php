@@ -24,16 +24,15 @@ class ProcessWeeklyAllowance extends Command
         $now = now();
         $today = $now->format('l'); // Get day name (e.g., 'Monday')
         $todayLower = strtolower($today);
-        $currentHour = (int) $now->format('G'); // 24-hour format without leading zeros
 
-        // ─── Points low warning check (runs every hour, not just at 2AM) ────────
-        // Warn parents if a kid has ≤ 3 points and their allowance day is today or tomorrow.
-        $this->checkPointsLowWarnings($now, $todayLower);
-
-        // Only run at 2:00 AM (hour 2)
-        if ($currentHour !== 2) {
-            $this->info("Not 2:00 AM (current hour: {$currentHour}). Skipping allowance processing.");
-            return 0;
+        // ─── Points low warning check ────────────────────────────────────────────
+        // Warn parents if a kid has ≤ 3 points and their allowance day is today.
+        // Wrapped in try-catch so a transient DB hiccup doesn't abort the whole run.
+        try {
+            $this->checkPointsLowWarnings($now, $todayLower);
+        } catch (\Throwable $e) {
+            $this->error('[checkPointsLowWarnings] DB error: ' . $e->getMessage());
+            \Log::error('[allowance:process] checkPointsLowWarnings failed: ' . $e->getMessage());
         }
 
         // Get all kids whose allowance day is today
