@@ -56,10 +56,7 @@
             subscribeUrl:   '{{ route("notifications.subscribe") }}',
             unsubscribeUrl: '{{ route("notifications.unsubscribe") }}',
         });
-        var success = await window.PushManager.subscribe();
-        if (success) {
-            console.log('[Push] Parent subscribed successfully.');
-        }
+        await window.PushManager.subscribe();
     });
 
     document.getElementById('pushBannerDismiss').addEventListener('click', function () {

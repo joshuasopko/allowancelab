@@ -56,10 +56,7 @@
             subscribeUrl:   '/kid/notifications/subscribe',
             unsubscribeUrl: '/kid/notifications/subscribe',
         });
-        var success = await window.PushManager.subscribe();
-        if (success) {
-            console.log('[Push] Kid subscribed successfully.');
-        }
+        await window.PushManager.subscribe();
     });
 
     document.getElementById('kidPushBannerDismiss').addEventListener('click', function () {

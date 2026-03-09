@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Models\Kid;
 use App\Models\Goal;
 use App\Models\GoalTransaction;
-use App\Models\User;
 use App\Notifications\AllowanceProcessedNotification;
 use App\Notifications\AllowanceReceivedNotification;
 use App\Notifications\AllowanceDeniedNotification;
@@ -75,8 +74,7 @@ class ProcessWeeklyAllowance extends Command
                 $kid->notify(new AllowanceReceivedNotification((float) $kid->allowance_amount));
 
                 // Notify parents: allowance processed (awarded)
-                $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
-                foreach ($familyParents as $parent) {
+                foreach ($kid->familyParents() as $parent) {
                     $parent->notify(new AllowanceProcessedNotification($kid, true, (float) $kid->allowance_amount));
                 }
             } else {
@@ -95,8 +93,7 @@ class ProcessWeeklyAllowance extends Command
                 $kid->notify(new AllowanceDeniedNotification((int) $kid->points, (int) $kid->max_points));
 
                 // Notify parents: allowance processed (denied)
-                $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
-                foreach ($familyParents as $parent) {
+                foreach ($kid->familyParents() as $parent) {
                     $parent->notify(new AllowanceProcessedNotification($kid, false));
                 }
             }
@@ -143,8 +140,7 @@ class ProcessWeeklyAllowance extends Command
                         // Notify parents if goal is now complete
                         $goal->refresh();
                         if ($goal->current_amount >= $goal->target_amount) {
-                            $familyParentsForGoal = User::whereHas('families', fn($q) => $q->where('families.id', $goal->family_id))->get();
-                            foreach ($familyParentsForGoal as $parent) {
+                            foreach ($kid->familyParents() as $parent) {
                                 $parent->notify(new GoalCompletedNotification($kid, $goal));
                             }
                         }
@@ -196,10 +192,9 @@ class ProcessWeeklyAllowance extends Command
             ->get();
 
         foreach ($kidsWithLowPoints as $kid) {
-            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
             $allowanceDayName = ucfirst($kid->allowance_day);
 
-            foreach ($familyParents as $parent) {
+            foreach ($kid->familyParents() as $parent) {
                 $parent->notify(new PointsLowWarningNotification($kid, $allowanceDayName));
             }
 

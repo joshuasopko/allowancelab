@@ -66,12 +66,7 @@ class ParentAccountController extends Controller
         ];
 
         // Notification preferences (merged config defaults + stored user preferences)
-        $defaults = config('webpush.parent_defaults', []);
-        $stored   = $user->notification_preferences ?? [];
-        $notificationPreferences = [];
-        foreach ($defaults as $event => $default) {
-            $notificationPreferences[$event] = array_merge($default, $stored[$event] ?? []);
-        }
+        $notificationPreferences = $user->mergedNotificationPreferences();
 
         // Whether the user has at least one active push subscription
         $hasPushSubscription = $user->pushSubscriptions()->exists();

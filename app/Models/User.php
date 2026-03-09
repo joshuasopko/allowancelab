@@ -78,6 +78,18 @@ class User extends Authenticatable
         return Kid::whereIn('family_id', $familyIds)->get();
     }
 
+    // Helper: Get merged notification preferences (config defaults + stored user overrides)
+    public function mergedNotificationPreferences(): array
+    {
+        $defaults = config('webpush.parent_defaults', []);
+        $stored   = $this->notification_preferences ?? [];
+        $merged   = [];
+        foreach ($defaults as $event => $default) {
+            $merged[$event] = array_merge($default, $stored[$event] ?? []);
+        }
+        return $merged;
+    }
+
     // Override password reset notification to use custom branded email
     public function sendPasswordResetNotification($token)
     {

@@ -105,8 +105,7 @@ class WishController extends Controller
 
             // Notify parents — each parent wrapped independently so one failure never blocks another
             $isRequest = $request->input('action') === 'request';
-            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
-            foreach ($familyParents as $parent) {
+            foreach ($kid->familyParents() as $parent) {
                 try {
                     if ($isRequest) {
                         $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
@@ -303,8 +302,7 @@ class WishController extends Controller
             // Notify parents — wrapped separately so a notification failure
             // never blocks the success response back to the kid
             try {
-                $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $wish->family_id))->get();
-                foreach ($familyParents as $parent) {
+                foreach ($kid->familyParents() as $parent) {
                     $parent->notify(new WishPurchaseRequestedNotification($kid, $wish->item_name, (float) $wish->price, $wish->id));
                 }
             } catch (\Exception $notifyEx) {

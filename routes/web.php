@@ -53,36 +53,6 @@ Route::post('/family/accept/{token}', [App\Http\Controllers\FamilyInviteControll
 // Email verification (public route)
 Route::get('/parent/verify-email/{token}', [App\Http\Controllers\ParentAccountController::class, 'verifyEmailChange'])->name('parent.account.verify-email');
 
-// TEMPORARY DEBUG ROUTE — remove after push notification debugging
-Route::get('/debug/notifications', function () {
-    $user = Auth::user();
-    if (!$user) return response()->json(['error' => 'Not logged in as parent']);
-
-    $prefs = $user->notification_preferences;
-    $subs  = $user->pushSubscriptions()->get()->map(fn($s) => [
-        'id'       => $s->id,
-        'endpoint' => substr($s->endpoint, 0, 60) . '...',
-        'created'  => $s->created_at?->toDateTimeString(),
-    ]);
-
-    $events = ['wish_created', 'wish_purchase_requested', 'allowance_processed', 'goal_redemption_requested'];
-    $checks = [];
-    foreach ($events as $event) {
-        $checks[$event] = [
-            'wantsPush'  => $user->wantsPush($event),
-            'wantsEmail' => $user->wantsEmail($event),
-            'stored'     => $prefs[$event] ?? '(using default)',
-        ];
-    }
-
-    return response()->json([
-        'user_id'              => $user->id,
-        'raw_prefs_in_db'      => $prefs,
-        'event_checks'         => $checks,
-        'push_subscriptions'   => $subs,
-        'subscription_count'   => $subs->count(),
-    ], 200, [], JSON_PRETTY_PRINT);
-})->middleware('auth');
 
 // Parent routes (protected by 'auth' middleware)
 Route::middleware('auth')->group(function () {

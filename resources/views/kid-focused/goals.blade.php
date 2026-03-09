@@ -939,7 +939,7 @@
                                 const fileName = 'scraped-image.jpg';
                                 photoFile = new File([blob], fileName, { type: blob.type });
                             })
-                            .catch(err => console.log('Could not convert image to file:', err));
+                            .catch(() => {});
                     }
 
                     if (data.partial) {

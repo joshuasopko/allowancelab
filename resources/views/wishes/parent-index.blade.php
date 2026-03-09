@@ -46,10 +46,7 @@
             <!-- Pending Requests Tab -->
             <div id="pendingTab" class="wish-tab-content active">
                 @if($pendingWishes->isEmpty())
-                    <div class="empty-state">
-                        <i class="fas fa-clipboard-list"></i>
-                        <p>No pending wish requests</p>
-                    </div>
+                    @include('partials.empty-state', ['icon' => 'fas fa-clipboard-list', 'message' => 'No pending wish requests'])
                 @else
                     <div class="wishes-list">
                         @foreach($pendingWishes as $wish)
@@ -102,10 +99,7 @@
             <!-- All Wishes Tab -->
             <div id="allTab" class="wish-tab-content">
                 @if($allWishes->isEmpty())
-                    <div class="empty-state">
-                        <i class="fas fa-heart"></i>
-                        <p>{{ $kid->name }} hasn't created any wishes yet</p>
-                    </div>
+                    @include('partials.empty-state', ['icon' => 'fas fa-heart', 'message' => $kid->name . " hasn't created any wishes yet"])
                 @else
                     <div class="wishes-grid">
                         @foreach($allWishes as $wish)
@@ -160,10 +154,7 @@
             <!-- Purchased Tab -->
             <div id="purchasedTab" class="wish-tab-content">
                 @if($purchasedWishes->isEmpty())
-                    <div class="empty-state">
-                        <i class="fas fa-check-circle"></i>
-                        <p>No purchased wishes yet</p>
-                    </div>
+                    @include('partials.empty-state', ['icon' => 'fas fa-check-circle', 'message' => 'No purchased wishes yet'])
                 @else
                     <div class="wishes-grid">
                         @foreach($purchasedWishes as $wish)

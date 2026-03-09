@@ -6,12 +6,12 @@ use App\Models\Goal;
 use App\Models\GoalTransaction;
 use App\Models\Kid;
 use App\Models\Transaction;
-use App\Models\User;
 use App\Notifications\GoalCreatedNotification;
 use App\Notifications\GoalRedemptionRequestedNotification;
 use App\Notifications\GoalApprovedNotification;
 use App\Notifications\GoalDeniedNotification;
 use App\Notifications\GoalCompletedNotification;
+use App\Http\Traits\AuthorizesKidAccess;
 use App\Services\UrlScraperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,12 +21,17 @@ use Carbon\Carbon;
 
 class GoalController extends Controller
 {
+    use AuthorizesKidAccess;
+
     protected $urlScraper;
 
     public function __construct(UrlScraperService $urlScraper)
     {
         $this->urlScraper = $urlScraper;
     }
+
+    // ─── Kid Goals ───────────────────────────────────────────────────────────
+
     /**
      * Display a listing of the kid's goals (kid view)
      */
@@ -46,11 +51,7 @@ class GoalController extends Controller
      */
     public function parentIndex(Kid $kid)
     {
-        // Verify parent has access to this kid
-        $familyIds = Auth::user()->families()->pluck('families.id');
-        if (!$familyIds->contains($kid->family_id)) {
-            abort(403, 'Unauthorized access to this kid.');
-        }
+        $this->authorizeKidAccess($kid);
 
         $activeGoals = $kid->goals()
             ->whereIn('status', ['active', 'ready_to_redeem', 'pending_redemption'])
@@ -147,8 +148,7 @@ class GoalController extends Controller
         ]);
 
         // Notify parents in family
-        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
-        foreach ($familyParents as $parent) {
+        foreach ($kid->familyParents() as $parent) {
             $parent->notify(new GoalCreatedNotification($kid, $goal));
         }
 
@@ -165,16 +165,14 @@ class GoalController extends Controller
         return redirect()->route('kid.goals.index')->with('success', 'Goal created successfully!');
     }
 
+    // ─── Parent Goals ─────────────────────────────────────────────────────────
+
     /**
      * Store a newly created goal (parent creates for kid)
      */
     public function parentStore(Request $request, Kid $kid)
     {
-        // Verify parent has access to this kid
-        $familyIds = Auth::user()->families()->pluck('families.id');
-        if (!$familyIds->contains($kid->family_id)) {
-            abort(403, 'Unauthorized access to this kid.');
-        }
+        $this->authorizeKidAccess($kid);
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -239,6 +237,8 @@ class GoalController extends Controller
 
         return redirect()->route('kids.goals', $kid)->with('success', 'Goal created successfully!');
     }
+
+    // ─── Goal Detail & Edit ──────────────────────────────────────────────────
 
     /**
      * Display the specified goal
@@ -520,6 +520,8 @@ class GoalController extends Controller
         }
     }
 
+    // ─── Fund Management ─────────────────────────────────────────────────────
+
     /**
      * Get the fund form HTML for modal (parent only)
      */
@@ -659,8 +661,7 @@ class GoalController extends Controller
 
         // Notify parents when goal is newly completed (status changed to ready_to_redeem or pending_redemption)
         if (in_array($refreshedGoal->status, ['ready_to_redeem', 'pending_redemption'])) {
-            $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $refreshedGoal->family_id))->get();
-            foreach ($familyParents as $parent) {
+            foreach ($refreshedKid->familyParents() as $parent) {
                 $parent->notify(new GoalCompletedNotification($refreshedKid, $refreshedGoal));
             }
         }
@@ -757,6 +758,8 @@ class GoalController extends Controller
         ]);
     }
 
+    // ─── Redemption ──────────────────────────────────────────────────────────
+
     /**
      * Kid requests redemption of a completed goal
      */
@@ -812,8 +815,7 @@ class GoalController extends Controller
         ]);
 
         // Notify parents in family about redemption request
-        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $goal->family_id))->get();
-        foreach ($familyParents as $parent) {
+        foreach ($kid->familyParents() as $parent) {
             $parent->notify(new GoalRedemptionRequestedNotification($kid, $goal));
         }
 
@@ -984,6 +986,8 @@ class GoalController extends Controller
 
         return redirect()->route('kids.goals', $kid)->with('success', 'Redemption denied. Goal remains active for ' . $kid->name . '.');
     }
+
+    // ─── Utilities ───────────────────────────────────────────────────────────
 
     /**
      * Scrape URL for goal details (parent only)

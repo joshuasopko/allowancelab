@@ -5,20 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Kid;
 use App\Models\Goal;
 use App\Models\Wish;
+use App\Http\Traits\AuthorizesKidAccess;
 use Illuminate\Http\Request;
 
 class KidFocusedController extends Controller
 {
+    use AuthorizesKidAccess;
+
     /**
      * Show kid-focused overview page
      */
     public function overview(Kid $kid)
     {
-        // Verify parent has access to this kid
-        $familyIds = auth()->user()->families()->pluck('families.id');
-        if (!$familyIds->contains($kid->family_id)) {
-            abort(403, 'Unauthorized access to this kid.');
-        }
+        $this->authorizeKidAccess($kid);
 
         // Get overview data
         $activeGoals = Goal::where('kid_id', $kid->id)
@@ -51,11 +50,7 @@ class KidFocusedController extends Controller
      */
     public function allowance(Kid $kid)
     {
-        // Verify parent has access to this kid
-        $familyIds = auth()->user()->families()->pluck('families.id');
-        if (!$familyIds->contains($kid->family_id)) {
-            abort(403, 'Unauthorized access to this kid.');
-        }
+        $this->authorizeKidAccess($kid);
 
         // Get recent transactions
         $transactions = $kid->transactions()
@@ -70,11 +65,7 @@ class KidFocusedController extends Controller
      */
     public function goals(Kid $kid)
     {
-        // Verify parent has access to this kid
-        $familyIds = auth()->user()->families()->pluck('families.id');
-        if (!$familyIds->contains($kid->family_id)) {
-            abort(403, 'Unauthorized access to this kid.');
-        }
+        $this->authorizeKidAccess($kid);
 
         // Get all goals for this kid
         $activeGoals = Goal::where('kid_id', $kid->id)
@@ -98,11 +89,7 @@ class KidFocusedController extends Controller
      */
     public function wishes(Kid $kid)
     {
-        // Verify parent has access to this kid
-        $familyIds = auth()->user()->families()->pluck('families.id');
-        if (!$familyIds->contains($kid->family_id)) {
-            abort(403, 'Unauthorized access to this kid.');
-        }
+        $this->authorizeKidAccess($kid);
 
         // Get wishes organized by status
         $pendingWishes = Wish::where('kid_id', $kid->id)

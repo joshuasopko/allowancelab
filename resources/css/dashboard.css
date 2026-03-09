@@ -1,3 +1,5 @@
+/* ===== Reset ============================================================== */
+
 * {
     margin: 0;
     padding: 0;
@@ -10,7 +12,7 @@ body {
     min-height: 100vh;
 }
 
-/* Header */
+/* ===== Header ============================================================= */
 .top-header {
     background: white;
     border-bottom: 1px solid #e0e0e0;
@@ -111,13 +113,14 @@ body {
     background: #059669;
 }
 
-/* Layout Container */
+/* ===== Layout ============================================================= */
+
 .dashboard-container {
     display: flex;
     min-height: calc(100vh - 73px);
 }
 
-/* Sidebar */
+/* ===== Sidebar ============================================================ */
 .sidebar {
     width: 280px;
     background: #f8f9fa;
@@ -327,7 +330,8 @@ body {
     margin-top: auto;
 }
 
-/* Main Content */
+/* ===== Main Content ======================================================= */
+
 .main-content {
     flex: 1;
     padding: 32px;
@@ -339,7 +343,7 @@ body {
     margin: 0 auto;
 }
 
-/* Kid Card */
+/* ===== Kid Cards ========================================================== */
 .kid-card {
     background: white;
     border-radius: 16px;
@@ -487,7 +491,8 @@ body {
     background: #546e7a;
 }
 
-/* Dropdown Forms */
+/* ===== Forms ============================================================== */
+
 .dropdown-form {
     display: none;
     grid-column: 1 / -1;
@@ -1360,7 +1365,8 @@ body {
     padding: 24px;
 }
 
-/* Transaction Modal */
+/* ===== Modals ============================================================= */
+
 .modal-overlay {
     display: none;
     position: fixed;

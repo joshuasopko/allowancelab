@@ -88,17 +88,9 @@ class NotificationController extends Controller
      */
     public function getPreferences(Request $request)
     {
-        $user     = Auth::user();
-        $defaults = config('webpush.parent_defaults', []);
-        $stored   = $user->notification_preferences ?? [];
+        $user = Auth::user();
 
-        // Merge each event: stored values override defaults
-        $merged = [];
-        foreach ($defaults as $event => $default) {
-            $merged[$event] = array_merge($default, $stored[$event] ?? []);
-        }
-
-        return response()->json($merged);
+        return response()->json($user->mergedNotificationPreferences());
     }
 
     /**

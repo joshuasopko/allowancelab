@@ -143,4 +143,10 @@ class Kid extends Authenticatable
             ->limit($limit)
             ->get();
     }
+
+    // Helper: Get all parent Users who belong to this kid's family
+    public function familyParents(): \Illuminate\Database\Eloquent\Collection
+    {
+        return User::whereHas('families', fn($q) => $q->where('families.id', $this->family_id))->get();
+    }
 }

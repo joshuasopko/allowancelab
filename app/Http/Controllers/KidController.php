@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Kid;
 use App\Models\User;
+use App\Http\Traits\AuthorizesKidAccess;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Mail;
@@ -19,20 +20,10 @@ use App\Notifications\KidSpentNotification;
 
 class KidController extends Controller
 {
-    /**
-     * Check if the authenticated user can access this kid
-     */
-    private function authorizeKidAccess(Kid $kid)
-    {
-        $user = Auth::user();
-        $userFamilyIds = $user->families()->pluck('families.id')->toArray();
+    use AuthorizesKidAccess;
 
-        if (!in_array($kid->family_id, $userFamilyIds)) {
-            abort(403, 'Unauthorized access to this kid.');
-        }
-    }
+    // ─── Kid Creation ────────────────────────────────────────────────────────
 
-    // Store a new kid
     public function store(Request $request)
     {
         // Validate the form data
@@ -92,7 +83,8 @@ class KidController extends Controller
         return redirect()->route('dashboard')->with('success', 'Kid added successfully!');
     }
 
-    // Update kid balance
+    // ─── Balance & Points ────────────────────────────────────────────────────
+
     public function updateBalance(Request $request, Kid $kid)
     {
         $this->authorizeKidAccess($kid);
@@ -161,8 +153,7 @@ class KidController extends Controller
         $kid->notify(new MoneyAddedNotification((float) $request->amount, (string) ($request->note ?? '')));
 
         // Notify all parents in the family
-        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
-        foreach ($familyParents as $parent) {
+        foreach ($kid->familyParents() as $parent) {
             $parent->notify(new KidDepositedNotification($kid, (float) $request->amount, (string) ($request->note ?? '')));
         }
 
@@ -198,8 +189,7 @@ class KidController extends Controller
         $kid->notify(new MoneyDeductedNotification((float) $request->amount, (string) ($request->note ?? '')));
 
         // Notify all parents in the family
-        $familyParents = User::whereHas('families', fn($q) => $q->where('families.id', $kid->family_id))->get();
-        foreach ($familyParents as $parent) {
+        foreach ($kid->familyParents() as $parent) {
             $parent->notify(new KidSpentNotification($kid, (float) $request->amount, (string) ($request->note ?? '')));
         }
 
@@ -213,6 +203,8 @@ class KidController extends Controller
 
         return back()->with('success', 'Spending recorded successfully');
     }
+
+    // ─── Points ──────────────────────────────────────────────────────────────
 
     public function adjustPoints(Request $request, Kid $kid)
     {
@@ -313,7 +305,8 @@ class KidController extends Controller
         return response()->json($transactionsData);
     }
 
-    // Display the Manage Kid page
+    // ─── Account Management ──────────────────────────────────────────────────
+
     public function manage(Kid $kid)
     {
         $this->authorizeKidAccess($kid);
@@ -365,6 +358,8 @@ class KidController extends Controller
 
         return redirect()->route('dashboard')->with('success', $kid->name . ' has been removed.');
     }
+
+    // ─── Invite System ───────────────────────────────────────────────────────
 
     // Create an invite for a kid
     public function createInvite(Kid $kid)

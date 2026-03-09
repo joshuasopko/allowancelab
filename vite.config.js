@@ -8,6 +8,8 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/css/dashboard.css',
                 'resources/css/kid-dashboard.css',
+                'resources/css/kid-focused.css',
+                'resources/css/page.css',
                 'resources/js/app.js',
                 'resources/js/bootstrap.js',
                 'resources/js/dashboard.js',
