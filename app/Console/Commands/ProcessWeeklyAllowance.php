@@ -71,11 +71,19 @@ class ProcessWeeklyAllowance extends Command
                 $this->info("✓ Posted $" . number_format($kid->allowance_amount, 2) . " allowance (had {$kid->points} points)");
 
                 // Notify kid: allowance received
-                $kid->notify(new AllowanceReceivedNotification((float) $kid->allowance_amount));
+                try {
+                    $kid->notify(new AllowanceReceivedNotification((float) $kid->allowance_amount));
+                } catch (\Throwable $e) {
+                    \Log::error("[allowance:process] Kid notification failed for {$kid->name}: " . $e->getMessage());
+                }
 
                 // Notify parents: allowance processed (awarded)
                 foreach ($kid->familyParents() as $parent) {
-                    $parent->notify(new AllowanceProcessedNotification($kid, true, (float) $kid->allowance_amount));
+                    try {
+                        $parent->notify(new AllowanceProcessedNotification($kid, true, (float) $kid->allowance_amount));
+                    } catch (\Throwable $e) {
+                        \Log::error("[allowance:process] Parent notification failed for {$parent->email}: " . $e->getMessage());
+                    }
                 }
             } else {
                 // Deny allowance due to insufficient points
@@ -90,11 +98,19 @@ class ProcessWeeklyAllowance extends Command
                 $this->warn("✗ Denied allowance (had {$kid->points} points)");
 
                 // Notify kid: allowance denied
-                $kid->notify(new AllowanceDeniedNotification((int) $kid->points, (int) $kid->max_points));
+                try {
+                    $kid->notify(new AllowanceDeniedNotification((int) $kid->points, (int) $kid->max_points));
+                } catch (\Throwable $e) {
+                    \Log::error("[allowance:process] Kid denied notification failed for {$kid->name}: " . $e->getMessage());
+                }
 
                 // Notify parents: allowance processed (denied)
                 foreach ($kid->familyParents() as $parent) {
-                    $parent->notify(new AllowanceProcessedNotification($kid, false));
+                    try {
+                        $parent->notify(new AllowanceProcessedNotification($kid, false));
+                    } catch (\Throwable $e) {
+                        \Log::error("[allowance:process] Parent notification failed for {$parent->email}: " . $e->getMessage());
+                    }
                 }
             }
 
@@ -141,7 +157,11 @@ class ProcessWeeklyAllowance extends Command
                         $goal->refresh();
                         if ($goal->current_amount >= $goal->target_amount) {
                             foreach ($kid->familyParents() as $parent) {
-                                $parent->notify(new GoalCompletedNotification($kid, $goal));
+                                try {
+                                    $parent->notify(new GoalCompletedNotification($kid, $goal));
+                                } catch (\Throwable $e) {
+                                    \Log::error("[allowance:process] Goal completed notification failed for {$parent->email}: " . $e->getMessage());
+                                }
                             }
                         }
                     } else {
@@ -195,7 +215,11 @@ class ProcessWeeklyAllowance extends Command
             $allowanceDayName = ucfirst($kid->allowance_day);
 
             foreach ($kid->familyParents() as $parent) {
-                $parent->notify(new PointsLowWarningNotification($kid, $allowanceDayName));
+                try {
+                    $parent->notify(new PointsLowWarningNotification($kid, $allowanceDayName));
+                } catch (\Throwable $e) {
+                    \Log::error("[allowance:process] Low points notification failed for {$parent->email}: " . $e->getMessage());
+                }
             }
 
             $this->warn("⚡ Low points warning sent for {$kid->name} ({$kid->points}/{$kid->max_points} pts)");
