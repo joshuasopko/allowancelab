@@ -48,18 +48,18 @@
                 @if($pendingWishes->isEmpty())
                     @include('partials.empty-state', ['icon' => 'fas fa-clipboard-list', 'message' => 'No pending wish requests'])
                 @else
-                    <div class="wishes-list">
+                    <div class="wishes-grid">
                         @foreach($pendingWishes as $wish)
-                            <div class="wish-row">
-                                <div class="wish-image">
+                            <div class="wish-card">
+                                <div class="wish-card-image">
                                     @if($wish->image_path)
                                         <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                     @else
                                         <div class="wish-placeholder"><i class="fas fa-box"></i></div>
                                     @endif
                                 </div>
-                                <div class="wish-info">
-                                    <h3>{{ $wish->item_name }}</h3>
+                                <div class="wish-card-content">
+                                    <h4>{{ $wish->item_name }}</h4>
                                     <div class="wish-price">${{ number_format($wish->price, 2) }}</div>
                                     @if($wish->reason)
                                         <p class="wish-reason">{{ Str::limit($wish->reason, 100) }}</p>
@@ -69,26 +69,28 @@
                                             <i class="fas fa-external-link-alt"></i> View Online
                                         </a>
                                     @endif
-                                    <div class="wish-meta">
+                                    <div class="wish-meta" style="font-size: 14px; color: #9ca3af; margin: 8px 0;">
                                         <span><i class="fas fa-clock"></i> Requested {{ $wish->requested_at->diffForHumans() }}</span>
                                     </div>
-                                </div>
-                                {{-- Hidden form submitted by approve modal --}}
-                                <form id="approve-wish-form-{{ $wish->id }}" action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: none;">
-                                    @csrf
-                                </form>
 
-                                <div class="wish-actions">
-                                    <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-view">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                    <button type="button" class="btn-approve"
-                                        onclick="openApproveWishModal('{{ $wish->id }}', '{{ addslashes($wish->item_name) }}', {{ $wish->price }}, '{{ addslashes($kid->name) }}', {{ $kid->balance }})">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button onclick="openDeclineModal({{ $wish->id }})" class="btn-decline">
-                                        <i class="fas fa-times"></i> Decline
-                                    </button>
+                                    {{-- Hidden form submitted by approve modal --}}
+                                    <form id="approve-wish-form-{{ $wish->id }}" action="{{ route('parent.wishes.approve', $wish) }}" method="POST" style="display: none;">
+                                        @csrf
+                                    </form>
+
+                                    <div class="wish-card-actions" style="flex-direction: column;">
+                                        <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-card-action btn-card-view" style="width: 100%;">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <button type="button" class="btn-card-action btn-card-approve" style="width: 100%;"
+                                            onclick="openApproveWishModal('{{ $wish->id }}', '{{ addslashes($wish->item_name) }}', {{ $wish->price }}, '{{ addslashes($kid->name) }}', {{ $kid->balance }})">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button type="button" class="btn-card-action btn-card-decline" style="width: 100%;"
+                                            onclick="openDeclineModal({{ $wish->id }})">
+                                            <i class="fas fa-times"></i> Decline
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -514,6 +516,36 @@
     flex-wrap: wrap;
 }
 
+@media (max-width: 640px) {
+    .wish-row {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .wish-image {
+        width: 100%;
+        height: 200px;
+    }
+
+    .wish-info {
+        padding: 16px 16px 0;
+    }
+
+    .wish-actions {
+        padding: 12px 16px 16px;
+        flex-direction: column;
+    }
+
+    .wish-actions .btn-view,
+    .wish-actions .btn-approve,
+    .wish-actions .btn-decline {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 .btn-view {
     padding: 10px 20px;
     border: 2px solid #e5e7eb;
@@ -689,6 +721,26 @@
 
 .btn-card-view:hover {
     background: #eff6ff;
+}
+
+.btn-card-approve {
+    background: #10b981;
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-card-approve:hover {
+    background: #059669;
+}
+
+.btn-card-decline {
+    background: #ef4444;
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-card-decline:hover {
+    background: #dc2626;
 }
 
 /* Redeem Modal Styles */

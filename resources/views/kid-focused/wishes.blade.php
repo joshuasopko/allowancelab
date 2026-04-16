@@ -52,18 +52,18 @@
                         <p>No pending wish requests</p>
                     </div>
                 @else
-                    <div class="wishes-list">
+                    <div class="wishes-grid">
                         @foreach($pendingWishes as $wish)
-                            <div class="wish-row">
-                                <div class="wish-image">
+                            <div class="wish-card">
+                                <div class="wish-card-image">
                                     @if($wish->image_path)
                                         <img src="{{ \Storage::url($wish->image_path) }}" alt="{{ $wish->item_name }}">
                                     @else
                                         <div class="wish-placeholder"><i class="fas fa-box"></i></div>
                                     @endif
                                 </div>
-                                <div class="wish-info">
-                                    <h3>{{ $wish->item_name }}</h3>
+                                <div class="wish-card-content">
+                                    <h4>{{ $wish->item_name }}</h4>
                                     <div class="wish-price">${{ number_format($wish->price, 2) }}</div>
                                     @if($wish->reason)
                                         <p class="wish-reason">{{ Str::limit($wish->reason, 100) }}</p>
@@ -76,17 +76,17 @@
                                     <div class="wish-meta">
                                         <span><i class="fas fa-clock"></i> Requested {{ $wish->requested_at->diffForHumans() }}</span>
                                     </div>
-                                </div>
-                                <div class="wish-actions">
-                                    <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-view">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                    <button type="button" onclick="openApproveModal({{ $wish->id }})" class="btn-approve">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button onclick="openDeclineModal({{ $wish->id }})" class="btn-decline">
-                                        <i class="fas fa-times"></i> Decline
-                                    </button>
+                                    <div class="wish-card-actions" style="flex-direction: column;">
+                                        <a href="{{ route('parent.wishes.show', $wish) }}" class="btn-card-action btn-card-view" style="width: 100%;">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <button type="button" onclick="openApproveModal({{ $wish->id }})" class="btn-card-action btn-card-approve" style="width: 100%;">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button type="button" onclick="openDeclineModal({{ $wish->id }})" class="btn-card-action btn-card-decline" style="width: 100%;">
+                                            <i class="fas fa-times"></i> Decline
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -753,6 +753,26 @@
 
 .btn-card-view:hover {
     background: #eff6ff;
+}
+
+.btn-card-approve {
+    background: #10b981;
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-card-approve:hover {
+    background: #059669;
+}
+
+.btn-card-decline {
+    background: #ef4444;
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-card-decline:hover {
+    background: #dc2626;
 }
 
 /* Redeem Modal Styles */
