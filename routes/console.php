@@ -15,5 +15,5 @@ Artisan::command('inspire', function () {
 Schedule::command('allowance:process')
     ->everyFifteenMinutes()
     ->timezone('America/Chicago')
-    ->between('02:00', '02:14')
+    ->between('01:00', '01:14')
     ->withoutOverlapping();
