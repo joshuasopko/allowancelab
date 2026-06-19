@@ -8,7 +8,12 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Schedule weekly allowance processing at 2:00 AM Central time daily.
-// The Laravel scheduler handles DST automatically via Carbon timezone awareness,
-// so spring-forward / fall-back won't cause the 2 AM hour to be skipped or doubled.
-Schedule::command('allowance:process')->dailyAt('02:00')->timezone('America/Chicago');
+// Run schedule:run every 15 minutes (Railway's most frequent option).
+// The between() window catches any firing that lands within 2:00–2:14 AM Central,
+// making the schedule tolerant of Railway's ~5-minute execution drift.
+// withoutOverlapping() prevents a double-post if two firings land in the window.
+Schedule::command('allowance:process')
+    ->everyFifteenMinutes()
+    ->timezone('America/Chicago')
+    ->between('02:00', '02:14')
+    ->withoutOverlapping();
