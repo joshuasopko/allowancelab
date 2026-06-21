@@ -851,7 +851,7 @@
                                 if (amount > KID_BALANCE) {
                                     hintEl.textContent = 'Insufficient balance';
                                     hintEl.style.color = '#ef4444';
-                                } else if (amount > GOAL_REMAINING) {
+                                } else if (Math.round(amount * 100) > Math.round(GOAL_REMAINING * 100)) {
                                     hintEl.textContent = 'Max you can add: $' + GOAL_REMAINING.toFixed(2);
                                     hintEl.style.color = '#f59e0b';
                                 } else {

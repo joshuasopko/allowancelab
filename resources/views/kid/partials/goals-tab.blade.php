@@ -99,7 +99,7 @@
                                 get addCents() { const v = this.addAmount.replace(/[^0-9]/g,''); return v === '' ? 0 : parseInt(v); },
                                 get addDollars() { return this.addCents / 100; },
                                 get remaining() { return Math.max(0, this.goalTarget - this.goalCurrent); },
-                                get isOverLimit() { return this.addDollars > this.remaining && this.addDollars > 0; },
+                                get isOverLimit() { return this.addDollars > 0 && Math.round(this.addDollars * 100) > Math.round(this.remaining * 100); },
                                 get newPct() { if (!this.addDollars || this.goalTarget <= 0) return null; return Math.min(100, Math.round(((this.goalCurrent + this.addDollars) / this.goalTarget) * 100)); },
                                 get hintText() {
                                     if (!this.addDollars) return '';

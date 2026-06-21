@@ -608,8 +608,8 @@ class GoalController extends Controller
         }
 
         // Validate amount doesn't exceed what's needed to complete the goal
-        $amountNeeded = $goal->target_amount - $goal->current_amount;
-        if ($request->amount > $amountNeeded) {
+        $amountNeeded = round($goal->target_amount - $goal->current_amount, 2);
+        if (round($request->amount, 2) > $amountNeeded) {
             return response()->json([
                 'success' => false,
                 'message' => 'You can only add $' . number_format($amountNeeded, 2) . ' to complete this goal.'
