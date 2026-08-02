@@ -8,12 +8,17 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Run schedule:run every 15 minutes (Railway's most frequent option).
-// The between() window catches any firing that lands within 2:00–2:14 AM Central,
-// making the schedule tolerant of Railway's ~5-minute execution drift.
-// withoutOverlapping() prevents a double-post if two firings land in the window.
+// Railway's Cron Schedule service invokes `schedule:run` every 15 minutes, but with
+// boot latency the actual execution time drifts by 1+ minutes from the :00/:15/:30/:45
+// mark. everyFifteenMinutes() only matches when the wall-clock minute is EXACTLY
+// 0/15/30/45, so a delayed boot (e.g. landing at 01:01 instead of 01:00) causes the
+// whole day's window to be silently skipped, since the next cron-matching minute (:15)
+// falls outside the between() cutoff. everyMinute() always satisfies the cron check,
+// so between('01:00','01:14') alone decides eligibility — any drifted tick that lands
+// in the window still fires. withoutOverlapping() prevents a double-post if two ticks
+// land in the window.
 Schedule::command('allowance:process')
-    ->everyFifteenMinutes()
+    ->everyMinute()
     ->timezone('America/Chicago')
     ->between('01:00', '01:14')
     ->withoutOverlapping();
