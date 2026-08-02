@@ -9,6 +9,7 @@ window.PushManager = PushManager;
 // GLOBAL VARIABLES
 // ============================================
 let activeForm = null;
+let activeFormButton = null;
 let currentKidId = null;
 let currentTypeFilter = 'all';
 let currentDateRange = '30';
@@ -73,17 +74,24 @@ function toggleForm(formId, buttonElement = null) {
 
     if (activeForm && activeForm !== form) {
         activeForm.classList.remove('active');
+        // Reset the previously active form's own button, since it's not the
+        // one that was just clicked and would otherwise be left showing
+        // "Close Ledger" while its form is actually closed.
+        if (activeFormButton) {
+            activeFormButton.textContent = 'Ledger';
+        }
     }
 
     form.classList.toggle('active');
     activeForm = form.classList.contains('active') ? form : null;
+    activeFormButton = activeForm ? buttonElement : null;
 
     // Toggle button text if button element is provided
     if (buttonElement) {
         if (form.classList.contains('active')) {
             buttonElement.textContent = 'Close Ledger';
         } else {
-            buttonElement.textContent = 'View Ledger';
+            buttonElement.textContent = 'Ledger';
         }
     }
 
