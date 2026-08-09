@@ -114,7 +114,7 @@
             <div class="kid-stats-row">
                 <!-- Birthday Countdown -->
                 @php
-    $today = now();
+    $today = today();
     $nextBirthday = \Carbon\Carbon::parse($kid->birthday)->year($today->year);
     if ($nextBirthday->isPast()) {
         $nextBirthday->addYear();

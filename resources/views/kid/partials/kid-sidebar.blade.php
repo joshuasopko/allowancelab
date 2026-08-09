@@ -19,7 +19,7 @@
         if ($nextBirthday->isPast()) {
             $nextBirthday->addYear();
         }
-        $daysUntilBirthday = (int) now()->diffInDays($nextBirthday);
+        $daysUntilBirthday = (int) today()->diffInDays($nextBirthday);
     @endphp
     <div class="kid-birthday-countdown">
         <div class="kid-birthday-icon">🎉</div>
