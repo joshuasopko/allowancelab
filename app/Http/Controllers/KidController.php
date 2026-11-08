@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Kid;
 use App\Models\User;
 use App\Http\Traits\AuthorizesKidAccess;
@@ -89,12 +90,21 @@ class KidController extends Controller
     {
         $this->authorizeKidAccess($kid);
 
-        $request->validate([
+        $validated = $request->validate([
             'amount' => 'required|numeric',
         ]);
 
-        $kid->balance += $request->amount;
-        $kid->save();
+        DB::transaction(function () use ($kid, $validated) {
+            $kid->balance += $validated['amount'];
+            $kid->save();
+
+            $kid->transactions()->create([
+                'type' => 'adjustment',
+                'amount' => abs($validated['amount']),
+                'description' => 'Balance adjustment',
+                'initiated_by' => 'parent',
+            ]);
+        });
 
         return back()->with('success', 'Balance updated!');
     }
@@ -143,6 +153,8 @@ class KidController extends Controller
 
     public function deposit(Request $request, Kid $kid)
     {
+        $this->authorizeKidAccess($kid);
+
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'note' => 'nullable|string|max:255'
@@ -179,6 +191,8 @@ class KidController extends Controller
 
     public function spend(Request $request, Kid $kid)
     {
+        $this->authorizeKidAccess($kid);
+
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'note' => 'nullable|string|max:255'
@@ -217,6 +231,8 @@ class KidController extends Controller
 
     public function adjustPoints(Request $request, Kid $kid)
     {
+        $this->authorizeKidAccess($kid);
+
         $request->validate([
             'points' => 'required|integer',
             'reason' => 'nullable|string|max:255'
@@ -255,6 +271,8 @@ class KidController extends Controller
 
     public function getTransactions(Request $request, Kid $kid)
     {
+        $this->authorizeKidAccess($kid);
+
         $type = $request->get('type', 'all');
         $days = $request->get('days', '30');
 

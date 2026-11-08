@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use App\Models\Kid;
 
 class KidAuthController extends Controller
@@ -23,9 +26,21 @@ class KidAuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        $throttleKey = Str::transliterate(Str::lower($request->string('username')).'|'.$request->ip());
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            throw ValidationException::withMessages([
+                'username' => "Too many login attempts. Please try again in {$seconds} seconds.",
+            ]);
+        }
+
         $kid = Kid::where('username', $request->username)->first();
 
         if ($kid && Hash::check($request->password, $kid->password)) {
+            RateLimiter::clear($throttleKey);
+
             $kid->update(['last_login_at' => now()]);
 
             // Check if remember me is requested
@@ -44,6 +59,8 @@ class KidAuthController extends Controller
 
             return redirect()->route('kid.dashboard');
         }
+
+        RateLimiter::hit($throttleKey);
 
         return back()->withErrors([
             'username' => 'Invalid username or password.',
