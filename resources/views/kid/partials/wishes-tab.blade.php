@@ -518,6 +518,7 @@
     padding-top: 4px;
 }
 .kid-wish-btn {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
