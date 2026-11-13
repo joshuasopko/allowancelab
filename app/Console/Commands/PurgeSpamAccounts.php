@@ -10,7 +10,7 @@ class PurgeSpamAccounts extends Command
 {
     protected $signature = 'accounts:purge-spam
         {--hours=48 : Only consider accounts created at least this many hours ago}
-        {--force : Actually delete the matched accounts (default is a dry run)}';
+        {--force : Actually delete the matched accounts, no prompt (default is a dry run). Standard Laravel --force semantics: this alone authorizes the deletion, same as migrate --force.}';
 
     protected $description = 'List (or delete, with --force) parent accounts that never logged back in and never added a kid — the signature of a bot-created registration';
 
@@ -42,11 +42,6 @@ class PurgeSpamAccounts extends Command
         if (!$force) {
             $this->newLine();
             $this->comment('Dry run only — nothing was deleted. Re-run with --force to delete these accounts (and their empty, kid-less families).');
-            return self::SUCCESS;
-        }
-
-        if (!$this->confirm("Permanently delete these {$candidates->count()} accounts and their families? This cannot be undone.")) {
-            $this->comment('Aborted — nothing was deleted.');
             return self::SUCCESS;
         }
 
