@@ -32,6 +32,17 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if ($this->looksLikeBot($request)) {
+            \Log::warning('Blocked likely bot registration attempt', [
+                'ip' => $request->ip(),
+                'email' => $request->input('email'),
+            ]);
+
+            return redirect()->route('register')
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->withErrors(['email' => 'Something went wrong. Please try again.']);
+        }
+
         $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
@@ -77,5 +88,19 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         return redirect(route('dashboard', absolute: false));
+    }
+
+    /**
+     * Honeypot field filled in, or form submitted faster than a human could fill it out.
+     */
+    private function looksLikeBot(Request $request): bool
+    {
+        if ($request->filled('website')) {
+            return true;
+        }
+
+        $renderedAt = (int) $request->input('form_rendered_at', 0);
+
+        return $renderedAt <= 0 || (time() - $renderedAt) < 3;
     }
 }

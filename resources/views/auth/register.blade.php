@@ -491,6 +491,13 @@
             <form method="POST" action="{{ route('register') }}">
                 @csrf
                 <input type="hidden" name="timezone" id="detected_timezone">
+                <input type="hidden" name="form_rendered_at" value="{{ now()->timestamp }}">
+
+                <!-- Honeypot field — left blank by humans, filled in by bots. Hidden off-screen, not display:none. -->
+                <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+                    <label for="website">Leave this field blank</label>
+                    <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                </div>
 
                 <!-- Name row -->
                 <div class="form-row">
